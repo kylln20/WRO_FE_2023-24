@@ -57,9 +57,9 @@ if __name__ == '__main__':
 
     #lists storing coordinates for the regions of interest to find contours of the lanes and the orange line 
     # order: x1, y1, x2, y2
-    ROI1 = [0, 170, 240, 220]
-    ROI2 = [400, 170, 640, 220]
-    ROI3 = [200, 350, 440, 400]
+    ROI1 = [20, 170, 240, 220]
+    ROI2 = [400, 170, 620, 220]
+    ROI3 = [200, 300, 440, 350]
 
     #booleans for tracking whether car is in a left or right turn
     lTurn = False
@@ -73,11 +73,11 @@ if __name__ == '__main__':
     straightConst = 90 #angle in which car goes straight
 
     turnThresh = 100 #if area of a lane is under this threshold car goes into a turn
-    exitThresh = 1200 #if area of both lanes is over this threshold car exits a turn
+    exitThresh = 1500 #if area of both lanes is over this threshold car exits a turn
   
     angle = 90 #variable for the current angle of the car
     prevAngle = angle #variable tracking the angle of the previous iteration
-    tDeviation = 30 #value used to calculate the how far left and right the car turns during a turn
+    tDeviation = 25 #value used to calculate the how far left and right the car turns during a turn
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
@@ -85,6 +85,8 @@ if __name__ == '__main__':
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
+    
+    #write("dc", 1500) 
 
     sleep(8) #delay 8 seconds for the servo to be ready
     
@@ -109,7 +111,7 @@ if __name__ == '__main__':
         
         # black mask
         lower_black = np.array([0, 0, 0])
-        upper_black = np.array([180, 255, 60])
+        upper_black = np.array([180, 255, 50])
         
         imgThresh = cv2.inRange(img_hsv, lower_black, upper_black)
         
