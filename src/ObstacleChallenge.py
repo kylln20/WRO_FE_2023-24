@@ -23,26 +23,12 @@ def write(motor, value):
         #print("no motor")
 
 #function which displays the Regions of Interest on the image
-def displayROI():
-    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[2], ROI1[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[0], ROI1[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[2], ROI1[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[0], ROI1[3]), (0, 255, 255), 4)
-    
-    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[2], ROI2[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[0], ROI2[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[2], ROI2[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[0], ROI2[3]), (0, 255, 255), 4)
-
-    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[2], ROI3[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[0], ROI3[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[2], ROI3[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[0], ROI3[3]), (0, 255, 255), 4)
-    
-    image = cv2.line(img, (ROI4[0], ROI4[1]), (ROI4[2], ROI4[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI4[0], ROI4[1]), (ROI4[0], ROI4[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI4[2], ROI4[3]), (ROI4[2], ROI4[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI4[2], ROI4[3]), (ROI4[0], ROI4[3]), (0, 255, 255), 4)
+def displayROI(ROIs):
+    for ROI in ROIs: 
+        image = cv2.line(img, (ROI[0], ROI[1]), (ROI[2], ROI[1]), (0, 255, 255), 4)
+        image = cv2.line(img, (ROI[0], ROI[1]), (ROI[0], ROI[3]), (0, 255, 255), 4)
+        image = cv2.line(img, (ROI[2], ROI[3]), (ROI[2], ROI[1]), (0, 255, 255), 4)
+        image = cv2.line(img, (ROI[2], ROI[3]), (ROI[0], ROI[3]), (0, 255, 255), 4)
 
 #function to bring the car to a stop
 def stopCar():
@@ -82,10 +68,22 @@ if __name__ == '__main__':
     #ROI3: for finding signal pillars
     #ROI4: for detecting blue and orange lines on mat
     # order: x1, y1, x2, y2
-    ROI1 = [0, 165, 330, 285]
-    ROI2 = [330, 165, 640, 285]
-    ROI3 = [redTarget - 50, 150, greenTarget + 50, 350]
-    ROI4 = [200, 350, 440, 350]
+    #ROI1 = [0, 165, 330, 285]
+    #ROI2 = [330, 165, 640, 285]
+    
+    parkingR = False
+    parkingL = False
+    
+    ROI1 = [0, 165, 330, 255]
+    ROI2 = [330, 165, 640, 255]
+    #ROI1 = [20, 170, 240, 220]
+    #ROI2 = [400, 170, 620, 220]
+    ROI3 = [redTarget - 50, 130, greenTarget + 50, 350]
+    ROI4 = [200, 250, 440, 300]
+    #ROI5 = [220, 130, 270, 200]
+    #ROI6 = [370, 130, 410, 200]
+    
+    ROIs = [ROI1, ROI2, ROI3, ROI4]
 
     #booleans for tracking whether car is in a left or right turn
     lTurn = False
@@ -96,7 +94,7 @@ if __name__ == '__main__':
 
     cKp = 0.17 #value of proportional for proportional steering for avoiding signal pillars
     cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-    cy = 0.075 #value used to affect pd steering based on how close the pillar is based on its y coordinate
+    cy = 0.125 #value used to affect pd steering based on how close the pillar is based on its y coordinate
   
     straightConst = 90 #angle in which car goes straight
     exitThresh = 4000 #if area of both lanes is over this threshold car exits a turn
@@ -107,7 +105,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1630 #variable for initial speed of the car
+    speed = 1650 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
     #reverseSpeed = 1615 #variable for speed of the car going backwards
     
@@ -163,6 +161,9 @@ if __name__ == '__main__':
     
         contours_right, hierarchy = cv2.findContours(imgThresh[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], 
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        
+        contours_parking, hierarchy = cv2.findContours(imgThresh[ROI4[1]:ROI4[3], ROI4[0]:ROI4[2]], 
+        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         #iterate through every contour in both the left and right region of interest and take the largest one in each
         for cnt in contours_left:
@@ -179,7 +180,7 @@ if __name__ == '__main__':
         img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         #create red mask
-        lower_red = np.array([165, 175, 50])
+        lower_red = np.array([173, 175, 50])
         upper_red = np.array([180, 255, 255])
       
         r_mask = cv2.inRange(img_hsv, lower_red, upper_red)
@@ -217,6 +218,21 @@ if __name__ == '__main__':
         #find orange contours to detect the lines on the mat
         contours_orange = cv2.findContours(o_mask[ROI4[1]:ROI4[3], ROI4[0]:ROI4[2]], cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
+        #create magenta mask
+        lm = np.array([168, 175, 50])
+        um = np.array([172, 255, 255])
+
+        m_mask = cv2.inRange(img_hsv, lm, um)
+
+        #find magenta contours to detect the parking lot
+        contours_magenta_l = cv2.findContours(m_mask[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
+        contours_magenta_r = cv2.findContours(m_mask[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
+        num_pillars = 0
 
         #iterate through green contours
         for i in range(len(contours_green)):
@@ -224,6 +240,7 @@ if __name__ == '__main__':
           area = cv2.contourArea(cnt)
 
           if area > 100:
+              num_pillars += 1
             
               #get width, height, and x and y coordinates by bounding rect
               approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
@@ -237,7 +254,7 @@ if __name__ == '__main__':
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
 
               #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
-              if y > contY: 
+              if y > contY:
                 contY = y
                 contX = x + w // 2
                 cTarget = greenTarget
@@ -248,6 +265,7 @@ if __name__ == '__main__':
           area = cv2.contourArea(cnt)
 
           if area > 100:
+              num_pillars += 1
             
               #get width, height, and x and y coordinates by bounding rect
               approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
@@ -261,10 +279,17 @@ if __name__ == '__main__':
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
 
               #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
-              if y > contY: 
+              if y > contY:
                 contY = y
                 contX = x + w // 2
                 cTarget = redTarget
+        
+        print("num pillars:", num_pillars, end = " ")
+        
+        if num_pillars >= 2:
+            cy = 0.075
+        else:
+            cy = 0.125
 
         #iterate through orange contours
         for i in range(len(contours_orange)):
@@ -313,14 +338,65 @@ if __name__ == '__main__':
 
                       #set tTurn and tSignal to true to indicate a left turn
                       lTurn = True
-                      tSignal = True 
+                      tSignal = True
+                      
+        
+        if t >= 13:
+            if turnDir == "right":
+                cy = 0.175
+                redTarget = greenTarget
+            elif turnDir == "left": 
+                greenTarget = redTarget
+                      
+        maxAreaL = 0
+        maxAreaR = 0
+        areaFront = 0
+        
+        for i in range(len(contours_magenta_l)):
+            cnt = contours_magenta_l[i]
+            maxAreaL = max(cv2.contourArea(cnt), maxAreaL)
+        
+        for i in range(len(contours_magenta_r)):
+            cnt = contours_magenta_r[i]
+            maxAreaR = max(cv2.contourArea(cnt), maxAreaR)
+            
+        for i in range(len(contours_parking)):
+            cnt = contours_parking[i]
+            areaFront = max(cv2.contourArea(cnt), areaFront)
+            
+        mDiff = maxAreaR- maxAreaL
+        
+        if areaFront > 7000:
+            time.sleep(0.2)
+            stopCar()
+            break
+        
+        if (maxAreaL > 3200 or (rTurn and maxAreaL > 100)) and t >= 12:
+            
+            if not parkingL and not parkingR:
+                parkingL = True
+            
+            if parkingL: 
+                angle = sharpLeft
+            
+        
+        elif (maxAreaR > 3200 or (lTurn and maxAreaR > 100)) and t >= 12:
+            if not parkingL and not parkingR:
+                parkingR = True
+            
+            if parkingR: 
+                angle = sharpRight
                   
         #if cTarget is 0 meaning no pillar is detected
-        if cTarget == 0:
+        if cTarget == 0 and not parkingL and not parkingR:
+            '''
+            
+            
+            elif not parkingL and not parkingR:
+            '''
 
             #calculate the difference in the left and right lane areas
             aDiff = rightArea - leftArea
-            print(aDiff)
             #calculate angle using PD steering
             angle = max(0, int(straightConst + aDiff * kp + (aDiff - prevDiff) * kd))
 
@@ -340,7 +416,7 @@ if __name__ == '__main__':
             
 
         #if pillar is detected
-        else:
+        elif not parkingR and not parkingL:
           
             #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
             if (lTurn or rTurn) and not tSignal:
@@ -356,9 +432,12 @@ if __name__ == '__main__':
                 #add a turn
                 t += 1
 
-                #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 3 
+                #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 3
+                '''
                 if t == 12:
                     stopCar()
+                    break
+                '''
             
             #calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
             error = cTarget - contX
@@ -415,17 +494,19 @@ if __name__ == '__main__':
                   #increase number of turns by 1
                   t += 1
 
-                  #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 2 
+                  #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 2
+                  '''
                   if t == 12:
                       stopCar()
                       break
                       
-                      '''
+                      
                       stopTime = time.time()
                       if s == 0:
                           write(tSpeed) 
                           s = 1
-                      '''
+                      
+                  '''
 
             #if in a right turn and no pillar is detected set the angle to sharpRight
             if rTurn and cTarget == 0:
@@ -453,7 +534,7 @@ if __name__ == '__main__':
         cTarget = 0
         
         #display regions of interest
-        displayROI()
+        displayROI(ROIs)
 
         #show image
         print("turns", t)
