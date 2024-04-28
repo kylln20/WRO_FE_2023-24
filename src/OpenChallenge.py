@@ -9,13 +9,14 @@ import RPi.GPIO as GPIO
 import numpy as np
 import threading
 import HiwonderSDK.Board as Board
+import time
 
 #function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 def write(motor, value):
     
     if(motor == "servo"):
         pulseWidth = int(11.1*value+500)
-        Board.setPWMServoPulse(1, pulseWidth, 100)
+        Board.setPWMServoPulse(1, pulseWidth, 1)
     
     elif(motor == "dc"):
         Board.setPWMServoPulse(5, value, 100)
@@ -24,7 +25,7 @@ def write(motor, value):
         
 #function to bring the car to a stop
 def stopCar():
-    write("servo", 90)
+    write("servo", 87)
     write("dc", 1500)
 
 #function which displays the regions of interest on the image
@@ -67,26 +68,26 @@ if __name__ == '__main__':
   
     t = 0 #number of turns car has completed
     
-    kp = 0.005 #value of proportional for proportional steering
-    kd = 0.005 #value of derivative for proportional and derivative sterring
+    kp = 0.006 #value of proportional for proportional steering
+    kd = 0.006 #value of derivative for proportional and derivative sterring
     
-    straightConst = 90 #angle in which car goes straight
+    straightConst = 87 #angle in which car goes straight
 
-    turnThresh = 100 #if area of a lane is under this threshold car goes into a turn
+    turnThresh = 150 #if area of a lane is under this threshold car goes into a turn
     exitThresh = 1500 #if area of both lanes is over this threshold car exits a turn
   
-    angle = 90 #variable for the current angle of the car
+    angle = 87 #variable for the current angle of the car
     prevAngle = angle #variable tracking the angle of the previous iteration
     tDeviation = 25 #value used to calculate the how far left and right the car turns during a turn
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1630 #variable for the speed of the car
+    speed = 1650 #variable for the speed of the car
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
     
-    #write("dc", 1500) 
+    write("dc", 1500) 
 
     sleep(8) #delay 8 seconds for the servo to be ready
     
@@ -99,6 +100,8 @@ if __name__ == '__main__':
 
     #main loop
     while True:
+        
+        #time.sleep(1)
           
         #declare variables for the areas of the left and right contours
         rightArea, leftArea = 0, 0
@@ -207,9 +210,11 @@ if __name__ == '__main__':
 
               #write angle to arduino to change servo
               write("servo", angle)
+              time.sleep(0.01)
             #if not in a turn write the angle and if the angle is over sharpLeft or sharpRight values it will be rounded down to those values
             else:
                 write("servo", max(min(angle, sharpLeft), sharpRight))
+                time.sleep(0.01)
           
         #update previous area difference
         prevDiff = aDiff
