@@ -34,7 +34,7 @@ def displayROI(ROIs):
 def stopCar():
     #write(1438)
     #sleep(1)
-    write("servo", 90)
+    write("servo", 87)
     write("dc", 1500)
     cv2.destroyAllWindows()
 
@@ -96,16 +96,16 @@ if __name__ == '__main__':
     cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
     cy = 0.125 #value used to affect pd steering based on how close the pillar is based on its y coordinate
   
-    straightConst = 90 #angle in which car goes straight
+    straightConst = 87 #angle in which car goes straight
     exitThresh = 4000 #if area of both lanes is over this threshold car exits a turn
   
-    angle = 90#variable for the current angle of the car
+    angle = 87#variable for the current angle of the car
     prevAngle = angle #variable tracking the angle of the previous iteration
     tDeviation = 40 #value used to calculate the how far left and right the car turns during a turn
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1650 #variable for initial speed of the car
+    speed = 1640 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
     #reverseSpeed = 1615 #variable for speed of the car going backwards
     
@@ -125,6 +125,8 @@ if __name__ == '__main__':
     t = 0 #tracks number of turns
     
     tSignal = False #boolean that makes sure that a pillar doesn't affect a turn too early
+    
+    write("dc", 1500) 
 
     sleep(8) #delay 8 seconds for the servo to be ready
     
@@ -284,12 +286,37 @@ if __name__ == '__main__':
                 contX = x + w // 2
                 cTarget = redTarget
         
-        print("num pillars:", num_pillars, end = " ")
+        #print("num pillars:", num_pillars, end = " ")
         
         if num_pillars >= 2:
-            cy = 0.075
+            cy = 0.05
+            
+            kp = 0.007 #value of proportional for proportional steering
+            kd = 0.007  #value of derivative for proportional and derivative sterring
+            
+            cKp = 0.15 #value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.15 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+            
+            
+        elif num_pillars == 1:
+            
+            kp = 0.007 #value of proportional for proportional steering
+            kd = 0.007  #value of derivative for proportional and derivative sterring
+            
+            cKp = 0.20 #value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.20 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+            
+            cy = 0.15
+        
         else:
-            cy = 0.125
+            
+            kp = 0.007 #value of proportional for proportional steering
+            kd = 0.007  #value of derivative for proportional and derivative sterring
+            
+            cKp = 0.17 #value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+            
+            cy = 0.15
 
         #iterate through orange contours
         for i in range(len(contours_orange)):
@@ -341,9 +368,9 @@ if __name__ == '__main__':
                       tSignal = True
                       
         
-        if t >= 13:
+        if t >= 0:
             if turnDir == "right":
-                cy = 0.175
+                #cy = 0.175
                 redTarget = greenTarget
             elif turnDir == "left": 
                 greenTarget = redTarget
@@ -365,22 +392,26 @@ if __name__ == '__main__':
             areaFront = max(cv2.contourArea(cnt), areaFront)
             
         mDiff = maxAreaR- maxAreaL
+        print(mDiff)
         
         if areaFront > 7000:
-            time.sleep(0.2)
+            time.sleep(0.3)
             stopCar()
             break
         
-        if (maxAreaL > 3200 or (rTurn and maxAreaL > 100)) and t >= 12:
+        if ((maxAreaL > 700 and num_pillars == 0) or (maxAreaL > 2000 and num_pillars == 1) or (rTurn and maxAreaL > 300)) and t >= 0:
             
             if not parkingL and not parkingR:
                 parkingL = True
+                
+            
+            time.sleep(0.5)
             
             if parkingL: 
                 angle = sharpLeft
             
         
-        elif (maxAreaR > 3200 or (lTurn and maxAreaR > 100)) and t >= 12:
+        elif (maxAreaR > 3200 or (lTurn and maxAreaR > 100)) and t >= 0:
             if not parkingL and not parkingR:
                 parkingR = True
             
@@ -409,10 +440,10 @@ if __name__ == '__main__':
                 #if the last pillar the car passed was green take a hard right turn and if the last pillar was red take a hard left turn
                 if lastTarget == greenTarget:
                     angle = sharpRight
-                    print("green")
+                    #print("green")
                 elif lastTarget == redTarget:
                     angle = sharpLeft
-                    print("red")
+                    #print("red")
             
 
         #if pillar is detected
@@ -535,8 +566,10 @@ if __name__ == '__main__':
         
         #display regions of interest
         displayROI(ROIs)
+        
+        #time.sleep(0.1)
 
         #show image
-        print("turns", t)
+        #print("turns", t)
         cv2.imshow("finalColor", img) 
 
