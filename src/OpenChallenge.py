@@ -22,11 +22,30 @@ def write(motor, value):
         Board.setPWMServoPulse(5, value, 100)
         #print("no motor")
         
+
+def buzz():
+
+    Board.setBuzzer(1)
+    time.sleep(0.5)
+    Board.setBuzzer(0)
+    
+def LED1(r, g, b):
+    Board.RGB.setPixelColor(0, Board.PixelColor(r, g, b))
+    Board.RGB.show()
+    
+def LED2(r, g, b):
+    Board.RGB.setPixelColor(1, Board.PixelColor(r, g, b))
+    Board.RGB.show()
+        
         
 #function to bring the car to a stop
 def stopCar():
     write("servo", 87)
     write("dc", 1500)
+    
+    if debug:
+        LED1(0, 0, 0)
+        LED2(0, 0, 0)
 
 #function which displays the regions of interest on the image
 def displayROI():
@@ -87,16 +106,36 @@ if __name__ == '__main__':
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
     
-    write("dc", 1500) 
+    write("dc", 1500)
+    LED1(255, 0, 0)
 
     sleep(8) #delay 8 seconds for the servo to be ready
+
+    #boolean tracking whether the orange line on the mat is detected
+    lDetected = False
+    
+    debug = False
+    key2_pin = 16
+    
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(key2_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+    
+    
+    LED1(0, 255, 0)
+    
+    if len(sys.argv) > 1 and sys.argv[1] == "Debug":
+        debug = True
+    else:
+        buzz()
+        while GPIO.input(key2_pin) == GPIO.HIGH:
+            pass
+        
+    if debug: 
+        LED2(0, 0, 255)
     
     #write initial values to car
     write("dc", speed) 
     write("servo", angle)
-
-    #boolean tracking whether the orange line on the mat is detected
-    lDetected = False
 
     #main loop
     while True:
@@ -177,10 +216,15 @@ if __name__ == '__main__':
         #if the area of either lane is less than or equal to turnThresh and the car is not in a turn going the other direction, set the boolean of the respective direction turn to true
         if leftArea <= turnThresh and not rTurn:
             lTurn = True
+            
+            if debug: 
+                LED1(255, 0, 0)
 
         elif rightArea <= turnThresh and not lTurn:
-            print("turned right")
+            #print("turned right")
             rTurn = True
+            if debug: 
+                LED1(255, 0, 0)
 
         #if angle is different from previous angle
         if angle != prevAngle:
@@ -192,6 +236,9 @@ if __name__ == '__main__':
                   #set turn variables to false as turn is over
                   lTurn = False 
                   rTurn = False
+                  
+                  if debug: 
+                      LED1(0, 255, 0)
 
                   #reset prevDiff
                   prevDiff = 0 
@@ -199,6 +246,14 @@ if __name__ == '__main__':
                   #increase number of turns by 1 only if the orange line has been detected 
                   if lDetected: 
                       t += 1
+                      
+                      if debug: 
+                          if t == 4:
+                              LED2(255, 255, 0)
+                          elif t == 8:
+                              LED2(255, 255, 255)
+                        
+                      
                       lDetected = False
 
               #if car is still in a left turn set the angle to the maximum of angle and sharpLeft
@@ -218,20 +273,27 @@ if __name__ == '__main__':
           
         #update previous area difference
         prevDiff = aDiff
-            
-        #stop the car and end the program if either q is pressed or the car has done 3 laps (12 turns) and is mostly straight (within 15 degrees)
-        if cv2.waitKey(1)==ord('q') or (t == 12 and abs(angle - straightConst) <= 10):
+        
+        prevAngle = angle #update previous angle
+        
+        if t == 12 and abs(angle - straightConst) <= 10:
             sleep(2)
             stopCar() 
             break
-        
-        prevAngle = angle #update previous angle
-      
-        #display regions of interest
-        displayROI()
+    
+        if debug: 
+            
+            #stop the car and end the program if either q is pressed or the car has done 3 laps (12 turns) and is mostly straight (within 15 degrees)
+            if cv2.waitKey(1)==ord('q'):
+                stopCar() 
+                break
+          
+            #display regions of interest
+            displayROI()
 
-        #show image
-        cv2.imshow("finalColor", img)
+            #show image
+            cv2.imshow("finalColor", img)
               
-    #close all image windows
-    cv2.destroyAllWindows()
+    if debug: 
+        #close all image windows
+        cv2.destroyAllWindows()
