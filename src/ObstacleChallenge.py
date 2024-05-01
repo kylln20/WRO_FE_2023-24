@@ -30,12 +30,30 @@ def displayROI(ROIs):
         image = cv2.line(img, (ROI[2], ROI[3]), (ROI[2], ROI[1]), (0, 255, 255), 4)
         image = cv2.line(img, (ROI[2], ROI[3]), (ROI[0], ROI[3]), (0, 255, 255), 4)
 
+def buzz():
+
+    Board.setBuzzer(1)
+    time.sleep(0.5)
+    Board.setBuzzer(0)
+    
+def LED1(r, g, b):
+    Board.RGB.setPixelColor(0, Board.PixelColor(r, g, b))
+    Board.RGB.show()
+    
+def LED2(r, g, b):
+    Board.RGB.setPixelColor(1, Board.PixelColor(r, g, b))
+    Board.RGB.show()
+
 #function to bring the car to a stop
 def stopCar():
     #write(1438)
     #sleep(1)
     write("servo", 87)
     write("dc", 1500)
+    
+    LED1(0, 0, 0)
+    LED2(0, 0, 0)
+    
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
@@ -107,7 +125,7 @@ if __name__ == '__main__':
     
     speed = 1640 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
-    #reverseSpeed = 1615 #variable for speed of the car going backwards
+    reverseSpeed = 1350 #variable for speed of the car going backwards
     
     stopTime = 0 #stores the time of when the car begins its stopping progress
     s = 0 #stores for how many seconds the car runs after stopTime
@@ -126,9 +144,37 @@ if __name__ == '__main__':
     
     tSignal = False #boolean that makes sure that a pillar doesn't affect a turn too early
     
+    LED1(255, 0, 0)
+    
     write("dc", 1500) 
 
     sleep(8) #delay 8 seconds for the servo to be ready
+    
+    debug = False
+    pl = False
+    pr = False
+    key2_pin = 16
+    
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(key2_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+    
+    
+    LED1(0, 255, 0)
+    
+    if len(sys.argv) > 1:
+        debug = True
+        
+        if sys.argv[1].lower() == "parkingl":
+            pl = True
+        elif sys.argv[1].lower() == "parkingr":
+            pr = True
+
+    else:
+        buzz()
+        while GPIO.input(key2_pin) == GPIO.HIGH:
+            pass
+        
+    LED1(0, 0, 0)
     
     #write initial values to car
     write("dc", speed) 
@@ -368,11 +414,11 @@ if __name__ == '__main__':
                       tSignal = True
                       
         
-        if t >= 0:
-            if turnDir == "right":
+        if t >= 12 or pl or pr:
+            if turnDir == "right" or pl:
                 #cy = 0.175
                 redTarget = greenTarget
-            elif turnDir == "left": 
+            elif turnDir == "left" or pr: 
                 greenTarget = redTarget
                       
         maxAreaL = 0
@@ -399,21 +445,25 @@ if __name__ == '__main__':
             stopCar()
             break
         
-        if ((maxAreaL > 700 and num_pillars == 0) or (maxAreaL > 2000 and num_pillars == 1) or (rTurn and maxAreaL > 300)) and t >= 0:
+        if ((maxAreaL > 700 and num_pillars == 0) or (maxAreaL > 2000 and num_pillars == 1) or (rTurn and maxAreaL > 300)) and (t >= 12 or pl):
             
             if not parkingL and not parkingR:
                 parkingL = True
+                if debug: 
+                    LED1(255, 0, 255)
                 
-            
             time.sleep(0.5)
             
             if parkingL: 
                 angle = sharpLeft
             
         
-        elif (maxAreaR > 3200 or (lTurn and maxAreaR > 100)) and t >= 0:
+        elif (maxAreaR > 3200 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
             if not parkingL and not parkingR:
                 parkingR = True
+                
+                if debug: 
+                    LED1(220, 255, 125)
             
             if parkingR: 
                 angle = sharpRight
@@ -425,6 +475,8 @@ if __name__ == '__main__':
             
             elif not parkingL and not parkingR:
             '''
+            
+            LED1(0, 0, 0)
 
             #calculate the difference in the left and right lane areas
             aDiff = rightArea - leftArea
@@ -448,6 +500,12 @@ if __name__ == '__main__':
 
         #if pillar is detected
         elif not parkingR and not parkingL:
+            
+            if debug:
+                if cTarget == redTarget:
+                    LED1(255, 0, 0)
+                elif cTarget == greenTarget:
+                    LED1(0, 255, 0)
           
             #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
             if (lTurn or rTurn) and not tSignal:
@@ -550,10 +608,7 @@ if __name__ == '__main__':
             #write the angle which is kept in the bounds of sharpLeft and sharpRight
             write("servo", max(min(angle, sharpLeft), sharpRight))
                 
-        #if q is pressed break out of main loop and stop the car
-        if cv2.waitKey(1)==ord('q'):
-            stopCar() 
-            break
+        
 
         prevAngle = angle #update previous angle
         tSignal = False #reset tSignal
@@ -564,12 +619,20 @@ if __name__ == '__main__':
         contX = 0
         cTarget = 0
         
-        #display regions of interest
-        displayROI(ROIs)
+        if debug: 
         
-        #time.sleep(0.1)
+            #if q is pressed break out of main loop and stop the car
+            if cv2.waitKey(1)==ord('q'):
+                stopCar() 
+                break
+            
+            #display regions of interest
+            displayROI(ROIs)
+            
+            #time.sleep(0.1)
 
-        #show image
-        #print("turns", t)
-        cv2.imshow("finalColor", img) 
+            #show image
+            #print("turns", t)
+            cv2.imshow("finalColor", img) 
 
+cv2.destroyAllWindows()
