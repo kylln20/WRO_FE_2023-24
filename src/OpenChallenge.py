@@ -130,6 +130,8 @@ if __name__ == '__main__':
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
         
+    LED1(0, 0, 0)
+        
     if debug: 
         LED2(0, 0, 255)
     
