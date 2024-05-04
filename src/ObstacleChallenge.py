@@ -76,6 +76,7 @@ if __name__ == '__main__':
 
     #boolean that is used for when the car has to turn around to the opposite direction so the car can complete the last lap the other way around
     reverse = False
+    tempR = ""
 
     #boolean storing the only direction the car is turning during the run
     turnDir = "none" 
@@ -153,6 +154,7 @@ if __name__ == '__main__':
     debug = False
     pl = False
     pr = False
+    mReverse = False
     key2_pin = 16
     
     GPIO.setmode(GPIO.BOARD)
@@ -168,6 +170,9 @@ if __name__ == '__main__':
             pl = True
         elif sys.argv[1].lower() == "parkingr":
             pr = True
+        elif sys.argv[1].lower() == "turn":
+            mReverse = True
+        
 
     else:
         buzz()
@@ -349,8 +354,8 @@ if __name__ == '__main__':
             kp = 0.007 #value of proportional for proportional steering
             kd = 0.007  #value of derivative for proportional and derivative sterring
             
-            cKp = 0.20 #value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.20 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+            cKp = 0.17 #value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
             
             cy = 0.15
         
@@ -378,16 +383,9 @@ if __name__ == '__main__':
               #if the turn direction is right
               if turnDir == "right":
 
-                  #if the last pillar we passed is red and we have already completed 7 turns meaning this is the 8th turn 
-                  #if lastTarget == redTarget and t == 7:
-
-#                       reverse = True #set reverse to true so the car turns and reverses its direction
-                      #turnDir = "left" #change the turn direction as we are heading in the opposite direction
-                  #else:
-
-                      #set tTurn and tSignal to true to indicate a right turn
-                      rTurn = True
-                      tSignal = True                  
+                  #set tTurn and tSignal to true to indicate a right turn
+                  rTurn = True
+                  tSignal = True                  
 
         #iterate through blue contours
         for i in range(len(contours_blue)):
@@ -402,16 +400,9 @@ if __name__ == '__main__':
               #if the turn direction is left
               if turnDir == "left":
 
-                  #if the last pillar we passed is red and we have already completed 7 turns meaning this is the 8th turn 
-                  #if lastTarget == redTarget and t == 7:
-                    
-                      #reverse = True #set reverse to true so the car turns and reverses its direction
-                      #turnDir = "right" #change the turn direction as we are heading in the opposite direction
-                  #else:
-
-                      #set tTurn and tSignal to true to indicate a left turn
-                      lTurn = True
-                      tSignal = True
+                  #set tTurn and tSignal to true to indicate a left turn
+                  lTurn = True
+                  tSignal = True
                       
         
         if t >= 12 or pl or pr:
@@ -476,6 +467,15 @@ if __name__ == '__main__':
             elif not parkingL and not parkingR:
             '''
             
+            if tempR == "w":
+                if turnDir == "right":
+                    turnDir == "left"
+                else:
+                    turnDir = "right"
+                    
+                reverse = True
+                tempR = "d"
+            
             LED1(0, 0, 0)
 
             #calculate the difference in the left and right lane areas
@@ -520,6 +520,9 @@ if __name__ == '__main__':
 
                 #add a turn
                 t += 1
+                
+                if (t == 8 or mReverse) and cTarget == redTarget:
+                    tempR = "w"
 
                 #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 3
                 '''
@@ -550,26 +553,37 @@ if __name__ == '__main__':
             angle = max(0, angle)
 
         #if the car needs to turn around to the opposite direction
-        '''
+        
         if reverse:
 
-            #code to implement a three point turn
-            write(tSpeed)
-            write(2098 + 50)
-            sleep(1.5)
-            write(1500)
-            sleep(1)
-            write(reverseSpeed)
-            write(2098 - 60)
-            sleep(1.5)
-            write(1500)
-            sleep(1)
-            write(speed)
-           
-            #set reverse to false as the turn is over and add 2 to t to make up for the missing turns
+            LED1(0, 0, 255)
+            write("dc", 1645) 
+            write("servo", sharpLeft)
+            
+            if tempR == "d": 
+                time.sleep(5)
+            else:
+                time.sleep(2.5)
+                
+            write("dc", 1500)
+            time.sleep(0.5)
+            write("servo", sharpRight)
+            write("dc", reverseSpeed)
+            time.sleep(4)
+            write("dc", 1500)
+            time.sleep(0.5)
+            write("dc", speed)
+            #write("servo", sharpLeft)
+            #write("dc", speed)
+            #time.sleep(4)
+            
             reverse = False
-            t += 2
-        '''
+            
+            if mReverse:
+                stopCar()
+                break
+            
+        
         #if angle is different from previous angle
         if angle != prevAngle:
           
@@ -582,6 +596,16 @@ if __name__ == '__main__':
               
                   #increase number of turns by 1
                   t += 1
+                  
+                  if (t == 8 or mReverse) and lastTarget == redTarget:
+                      reverse = True
+                      
+                      if turnDir == "right":
+                        turnDir == "left"
+                      else:
+                        turnDir = "right"
+                            
+                        reverse = True
 
                   #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 2
                   '''
@@ -632,7 +656,8 @@ if __name__ == '__main__':
             #time.sleep(0.1)
 
             #show image
-            #print("turns", t)
+            print("turns", t)
+
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
