@@ -22,9 +22,9 @@ This repository details Team <>’s building and programming process in creating
 
 (insert info about HAT)
   
-    Our car uses a Furitek Micro Komodo Brushless Motor with the Furitek Lizard Pro Electronic Speed Controller (ESC). A brushless motor was chosen over a brushed motor since the latter is powered by direct contact, and can wear down over time. A brushless motor in comparison, has a longer lifespan. Additionally a brushless motor has greater torque, efficiency, and acceleration than a brushed motor. 
+  Our car uses a Furitek Micro Komodo Brushless Motor with the Furitek Lizard Pro Electronic Speed Controller (ESC). A brushless motor was chosen over a brushed motor since the latter is powered by direct contact, and can wear down over time. A brushless motor in comparison, has a longer lifespan. Additionally a brushless motor has greater torque, efficiency, and acceleration than a brushed motor. 
     
-    To control steering, we have a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. Specifically, our new servo has a three-wire connection, which we can connect and power with the HAT.
+  To control steering, we have a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. Specifically, our new servo has a three-wire connection, which we can connect and power with the HAT.
 
 ## Components
 * Brushless Motor and ESC: [Furitek Komodo Motor + Lizard Pro ESC](https://www.xtremerc.ca/products/furitek-scx24-stinger-brushless-power-system-w-1212-3450kv-brushless-motor?_pos=1&amp;_sid=cf7c35a05&amp;_ss=r)
