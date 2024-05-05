@@ -20,7 +20,7 @@ This repository details Team <>’s building and programming process in creating
 ## Mobility
   Last year, we used a pre-built 1/18 scale RC car (26.5 cm in length). However, with the addition of the magenta parking lot in the obstacle challenge, we decided that we wanted a smaller chassis. Since the length of the parking lot is always 20 cm, by choosing a car of shorter length then 20 cm, we avoid having to parallel park. As such, we chose a 1/24 scale RC car (15 cm in length).
   
-  <insert info about HAT>
+- insert info about HAT
   
     Our car uses a Furitek Micro Komodo Brushless Motor with the Furitek Lizard Pro Electronic Speed Controller (ESC). A brushless motor was chosen over a brushed motor since the latter is powered by direct contact, and can wear down over time. A brushless motor in comparison, has a longer lifespan. Additionally a brushless motor has greater torque, efficiency, and acceleration than a brushed motor. 
     
