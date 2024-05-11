@@ -69,8 +69,8 @@ if __name__ == '__main__':
     picam2.start()
 
     #set the target x coordinates for each red and green pillar
-    redTarget = 130 #160
-    greenTarget = 510 #480
+    redTarget = 120 #160
+    greenTarget = 520 #480
 
     #variable that keeps track of the target of the last pillar the car has passed
     lastTarget = 0
@@ -95,11 +95,16 @@ if __name__ == '__main__':
     parkingL = False
     tempParking = False
     
+    prevPillarCountR = 0
+    prevPillarCountG = 0
+    
+    state = False
+    
     ROI1 = [0, 165, 330, 255]
     ROI2 = [330, 165, 640, 255]
     #ROI1 = [20, 170, 240, 220]
     #ROI2 = [400, 170, 620, 220]
-    ROI3 = [redTarget - 50, 130, greenTarget + 50, 350]
+    ROI3 = [redTarget - 50, 100, greenTarget + 50, 350]
     ROI4 = [200, 250, 440, 300]
     #ROI5 = [220, 130, 270, 200]
     #ROI6 = [370, 130, 410, 200]
@@ -126,9 +131,9 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1645 #variable for initial speed of the car
+    speed = 1650 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
-    reverseSpeed = 1350 #variable for speed of the car going backwards
+    reverseSpeed = 1340 #variable for speed of the car going backwards
     
     stopTime = 0 #stores the time of when the car begins its stopping progress
     s = 0 #stores for how many seconds the car runs after stopTime
@@ -143,6 +148,8 @@ if __name__ == '__main__':
     contX = 0 #stores x value of the current signal pillar
     contY = 0 #stores y value of the current signal pillar
     pArea = 0
+    
+    close = False
     
     t = 0 #tracks number of turns
     
@@ -292,6 +299,8 @@ if __name__ == '__main__':
         
         num_pillars_g = 0
         num_pillars_r = 0
+        
+        yDiff = 480 
 
         #iterate through green contours
         for i in range(len(contours_green)):
@@ -315,13 +324,17 @@ if __name__ == '__main__':
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
+              
+              yDiff = min(yDiff, abs(contY - y))
 
               #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
-              if (y > contY or abs(contY - y) <= 5) and area > pArea:
+              if ((y > contY or abs(contY - y) <= 5) and area > pArea) or contY > ROI3[3] - 70:
                 contY = y
                 contX = x + w // 2
                 cTarget = greenTarget
                 pArea = area
+                
+              
 
         #iterate through red contours
         for i in range(len(contours_red)):
@@ -347,33 +360,84 @@ if __name__ == '__main__':
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
 
               #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
-              if (y > contY or abs(contY - y) <= 5) and area > pArea:
+              
+              yDiff = min(yDiff, abs(contY - y))
+              
+              if ((y > contY or abs(contY - y) <= 5) and area > pArea)  or contY > ROI3[3] - 70:
                 contY = y
                 contX = x + w // 2
                 cTarget = redTarget
                 pArea = area
+                
+              
         
         #print("num pillars:", num_pillars, end = " ")
         
+        if yDiff <= 100:
+            close = True
+        
+        
+        if not state:
+                if (num_pillars_r == 1 and prevPillarCountR == 2 and close) or (num_pillars_g == 1 and prevPillarCountG == 2 and close):
+                    close = False
+                    state = True
+                        
+        if state:
+            if num_pillars_r == 0 and num_pillars_g == 0:
+                state = False
+                
+        
         if num_pillars_r >= 2 or num_pillars_g >= 2:
-            cy = 0.07
+            cy = 0.1
             
-            kp = 0.005 #value of proportional for proportional steering
-            kd = 0.005  #value of derivative for proportional and derivative sterring
+            kp = 0.003 #value of proportional for proportional steering
+            kd = 0.003  #value of derivative for proportional and derivative sterring
+            
+            cKp = 0.20 #0.15 value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.20 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
+            
+            redTarget = 130
+            greenTarget = 510
+            
+            ROI3 = [redTarget - 50, 120, greenTarget + 50, 350]
+            
+            
+            LED2(0, 0, 0)
+            
+        elif state:
+            
+            LED2(255, 255, 255)
+            
+            cy = 0.1
+            
+            kp = 0.003 #value of proportional for proportional steering
+            kd = 0.003  #value of derivative for proportional and derivative sterring
             
             cKp = 0.15 #0.15 value of proportional for proportional steering for avoiding signal pillars
             cKd = 0.15 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
             
+            redTarget = 130
+            greenTarget = 510
+            
+            ROI3 = [redTarget - 10, 120, greenTarget + 10, 350]
             
         else:
             
-            kp = 0.007 #value of proportional for proportional steering
-            kd = 0.007  #value of derivative for proportional and derivative sterring
+            LED2(0, 0, 0)
             
-            cKp = 0.17 #value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
             
-            cy = 0.15
+            cy = 0.125
+            
+            kp = 0.01 #value of proportional for proportional steering
+            kd = 0.01  #value of derivative for proportional and derivative sterring
+            
+            cKp = 0.2 #0.15 value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.2 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
+            
+            redTarget = 120
+            greenTarget = 520
+            
+            ROI3 = [redTarget - 50, 120, greenTarget + 50, 350]
         
 
         #iterate through orange contours
@@ -487,6 +551,8 @@ if __name__ == '__main__':
                 tempParking = True
             
             LED1(0, 0, 0)
+            
+            close = False
 
             #calculate the difference in the left and right lane areas
             aDiff = rightArea - leftArea
@@ -517,7 +583,7 @@ if __name__ == '__main__':
                 elif cTarget == greenTarget:
                     LED1(0, 255, 0)
           
-            #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
+            #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn # and not tSignal
             if (lTurn or rTurn) and not tSignal:
 
                 #reset prevError and prevDiff 
@@ -527,6 +593,8 @@ if __name__ == '__main__':
                 #reset lTurn and rTurn booleans to indicate the turn is over
                 lTurn = False
                 rTurn = False
+                
+                
 
                 #add a turn
                 t += 1
@@ -568,30 +636,61 @@ if __name__ == '__main__':
 
             LED1(0, 0, 255)
             
+            if turnDir == "left": 
             
-            if tempR == "d":
-                write("dc", 1645) 
-                write("servo", sharpLeft)
-                time.sleep(5)
-            else:
+                if tempR == "d":
+                    write("dc", 1660) 
+                    write("servo", sharpLeft)
+                    time.sleep(5)
+                else:
 
-                write("dc", 1645) 
-                write("servo", straightConst)
-                time.sleep(1)
-                write("servo", sharpLeft)
-                time.sleep(2.5)
+                    write("dc", 1660) 
+                    write("servo", straightConst)
+                    time.sleep(1)
+                    write("servo", sharpLeft)
+                    time.sleep(2.5)
+                    
+                write("dc", 1500)
+                time.sleep(0.5)
+                write("servo", sharpRight)
+                write("dc", reverseSpeed)
+                time.sleep(4)
+                write("dc", 1500)
+                time.sleep(0.5)
+                write("dc", speed)
+                #write("servo", sharpLeft)
+                #write("dc", speed)
+                #time.sleep(4)
+            
+            else:
                 
-            write("dc", 1500)
-            time.sleep(0.5)
-            write("servo", sharpRight)
-            write("dc", reverseSpeed)
-            time.sleep(4)
-            write("dc", 1500)
-            time.sleep(0.5)
-            write("dc", speed)
-            #write("servo", sharpLeft)
-            #write("dc", speed)
-            #time.sleep(4)
+                '''
+                if tempR == "d":
+                    write("dc", 1660) 
+                    write("servo", sharpRight)
+                    time.sleep(5)
+                else:
+
+                    write("dc", 1660) 
+                    write("servo", straightConst)
+                    time.sleep(1)
+                    write("servo", sharpRight)
+                    time.sleep(2.5)
+                '''
+                
+                write("dc", 1500)
+                time.sleep(0.5)
+                write("servo", sharpLeft)
+                write("dc", reverseSpeed)
+                time.sleep(5)
+                write("dc", 1500)
+                time.sleep(0.5)
+                write("dc", speed)
+                write("servo", sharpRight)
+                write("dc", speed)
+                time.sleep(1)
+                
+                
             
             reverse = False
             
@@ -659,6 +758,8 @@ if __name__ == '__main__':
         contX = 0
         cTarget = 0
         pArea = 0
+        prevPillarCountR = num_pillars_r
+        prevPillarCountG = num_pillars_g
         
         if debug: 
         
