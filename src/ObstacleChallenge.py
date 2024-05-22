@@ -104,7 +104,7 @@ if __name__ == '__main__':
     ROI2 = [330, 165, 640, 255]
     #ROI1 = [20, 170, 240, 220]
     #ROI2 = [400, 170, 620, 220]
-    ROI3 = [redTarget - 50, 100, greenTarget + 50, 350]
+    ROI3 = [redTarget - 50, 100, greenTarget + 50, 300]
     ROI4 = [200, 250, 440, 300]
     #ROI5 = [220, 130, 270, 200]
     #ROI6 = [370, 130, 410, 200]
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1650 #variable for initial speed of the car
+    speed = 1645 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
     reverseSpeed = 1340 #variable for speed of the car going backwards
     
@@ -328,7 +328,7 @@ if __name__ == '__main__':
               yDiff = min(yDiff, abs(contY - y))
 
               #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
-              if ((y > contY or abs(contY - y) <= 5) and area > pArea) or contY > ROI3[3] - 70:
+              if ((y > contY or abs(contY - y) <= 5) and area > pArea):
                 contY = y
                 contX = x + w // 2
                 cTarget = greenTarget
@@ -359,11 +359,11 @@ if __name__ == '__main__':
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
 
-              #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
+              #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means te current pillar is closer than the previous one
               
               yDiff = min(yDiff, abs(contY - y))
               
-              if ((y > contY or abs(contY - y) <= 5) and area > pArea)  or contY > ROI3[3] - 70:
+              if ((y > contY or abs(contY - y) <= 5) and area > pArea):
                 contY = y
                 contX = x + w // 2
                 cTarget = redTarget
@@ -399,7 +399,7 @@ if __name__ == '__main__':
             redTarget = 130
             greenTarget = 510
             
-            ROI3 = [redTarget - 50, 120, greenTarget + 50, 350]
+            ROI3 = [redTarget - 50, 125, greenTarget + 50, 350]
             
             
             LED2(0, 0, 0)
@@ -419,7 +419,7 @@ if __name__ == '__main__':
             redTarget = 130
             greenTarget = 510
             
-            ROI3 = [redTarget - 10, 120, greenTarget + 10, 350]
+            ROI3 = [redTarget - 10, 125, greenTarget + 10, 350]
             
         else:
             
@@ -478,8 +478,10 @@ if __name__ == '__main__':
         
         if (t >= 12 and tempParking) or pl or pr:
             if turnDir == "right" or pl:
+                
                 #cy = 0.175
                 redTarget = greenTarget
+                ROI3 = [redTarget - 50, 180, greenTarget + 50, 350]
             elif turnDir == "left" or pr: 
                 greenTarget = redTarget
                       
@@ -507,7 +509,7 @@ if __name__ == '__main__':
             stopCar()
             break
         
-        if ((maxAreaL > 700 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 300)) and (t >= 12 or pl):
+        if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
             
             if not parkingL and not parkingR:
                 parkingL = True
@@ -520,7 +522,7 @@ if __name__ == '__main__':
                 angle = sharpLeft
             
         
-        elif (maxAreaR > 3200 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
+        elif (maxAreaR > 3800 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
             if not parkingL and not parkingR:
                 parkingR = True
                 
