@@ -3,14 +3,11 @@ import cv2
 import sys
 sys.path.append('/home/pi/TurboPi/')
 from picamera2 import Picamera2
-import serial
-from time import sleep
 import time
 import RPi.GPIO as GPIO
 import numpy as np
 import HiwonderSDK.Board as Board
 
-#function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 #function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 def write(motor, value):
     
@@ -20,7 +17,6 @@ def write(motor, value):
     
     elif(motor == "dc"):
         Board.setPWMServoPulse(5, value, 100)
-        #print("no motor")
 
 #function which displays the Regions of Interest on the image
 def displayROI(ROIs):
@@ -30,12 +26,14 @@ def displayROI(ROIs):
         image = cv2.line(img, (ROI[2], ROI[3]), (ROI[2], ROI[1]), (0, 255, 255), 4)
         image = cv2.line(img, (ROI[2], ROI[3]), (ROI[0], ROI[3]), (0, 255, 255), 4)
 
+#controls buzzer
 def buzz():
 
     Board.setBuzzer(1)
     time.sleep(0.5)
     Board.setBuzzer(0)
-    
+
+#functions to control each on board LED
 def LED1(r, g, b):
     Board.RGB.setPixelColor(0, Board.PixelColor(r, g, b))
     Board.RGB.show()
@@ -46,8 +44,7 @@ def LED2(r, g, b):
 
 #function to bring the car to a stop
 def stopCar():
-    #write(1438)
-    #sleep(1)
+
     write("servo", 87)
     
     write("dc", 1500)
@@ -77,6 +74,7 @@ if __name__ == '__main__':
 
     #boolean that is used for when the car has to turn around to the opposite direction so the car can complete the last lap the other way around
     reverse = False
+
     tempR = ""
 
     #boolean storing the only direction the car is turning during the run
@@ -91,15 +89,21 @@ if __name__ == '__main__':
     #ROI1 = [0, 165, 330, 285]
     #ROI2 = [330, 165, 640, 285]
     
+    #variables to indicate when the car should park and whether it parks on the right or left side
     parkingR = False
     parkingL = False
+
+    #makes sure the car begins to park when no pillar is detected
     tempParking = False
     
+    #counts the previous number of red and green pillars
     prevPillarCountR = 0
     prevPillarCountG = 0
     
+    #variable for a state when 2 pillars were previously seen and only 1 pillar is currently seen
     state = False
     
+    #regions of interest
     ROI1 = [0, 165, 330, 255]
     ROI2 = [330, 165, 640, 255]
     #ROI1 = [20, 170, 240, 220]
@@ -147,9 +151,9 @@ if __name__ == '__main__':
     cTarget = 0 #stores the target x coordinate for the current signal pillar, stays 0 if there is no signal pillar
     contX = 0 #stores x value of the current signal pillar
     contY = 0 #stores y value of the current signal pillar
-    pArea = 0
+    pArea = 0 #stores the area of a signal pillar
     
-    close = False
+    close = False #boolean indicating whether a signal pillar is within a certain proximity of the camera
     
     t = 0 #tracks number of turns
     
@@ -159,12 +163,14 @@ if __name__ == '__main__':
     
     write("dc", 1500) 
 
-    sleep(8) #delay 8 seconds for the servo to be ready
+    time.sleep(8) #delay 8 seconds for the servo to be ready
     
-    debug = False
-    pl = False
-    pr = False
-    mReverse = False
+    debug = False #boolean for debug mode
+    pl = False #variable for left parking mode, a debug mode where it parks immedietly for testing purposes
+    pr = False #variable for right parking mode, a debug mode where it parks immedietly for testing purposes
+    mReverse = False #variable for reverse mode, a debug mode where it goes directly into a 3 point turn
+
+    #code for starting button
     key2_pin = 16
     
     GPIO.setmode(GPIO.BOARD)
@@ -173,6 +179,7 @@ if __name__ == '__main__':
     
     LED1(0, 255, 0)
     
+    #set mode based on program arguments
     if len(sys.argv) > 1:
         debug = True
         
@@ -185,7 +192,7 @@ if __name__ == '__main__':
         elif sys.argv[1].lower() == "steer":
             speed = 1500
         
-
+    #if no mode is specified, assume the regular program and wait for button put
     else:
         buzz()
         while GPIO.input(key2_pin) == GPIO.HIGH:
@@ -199,14 +206,6 @@ if __name__ == '__main__':
 
     #main loop
     while True:
-
-        #if s seconds has passed after the car began the stopping process, end the program and stop the car
-        '''
-        if stopTime != 0:
-            if time.time() - stopTime > s:
-                stopCar()
-                break
-        '''
             
         #reset rightArea, and leftArea variables
         rightArea, leftArea = 0, 0
@@ -226,7 +225,8 @@ if __name__ == '__main__':
     
         contours_right, hierarchy = cv2.findContours(imgThresh[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], 
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        
+
+        #find black contours in the parking region of interest to determine when to stop during parking
         contours_parking, hierarchy = cv2.findContours(imgThresh[ROI4[1]:ROI4[3], ROI4[0]:ROI4[2]], 
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
@@ -297,9 +297,11 @@ if __name__ == '__main__':
         contours_magenta_r = cv2.findContours(m_mask[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
+        #count number of red and green pillars
         num_pillars_g = 0
         num_pillars_r = 0
         
+        #stores distance between the y coordinates of 2 signal pillars
         yDiff = 480 
 
         #iterate through green contours
@@ -310,8 +312,6 @@ if __name__ == '__main__':
           if area > 100:
               num_pillars_g += 1
               
-              
-            
               #get width, height, and x and y coordinates by bounding rect
               approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
               x,y,w,h=cv2.boundingRect(approx)
@@ -325,17 +325,16 @@ if __name__ == '__main__':
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
               
+              #update the y difference of the pillars
               yDiff = min(yDiff, abs(contY - y))
 
-              #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means the current pillar is closer than the previous one
+              #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if ((y > contY or abs(contY - y) <= 5) and area > pArea):
                 contY = y
                 contX = x + w // 2
                 cTarget = greenTarget
                 pArea = area
                 
-              
-
         #iterate through red contours
         for i in range(len(contours_red)):
           cnt = contours_red[i]
@@ -345,7 +344,6 @@ if __name__ == '__main__':
               
               num_pillars_r += 1
               
-            
               #get width, height, and x and y coordinates by bounding rect
               approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
               x,y,w,h=cv2.boundingRect(approx)
@@ -358,25 +356,24 @@ if __name__ == '__main__':
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-
-              #if the y value is bigger than the previous contY value update contY, contX, and cTarget since this means te current pillar is closer than the previous one
               
+              #update the y difference of the pillars
               yDiff = min(yDiff, abs(contY - y))
               
+              #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if ((y > contY or abs(contY - y) <= 5) and area > pArea):
                 contY = y
                 contX = x + w // 2
                 cTarget = redTarget
                 pArea = area
-                
-              
         
         #print("num pillars:", num_pillars, end = " ")
         
+        #if the difference between the current pillar and another pillar is below 100 set close to true
         if yDiff <= 100:
             close = True
         
-        
+        #state is a variable
         if not state:
                 if (num_pillars_r == 1 and prevPillarCountR == 2 and close) or (num_pillars_g == 1 and prevPillarCountG == 2 and close):
                     close = False
@@ -386,7 +383,7 @@ if __name__ == '__main__':
             if num_pillars_r == 0 and num_pillars_g == 0:
                 state = False
                 
-        
+        #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if num_pillars_r >= 2 or num_pillars_g >= 2:
             cy = 0.1
             
@@ -401,9 +398,9 @@ if __name__ == '__main__':
             
             ROI3 = [redTarget - 50, 125, greenTarget + 50, 350]
             
-            
             LED2(0, 0, 0)
-            
+        
+        #state is a state where there was previously 2 pillars of the same colour and now there is one meaning we are in the second half of an inside corner turn, if state is true, change control variables
         elif state:
             
             LED2(255, 255, 255)
@@ -420,11 +417,11 @@ if __name__ == '__main__':
             greenTarget = 510
             
             ROI3 = [redTarget - 10, 125, greenTarget + 10, 350]
-            
+
+        #any other combination of number of pillars
         else:
             
             LED2(0, 0, 0)
-            
             
             cy = 0.125
             
@@ -476,6 +473,8 @@ if __name__ == '__main__':
                   tSignal = True
                       
         
+        #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
+        #do the same if pl and pr are true (debugging mode)
         if (t >= 12 and tempParking) or pl or pr:
             if turnDir == "right" or pl:
                 
@@ -484,10 +483,11 @@ if __name__ == '__main__':
                 ROI3 = [redTarget - 50, 180, greenTarget + 50, 350]
             elif turnDir == "left" or pr: 
                 greenTarget = redTarget
-                      
-        maxAreaL = 0
-        maxAreaR = 0
-        areaFront = 0
+        
+        
+        maxAreaL = 0 #biggest magenta contour on left ROI
+        maxAreaR = 0 #biggest magenta contour on right ROI
+        areaFront = 0 #area of black contour on main ROI
         
         for i in range(len(contours_magenta_l)):
             cnt = contours_magenta_l[i]
@@ -500,15 +500,14 @@ if __name__ == '__main__':
         for i in range(len(contours_parking)):
             cnt = contours_parking[i]
             areaFront = max(cv2.contourArea(cnt), areaFront)
-            
-        mDiff = maxAreaR- maxAreaL
-        print(mDiff)
         
+        #if the area of the wall in front is above a limit stop as we are very close to the wall
         if areaFront > 7000:
             time.sleep(0.3)
             stopCar()
             break
-        
+
+        #conditions for initiating parking on the left side
         if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
             
             if not parkingL and not parkingR:
@@ -520,8 +519,8 @@ if __name__ == '__main__':
             
             if parkingL: 
                 angle = sharpLeft
-            
-        
+
+        #conditions for initiating parking on the right side
         elif (maxAreaR > 3800 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
             if not parkingL and not parkingR:
                 parkingR = True
@@ -534,12 +533,9 @@ if __name__ == '__main__':
                   
         #if cTarget is 0 meaning no pillar is detected
         if cTarget == 0 and not parkingL and not parkingR:
-            '''
-            
-            
-            elif not parkingL and not parkingR:
-            '''
-            
+
+            #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
+            #setting tempR to "d" allows for us to alter the three-point turn process slightly for this special case
             if tempR == "w":
                 if turnDir == "right":
                     turnDir == "left"
@@ -548,12 +544,15 @@ if __name__ == '__main__':
                     
                 reverse = True
                 tempR = "d"
-            
+
+
+            #set tempParking to true after 12 turns to indicate pillars should be passed on the outside
             if not tempParking and t == 12:
                 tempParking = True
             
             LED1(0, 0, 0)
             
+            #since no pillar is detected none can be close so set close to false
             close = False
 
             #calculate the difference in the left and right lane areas
@@ -585,7 +584,8 @@ if __name__ == '__main__':
                 elif cTarget == greenTarget:
                     LED1(0, 255, 0)
           
-            #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn # and not tSignal
+            #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
+            #in this case the turn is finished while still seeing a pillar
             if (lTurn or rTurn) and not tSignal:
 
                 #reset prevError and prevDiff 
@@ -596,20 +596,14 @@ if __name__ == '__main__':
                 lTurn = False
                 rTurn = False
                 
-                
-
                 #add a turn
                 t += 1
-                
+
+                #if a turn is added and we still see a pillar, set tempR to "w" and wait for no pillars to be detected in future iterations
+                #do this only if 2 laps is completed and pillar is red 
+                #also do this if mReverse is true (debugging purposes)
                 if (t == 8 or mReverse) and cTarget == redTarget:
                     tempR = "w"
-
-                #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 3
-                '''
-                if t == 12:
-                    stopCar()
-                    break
-                '''
             
             #calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
             error = cTarget - contX
@@ -632,14 +626,15 @@ if __name__ == '__main__':
             #make sure angle value is over 2000 
             angle = max(0, angle)
 
-        #if the car needs to turn around to the opposite direction
-        
+        #sequence for three-point turn
         if reverse:
 
             LED1(0, 0, 255)
             
             if turnDir == "left": 
-            
+
+
+                #special case when a pillar had to be passed first before the three-point turn could start
                 if tempR == "d":
                     write("dc", 1660) 
                     write("servo", sharpLeft)
@@ -664,7 +659,7 @@ if __name__ == '__main__':
                 #write("dc", speed)
                 #time.sleep(4)
             
-            else:
+            else: #turn sequence if turn direction is right
                 
                 '''
                 if tempR == "d":
@@ -692,10 +687,9 @@ if __name__ == '__main__':
                 write("dc", speed)
                 time.sleep(1)
                 
-                
-            
             reverse = False
             
+            #end the program if we just wanted to see the three-point turn
             if mReverse:
                 stopCar()
                 break
@@ -712,8 +706,10 @@ if __name__ == '__main__':
                   rTurn = False
               
                   #increase number of turns by 1
+                  #in this case the turn is ended without seeing a pillar
                   t += 1
                   
+                  #if 2 laps have been completed or mReverse is true (debugging mode) and the last pillar is red initiate a regular three point turn
                   if (t == 8 or mReverse) and lastTarget == redTarget:
                       reverse = True
                       
@@ -721,22 +717,6 @@ if __name__ == '__main__':
                         turnDir == "left"
                       else:
                         turnDir = "right"
-                            
-                        reverse = True
-
-                  #if car is done 3 laps begin the stopping process by setting stopTime to the current time and s to 2
-                  '''
-                  if t == 12:
-                      stopCar()
-                      break
-                      
-                      
-                      stopTime = time.time()
-                      if s == 0:
-                          write(tSpeed) 
-                          s = 1
-                      
-                  '''
 
             #if in a right turn and no pillar is detected set the angle to sharpRight
             if rTurn and cTarget == 0:
@@ -749,8 +729,6 @@ if __name__ == '__main__':
             #write the angle which is kept in the bounds of sharpLeft and sharpRight
             write("servo", max(min(angle, sharpLeft), sharpRight))
                 
-        
-
         prevAngle = angle #update previous angle
         tSignal = False #reset tSignal
         
@@ -763,6 +741,7 @@ if __name__ == '__main__':
         prevPillarCountR = num_pillars_r
         prevPillarCountG = num_pillars_g
         
+        #additional debugging information in debugging mode
         if debug: 
         
             #if q is pressed break out of main loop and stop the car
