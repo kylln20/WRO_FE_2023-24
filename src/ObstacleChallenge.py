@@ -285,17 +285,19 @@ if __name__ == '__main__':
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         #create magenta mask
-        lm = np.array([168, 175, 50])
-        um = np.array([172, 255, 255])
 
-        m_mask = cv2.inRange(img_hsv, lm, um)
+        if tempParking: 
+            lm = np.array([168, 175, 50])
+            um = np.array([172, 255, 255])
 
-        #find magenta contours to detect the parking lot
-        contours_magenta_l = cv2.findContours(m_mask[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE)[-2]
-        
-        contours_magenta_r = cv2.findContours(m_mask[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE)[-2]
+            m_mask = cv2.inRange(img_hsv, lm, um)
+
+            #find magenta contours to detect the parking lot
+            contours_magenta_l = cv2.findContours(m_mask[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE)[-2]
+            
+            contours_magenta_r = cv2.findContours(m_mask[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         #count number of red and green pillars
         num_pillars_g = 0
@@ -475,6 +477,7 @@ if __name__ == '__main__':
         
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
+
         if (t >= 12 and tempParking) or pl or pr:
             if turnDir == "right" or pl:
                 
@@ -483,53 +486,53 @@ if __name__ == '__main__':
                 ROI3 = [redTarget - 50, 180, greenTarget + 50, 350]
             elif turnDir == "left" or pr: 
                 greenTarget = redTarget
-        
-        
-        maxAreaL = 0 #biggest magenta contour on left ROI
-        maxAreaR = 0 #biggest magenta contour on right ROI
-        areaFront = 0 #area of black contour on main ROI
-        
-        for i in range(len(contours_magenta_l)):
-            cnt = contours_magenta_l[i]
-            maxAreaL = max(cv2.contourArea(cnt), maxAreaL)
-        
-        for i in range(len(contours_magenta_r)):
-            cnt = contours_magenta_r[i]
-            maxAreaR = max(cv2.contourArea(cnt), maxAreaR)
-            
-        for i in range(len(contours_parking)):
-            cnt = contours_parking[i]
-            areaFront = max(cv2.contourArea(cnt), areaFront)
-        
+
         #if the area of the wall in front is above a limit stop as we are very close to the wall
         if areaFront > 7000:
             time.sleep(0.3)
             stopCar()
             break
-
-        #conditions for initiating parking on the left side
-        if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
+        
+        if tempParking or pr or pl: 
+            maxAreaL = 0 #biggest magenta contour on left ROI
+            maxAreaR = 0 #biggest magenta contour on right ROI
+            areaFront = 0 #area of black contour on main ROI
             
-            if not parkingL and not parkingR:
-                parkingL = True
-                if debug: 
-                    LED1(255, 0, 255)
+            for i in range(len(contours_magenta_l)):
+                cnt = contours_magenta_l[i]
+                maxAreaL = max(cv2.contourArea(cnt), maxAreaL)
+            
+            for i in range(len(contours_magenta_r)):
+                cnt = contours_magenta_r[i]
+                maxAreaR = max(cv2.contourArea(cnt), maxAreaR)
                 
-            time.sleep(0.5)
-            
-            if parkingL: 
-                angle = sharpLeft
+            for i in range(len(contours_parking)):
+                cnt = contours_parking[i]
+                areaFront = max(cv2.contourArea(cnt), areaFront)
 
-        #conditions for initiating parking on the right side
-        elif (maxAreaR > 3800 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
-            if not parkingL and not parkingR:
-                parkingR = True
+            #conditions for initiating parking on the left side
+            if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
                 
-                if debug: 
-                    LED1(220, 255, 125)
-            
-            if parkingR: 
-                angle = sharpRight
+                if not parkingL and not parkingR:
+                    parkingL = True
+                    if debug: 
+                        LED1(255, 0, 255)
+                    
+                time.sleep(0.5)
+                
+                if parkingL: 
+                    angle = sharpLeft
+
+            #conditions for initiating parking on the right side
+            elif (maxAreaR > 3800 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
+                if not parkingL and not parkingR:
+                    parkingR = True
+                    
+                    if debug: 
+                        LED1(220, 255, 125)
+                
+                if parkingR: 
+                    angle = sharpRight
                   
         #if cTarget is 0 meaning no pillar is detected
         if cTarget == 0 and not parkingL and not parkingR:
