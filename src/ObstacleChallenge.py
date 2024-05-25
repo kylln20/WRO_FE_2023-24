@@ -7,6 +7,7 @@ import time
 import RPi.GPIO as GPIO
 import numpy as np
 import HiwonderSDK.Board as Board
+import math
 
 #function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 def write(motor, value):
@@ -102,6 +103,12 @@ if __name__ == '__main__':
     
     #variable for a state when 2 pillars were previously seen and only 1 pillar is currently seen
     state = False
+    
+    #determines the offset from the bottom of the ROI when the car should stop seeing a pillar
+    endConst = 30
+    
+    #distance from a pillar to the car
+    pDist = 0
     
     #regions of interest
     ROI1 = [0, 165, 330, 255]
@@ -255,8 +262,8 @@ if __name__ == '__main__':
         cv2.CHAIN_APPROX_SIMPLE)[-2]
 
         #create green mask
-        lower_green = np.array([60, 80, 40])
-        upper_green = np.array([95, 255, 255])
+        lower_green = np.array([58, 62, 55])
+        upper_green = np.array([96, 255, 255])
 
         g_mask = cv2.inRange(img_hsv, lower_green, upper_green)
 
@@ -304,7 +311,8 @@ if __name__ == '__main__':
         num_pillars_r = 0
         
         #stores distance between the y coordinates of 2 signal pillars
-        yDiff = 480 
+        yDiff = 480
+        pDist = 100000
 
         #iterate through green contours
         for i in range(len(contours_green)):
@@ -327,15 +335,20 @@ if __name__ == '__main__':
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
               
+              if y > ROI3[3] - endConst:
+                  continue
+              
               #update the y difference of the pillars
               yDiff = min(yDiff, abs(contY - y))
+              
+              temp_dist = math.dist([x, y], [w/2, h])
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
-              if ((y > contY or abs(contY - y) <= 5) and area > pArea):
+              if temp_dist < pDist:
                 contY = y
                 contX = x + w // 2
                 cTarget = greenTarget
-                pArea = area
+                pDist = temp_dist
                 
         #iterate through red contours
         for i in range(len(contours_red)):
@@ -359,15 +372,20 @@ if __name__ == '__main__':
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
               
+              if y > ROI3[3] - endConst:
+                  continue
+              
               #update the y difference of the pillars
               yDiff = min(yDiff, abs(contY - y))
               
+              temp_dist = math.dist([x, y], [w/2, h])
+
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
-              if ((y > contY or abs(contY - y) <= 5) and area > pArea):
+              if temp_dist < pDist:
                 contY = y
                 contX = x + w // 2
                 cTarget = redTarget
-                pArea = area
+                pDist = temp_dist
         
         #print("num pillars:", num_pillars, end = " ")
         
@@ -385,8 +403,13 @@ if __name__ == '__main__':
             if num_pillars_r == 0 and num_pillars_g == 0:
                 state = False
                 
+        state = False
+                
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
-        if num_pillars_r >= 2 or num_pillars_g >= 2:
+        if (num_pillars_r >= 2 or num_pillars_g >= 2):
+            
+            '''
+            
             cy = 0.1
             
             kp = 0.003 #value of proportional for proportional steering
@@ -401,6 +424,27 @@ if __name__ == '__main__':
             ROI3 = [redTarget - 50, 125, greenTarget + 50, 350]
             
             LED2(0, 0, 0)
+            '''
+            
+            LED2(0, 0, 0)
+            
+            cy = 0.15
+            
+            kp = 0.01 #value of proportional for proportional steering
+            kd = 0.01  #value of derivative for proportional and derivative sterring
+            
+            cKp = 0.3 #0.15 value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.3 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
+            
+            redTarget = 120
+            greenTarget = 520
+            
+            ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
+            
+            endConst = 70
+            
+            if rightArea > 1000 and leftArea > 1000:
+                endConst = 0
         
         #state is a state where there was previously 2 pillars of the same colour and now there is one meaning we are in the second half of an inside corner turn, if state is true, change control variables
         elif state:
@@ -418,14 +462,14 @@ if __name__ == '__main__':
             redTarget = 130
             greenTarget = 510
             
-            ROI3 = [redTarget - 10, 125, greenTarget + 10, 350]
+            ROI3 = [redTarget - 20, 125, greenTarget + 20, 350]
 
         #any other combination of number of pillars
         else:
             
             LED2(0, 0, 0)
             
-            cy = 0.125
+            cy = 0.15
             
             kp = 0.01 #value of proportional for proportional steering
             kd = 0.01  #value of derivative for proportional and derivative sterring
@@ -436,7 +480,9 @@ if __name__ == '__main__':
             redTarget = 120
             greenTarget = 520
             
-            ROI3 = [redTarget - 50, 120, greenTarget + 50, 350]
+            ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
+            
+            endConst = 30
         
 
         #iterate through orange contours
@@ -486,6 +532,12 @@ if __name__ == '__main__':
                 ROI3 = [redTarget - 50, 180, greenTarget + 50, 350]
             elif turnDir == "left" or pr: 
                 greenTarget = redTarget
+        
+        areaFront = 0
+                
+        for i in range(len(contours_parking)):
+            cnt = contours_parking[i]
+            areaFront = max(cv2.contourArea(cnt), areaFront)
 
         #if the area of the wall in front is above a limit stop as we are very close to the wall
         if areaFront > 7000:
@@ -505,10 +557,6 @@ if __name__ == '__main__':
             for i in range(len(contours_magenta_r)):
                 cnt = contours_magenta_r[i]
                 maxAreaR = max(cv2.contourArea(cnt), maxAreaR)
-                
-            for i in range(len(contours_parking)):
-                cnt = contours_parking[i]
-                areaFront = max(cv2.contourArea(cnt), areaFront)
 
             #conditions for initiating parking on the left side
             if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
@@ -763,3 +811,4 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
+
