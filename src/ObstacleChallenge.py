@@ -29,7 +29,6 @@ def displayROI(ROIs):
 
 #controls buzzer
 def buzz():
-
     Board.setBuzzer(1)
     time.sleep(0.5)
     Board.setBuzzer(0)
@@ -115,7 +114,7 @@ if __name__ == '__main__':
     ROI2 = [330, 165, 640, 255]
     #ROI1 = [20, 170, 240, 220]
     #ROI2 = [400, 170, 620, 220]
-    ROI3 = [redTarget - 50, 100, greenTarget + 50, 300]
+    ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
     ROI4 = [200, 250, 440, 300]
     #ROI5 = [220, 130, 270, 200]
     #ROI6 = [370, 130, 410, 200]
@@ -126,12 +125,12 @@ if __name__ == '__main__':
     lTurn = False
     rTurn = False
   
-    kp = 0.005 #value of proportional for proportional steering
-    kd = 0.005  #value of derivative for proportional and derivative sterring
+    kp = 0.01 #value of proportional for proportional steering
+    kd = 0.01  #value of derivative for proportional and derivative sterring
 
-    cKp = 0.17 #value of proportional for proportional steering for avoiding signal pillars
-    cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-    cy = 0.125 #value used to affect pd steering based on how close the pillar is based on its y coordinate
+    cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
+    cKd = 0.2 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+    cy = 0.15 #value used to affect pd steering based on how close the pillar is based on its y coordinate
   
     straightConst = 87 #angle in which car goes straight
     exitThresh = 4000 #if area of both lanes is over this threshold car exits a turn
@@ -310,8 +309,7 @@ if __name__ == '__main__':
         num_pillars_g = 0
         num_pillars_r = 0
         
-        #stores distance between the y coordinates of 2 signal pillars
-        yDiff = 480
+        #distance of the pillar from the bottom middle of the screen
         pDist = 100000
 
         #iterate through green contours
@@ -341,10 +339,6 @@ if __name__ == '__main__':
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-        
-              
-              #update the y difference of the pillars
-              yDiff = min(yDiff, abs(contY - y))
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if temp_dist < pDist:
@@ -381,9 +375,6 @@ if __name__ == '__main__':
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-            
-              #update the y difference of the pillars
-              yDiff = min(yDiff, abs(contY - y))
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if temp_dist < pDist:
@@ -393,99 +384,21 @@ if __name__ == '__main__':
                 pDist = temp_dist
         
         #print("num pillars:", num_pillars, end = " ")
-        
-        #if the difference between the current pillar and another pillar is below 100 set close to true
-        if yDiff <= 100:
-            close = True
-        
-        #state is a variable
-        if not state:
-                if (num_pillars_r == 1 and prevPillarCountR == 2 and close) or (num_pillars_g == 1 and prevPillarCountG == 2 and close):
-                    close = False
-                    state = True
-                        
-        if state:
-            if num_pillars_r == 0 and num_pillars_g == 0:
-                state = False
-                
-        state = False
-                
+    
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
             
-            '''
-            
-            cy = 0.1
-            
-            kp = 0.003 #value of proportional for proportional steering
-            kd = 0.003  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.20 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.20 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 130
-            greenTarget = 510
-            
-            ROI3 = [redTarget - 50, 125, greenTarget + 50, 350]
-            
             LED2(0, 0, 0)
-            '''
-            
-            LED2(0, 0, 0)
-            
-            cy = 0.15
-            
-            kp = 0.01 #value of proportional for proportional steering
-            kd = 0.01  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.3 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.3 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 120
-            greenTarget = 520
-            
-            ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
             
             endConst = 70
             
             if rightArea > 1000 and leftArea > 1000:
                 endConst = 0
         
-        #state is a state where there was previously 2 pillars of the same colour and now there is one meaning we are in the second half of an inside corner turn, if state is true, change control variables
-        elif state:
-            
-            LED2(255, 255, 255)
-            
-            cy = 0.1
-            
-            kp = 0.003 #value of proportional for proportional steering
-            kd = 0.003  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.15 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.15 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 130
-            greenTarget = 510
-            
-            ROI3 = [redTarget - 20, 125, greenTarget + 20, 350]
-
         #any other combination of number of pillars
         else:
             
             LED2(0, 0, 0)
-            
-            cy = 0.15
-            
-            kp = 0.01 #value of proportional for proportional steering
-            kd = 0.01  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.2 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.2 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 120
-            greenTarget = 520
-            
-            ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
             
             endConst = 30
         
@@ -750,7 +663,6 @@ if __name__ == '__main__':
                 stopCar()
                 break
             
-        
         #if angle is different from previous angle
         if angle != prevAngle:
           
@@ -816,4 +728,3 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
-
