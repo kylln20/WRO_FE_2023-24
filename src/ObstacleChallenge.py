@@ -142,7 +142,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1645 #variable for initial speed of the car
+    speed = 1643 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
     reverseSpeed = 1340 #variable for speed of the car going backwards
     
@@ -331,17 +331,20 @@ if __name__ == '__main__':
               y += ROI3[1] + h
               
               print("green", area, y)
+              
+              temp_dist = math.dist([x, y], [320, 480])
+              
+              print(temp_dist, "pixels away")
+              
+              if y > ROI3[3] - endConst or temp_dist > 390:
+                  continue
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-              
-              if y > ROI3[3] - endConst:
-                  continue
+        
               
               #update the y difference of the pillars
               yDiff = min(yDiff, abs(contY - y))
-              
-              temp_dist = math.dist([x, y], [w/2, h])
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if temp_dist < pDist:
@@ -368,17 +371,19 @@ if __name__ == '__main__':
               y += ROI3[1] + h
               
               print("red", area, y)
+              
+              temp_dist = math.dist([x, y], [320, 480])
+              
+              print(temp_dist, "pixels away")
+              
+              if y > ROI3[3] - endConst or temp_dist > 390:
+                  continue
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-              
-              if y > ROI3[3] - endConst:
-                  continue
-              
+            
               #update the y difference of the pillars
               yDiff = min(yDiff, abs(contY - y))
-              
-              temp_dist = math.dist([x, y], [w/2, h])
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if temp_dist < pDist:
