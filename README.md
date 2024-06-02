@@ -37,13 +37,13 @@
   * `lorem` - 
   * `ipsum` - 
     
-* #### Design Process
+* ### Design Process
 
 &nbsp;
 
 ---
 
-## 🦿 Hardware 🦿
+# 🦿 Hardware 🦿
 
 &nbsp;
 
