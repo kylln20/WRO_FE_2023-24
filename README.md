@@ -5,7 +5,7 @@ Engineering Documentation
 
 > This repository details Team <>’s building and programming process in our second participating year of the 2024 WRO Future Engineers Competition.
 
-&nbsp;  
+&nbsp; 
 
 ---
 
@@ -18,7 +18,7 @@ Engineering Documentation
 * `v-photos` - robot photos
 * `video` - video demonstration
 
-&nbsp;  
+&nbsp; 
 
 ---
 
@@ -45,7 +45,7 @@ Engineering Documentation
 
 ## Hardware
 
-&nbsp; 
+&nbsp;
 
 ### Components
 
