@@ -19,7 +19,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 ## Content of README
 
 * #### Hardware
-  * Components - list of components 
+  * `Components` - list of components 
   * [`Mobility`](#mobility) - hardware for robot movement
   * `Sensors` - sensors used
   * `Electricity` - electrical wiring and circuit boards
@@ -37,14 +37,16 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Hardware
 
+### Components
+
+| Component | Product |
+| ----------- | ----------- |
+| Driving Motor | [motor name](https://www.examplelink.com) |
+
 ### Mobility
 
 <img src="v-photos/rock.webp" width="700" height=auto>
 
-| Syntax | Description |
-| ----------- | ----------- |
-| Header | Title |
-| Paragraph | Text |
 
 #### Chassis
 #### Drive Motor
