@@ -39,7 +39,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ### Components
 
-| Component | Product |
+| Name | Product |
 | ----------- | ----------- |
 | Driving Motor | [motor name](https://www.examplelink.com) |
 
