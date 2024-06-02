@@ -27,9 +27,9 @@
 * ### Hardware
   * [`Components`](#components) - list of components 
   * [`Mobility`](#mobility) - hardware for robot movement
-  * `Sensors` - sensors used
-  * `Electricity` - electrical wiring and circuit boards
-  * `Power` - power supply
+  * [`Sensors`](#sensors) - sensors used
+  * [`Electricity`](#electricity) - electrical wiring and circuit boards
+  * [`Power`](#power) - power supply
     
 * ### Software
   * `Object Detection` - 
