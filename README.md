@@ -9,7 +9,7 @@
 
 ---
 
-### Content of Repository 💻
+### 💻 Content of Repository 💻
 * `models` - 3D CAD files
 * `others` - other essential files
 * `schemes` - electrical schematics
@@ -22,7 +22,7 @@
 
 ---
 
-### Content of README 📖
+### 📖 Content of README 📖
 
 * #### Hardware
   * `Components` - list of components 
@@ -43,7 +43,7 @@
 
 ---
 
-## Hardware 🦿
+## 🦿 Hardware 🦿
 
 ### Components
 
