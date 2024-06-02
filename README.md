@@ -50,6 +50,13 @@ Engineering Documentation
 | Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
 | Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
 
+> * Brushless Motor and ESC: [Furitek Komodo Motor + Lizard Pro ESC](https://www.xtremerc.ca/products/furitek-scx24-stinger-brushless-power-system-w-1212-3450kv-brushless-motor?_pos=1&amp;_sid=cf7c35a05&amp;_ss=r)
+> * Raspberry Pi Fan: 
+> * CSI Camera: [DORHEA 160° Camera](https://www.amazon.com/Raspberry-Camera-Module-160FOV-Fisheye/dp/B083XMGSVP/)
+> * Servo Motor: [Hitech HS-5055MG](https://ca.robotshop.com/products/hs-5055mg-metal-gear-micro-servo-motor?srsltid=AfmBOopv8Z7LoCVOEqe16w05ZV-R78dNmy7dappldIxZiQzCJroxcssFc2Y)
+> * Raspberry Pi HAT Extension:
+> * RC Car Lipo Battery: 
+> * RC Car: [Carisma GT24](https://www.canadahobbies.ca/product/hobby-brands/carisma-rc/gt24-124th-4wd-toyota-celica-gt-four-st185-wrc/)
 
 ### Mobility
 
