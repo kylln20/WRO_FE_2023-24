@@ -74,7 +74,7 @@
 <img src="v-photos/rock.webp" width="700" height=auto>
 
 #### Chassis
-We use a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accomodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, instead of actually parallel parking. 
+We use the `chassis name`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accomodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, instead of actually parallel parking. 
 
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces friction within the motor, and provides a longer lifespan, greater torque, efficiency, and acceleration. 
