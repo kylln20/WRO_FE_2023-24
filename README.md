@@ -17,10 +17,20 @@ This repository details Team <>’s building and programming process in our 2nd 
 ---
 
 ## Content of README
-* #### Mobility
-* #### Power and Sensors
+
+* #### Hardware
+  * `Mobility` - hardware for robot movement
+  * `Sensors` - sensors used
+  * `Electricity` - electrical wiring and circuit boards
+  * `Power` - power supply
+    
 * #### Software
-* #### Design process
+  * `Object Detection` - 
+  * `Movement Logic` - 
+  * `poop` - 
+  * `pee` - 
+    
+* #### Design Process
 
 ---
 
