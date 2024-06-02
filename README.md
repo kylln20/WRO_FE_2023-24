@@ -24,14 +24,14 @@
 
 ## 📖 Content of README 📖
 
-* #### Hardware
+* ### Hardware
   * `Components` - list of components 
   * [`Mobility`](#mobility) - hardware for robot movement
   * `Sensors` - sensors used
   * `Electricity` - electrical wiring and circuit boards
   * `Power` - power supply
     
-* #### Software
+* ### Software
   * `Object Detection` - 
   * `Movement Logic` - 
   * `lorem` - 
