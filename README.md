@@ -1,6 +1,6 @@
 &nbsp;
 
-Engineering Documentation
+Engineering Documentation 🛠️
 ======
 
 > This repository details Team <>’s building and programming process in our second participating year of the 2024 WRO Future Engineers Competition.
