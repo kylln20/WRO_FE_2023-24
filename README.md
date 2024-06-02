@@ -86,7 +86,7 @@
 
 &nbsp;
 
-### Sensors
+### 👀 Sensors 👀
 
 #### Camera
  - information
