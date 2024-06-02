@@ -6,13 +6,13 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 
 ## Content of Repository
-* `models` - 3D printable files designed by us
-* `others` - other essential files (is for other files which can be used to understand how to prepare the vehicle for the competition. It may include documentation how to connect to a SBC/SBM and upload files there, datasets, hardware specifications, communication protocols descriptions etc. If there is nothing to add to this location, the directory can be removed.)
-* `schemes` - schematics of our robot's electrical systems
-* `src` - main code files and other programs to run/control software
-* `t-photos` - a serious and a funny photo of the team
-* `v-photos` - photos of our robot from each angle
-* `video` - YouTube link (video.md file needed?) of our robot running each program on the game field
+* `models` - 3D CAD files
+* `others` - other essential files
+* `schemes` - electrical schematics
+* `src` - main and other programs to run/control software
+* `t-photos` - team photos
+* `v-photos` - robot photos
+* `video` - video demonstration
 
 
 
