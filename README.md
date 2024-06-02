@@ -39,23 +39,17 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ### Components
 
-| Name | Product |
-| ----------- | ----------- |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
-| Driving motor | [`motor name`](https://www.examplelink.com) |
+| Name | Product | Price |
+| ----------- | ----------- | ----------- |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+| Driving motor | [`motor name`](https://www.examplelink.com) | $1000 |
+
 
 ### Mobility
 
