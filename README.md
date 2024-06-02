@@ -43,11 +43,11 @@
 
 ---
 
-## 🤖 Hardware 🤖
+## Hardware 🤖
 
 &nbsp;
 
-### ⚙️ Components ⚙️
+### Components ⚙️
 
 | Name | Product | Price |
 | ----------- | ----------- | ----------- |
@@ -71,7 +71,7 @@
 
 &nbsp;
 
-### 🚗 Mobility 🚗
+### Mobility 🚗
 
 <img src="v-photos/rock.webp" width="700" height=auto>
 
