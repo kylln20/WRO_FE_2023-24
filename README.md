@@ -60,6 +60,8 @@
 > * RC Car Lipo Battery: 
 > * RC Car: [Carisma GT24](https://www.canadahobbies.ca/product/hobby-brands/carisma-rc/gt24-124th-4wd-toyota-celica-gt-four-st185-wrc/)
 
+&nbsp;
+
 ### Mobility
 
 &nbsp;
