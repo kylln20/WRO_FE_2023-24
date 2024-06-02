@@ -3,6 +3,8 @@ Engineering Documentation
 
 *This repository details Team <>’s building and programming process in our 2nd participating year of the 2024 WRO Future Engineers Competition.*
 
+
+
 ## Content of Repository
 * `models` - 3D printable files designed by us
 * `others` - other essential files (is for other files which can be used to understand how to prepare the vehicle for the competition. It may include documentation how to connect to a SBC/SBM and upload files there, datasets, hardware specifications, communication protocols descriptions etc. If there is nothing to add to this location, the directory can be removed.)
@@ -14,7 +16,7 @@ Engineering Documentation
 
 
 
-# Content of README
+## Content of README
 * Mobility
 * Power and Sensors
 * Software and Code
