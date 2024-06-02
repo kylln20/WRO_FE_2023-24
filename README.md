@@ -45,9 +45,9 @@
 
 ## 🦿 Hardware 🦿
 
-### Components
-
 &nbsp;
+
+### Components
 
 | Name | Product | Price |
 | ----------- | ----------- | ----------- |
