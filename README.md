@@ -70,10 +70,12 @@
 
 <img src="v-photos/rock.webp" width="700" height=auto>
 
-
 #### Chassis
+ - information
 #### Drive Motor
+ - information
 #### Turning Motor
+ - information
 
 ## Components
 * Brushless Motor and ESC: [Furitek Komodo Motor + Lizard Pro ESC](https://www.xtremerc.ca/products/furitek-scx24-stinger-brushless-power-system-w-1212-3450kv-brushless-motor?_pos=1&amp;_sid=cf7c35a05&amp;_ss=r)
