@@ -75,9 +75,7 @@
 
 <img src="v-photos/rock.webp" width="700" height=auto>
 
-&nbsp;
-
-<sup>*for a list of the components, please look [here](#components)</sup>
+<sup>*for a list of the components, please look [here](#components)*</sup>
 
 #### Chassis
  - information
