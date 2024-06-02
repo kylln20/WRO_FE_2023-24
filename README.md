@@ -1,6 +1,6 @@
 Engineering Documentation
 ======
-> This repository details Team <>’s building and programming process in our 2nd participating year of the 2024 WRO Future Engineers Competition.
+*This repository details Team <>’s building and programming process in our 2nd participating year of the 2024 WRO Future Engineers Competition.*
 
 # Content of Repository
 * `models` - 3D printable files designed by us
