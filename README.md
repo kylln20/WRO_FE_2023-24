@@ -60,9 +60,9 @@
 
 [^1]:This link is for the `Hiwonder TurboPi Car`, which uses the `HiWonder TurboPi HAT`. We contacted the manufacturer to purchase the HAT directly.
 
-[^2]:tax included
+<sup>tax included</sup>
 
-[^2]:3D printed parts were made with the [`BambuLab P1P`](https://www.examplelink.com)
+<sup>3D printed parts were made with the [`BambuLab P1P`](https://ca.store.bambulab.com/products/p1p)</sup>
 
 &nbsp;
 
