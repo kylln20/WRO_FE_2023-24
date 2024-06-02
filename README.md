@@ -47,6 +47,8 @@
 
 ### Components
 
+&nbsp;
+
 | Name | Product | Price |
 | ----------- | ----------- | ----------- |
 | Drive motor | [`motor name`](https://www.examplelink.com) | $1000 |
