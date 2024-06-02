@@ -27,8 +27,8 @@ This repository details Team <>’s building and programming process in our 2nd 
 * #### Software
   * `Object Detection` - 
   * `Movement Logic` - 
-  * `poop` - 
-  * `pee` - 
+  * `lorem` - 
+  * `ipsum` - 
     
 * #### Design Process
 
