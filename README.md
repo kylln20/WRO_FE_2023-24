@@ -19,7 +19,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 ## Content of README
 
 * #### Hardware
-  * `Mobility` - hardware for robot movement
+  * [`Mobility`](#mobility) - hardware for robot movement
   * `Sensors` - sensors used
   * `Electricity` - electrical wiring and circuit boards
   * `Power` - power supply
@@ -34,8 +34,12 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ---
 
+## Hardware
 
-## Mobility
+### Mobility {#mobility}
+
+*insert car img here*
+
   Last year, we used a pre-built 1/18 scale RC car (26.5 cm in length). However, with the addition of the magenta parking lot in the obstacle challenge, we decided that we wanted a smaller chassis. Since the length of the parking lot is always 20 cm, by choosing a car of shorter length then 20 cm, we avoid having to parallel park. As such, we chose a 1/24 scale RC car (15 cm in length).
 
 (insert info about HAT)
