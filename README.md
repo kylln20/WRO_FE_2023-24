@@ -19,7 +19,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 ## Content of README
 
 * #### Hardware
-  * [`Mobility`](#mobility) - hardware for robot movement
+  * [`Mobility`](#custom-id) - hardware for robot movement
   * `Sensors` - sensors used
   * `Electricity` - electrical wiring and circuit boards
   * `Power` - power supply
@@ -36,7 +36,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Hardware
 
-### Mobility {#mobility}
+### My Great Heading {#custom-id}
 
 *insert car img here*
 
