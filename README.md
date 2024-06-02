@@ -36,7 +36,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Hardware
 
-### Mobility
+#### Mobility
 
 *insert car img here*
 
