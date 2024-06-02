@@ -45,7 +45,7 @@ Engineering Documentation
 
 ## Hardware
 
-&nbsp;  
+&nbsp; 
 
 ### Components
 
