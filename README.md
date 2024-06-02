@@ -18,8 +18,6 @@ Engineering Documentation
 
 ---
 
-&nbsp;  
-
 ## Content of README
 
 * #### Hardware
@@ -40,8 +38,6 @@ Engineering Documentation
 &nbsp;
 
 ---
-
-&nbsp;  
 
 ## Hardware
 
