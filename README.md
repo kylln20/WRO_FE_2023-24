@@ -88,6 +88,9 @@
 
 ### Sensors
 
+#### Camera
+ - information
+
 &nbsp;
 
 ### Electricty
