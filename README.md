@@ -18,7 +18,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Content of README
 
-* #### Hardware
+* #### [Hardware](#hardware)
   * [`Mobility`](#mobility) - hardware for robot movement
   * `Sensors` - sensors used
   * `Electricity` - electrical wiring and circuit boards
