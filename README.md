@@ -40,6 +40,11 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 <img src="v-photos/rock.webp" width="700" height=auto>
 
+	| Syntax | Description |
+| ----------- | ----------- |
+| Header | Title |
+| Paragraph | Text |
+
 #### Chassis
 #### Drive Motor
 #### Turning Motor
