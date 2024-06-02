@@ -18,13 +18,13 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Content of README
 
-* #### [Hardware Components](#hardware)
+* #### Hardware
   * [`Mobility`](#mobility) - hardware for robot movement
   * `Sensors` - sensors used
   * `Electricity` - electrical wiring and circuit boards
   * `Power` - power supply
     
-* #### Software Components
+* #### Software
   * `Object Detection` - 
   * `Movement Logic` - 
   * `lorem` - 
