@@ -45,8 +45,6 @@
 
 ## 🤖 Hardware 🤖
 
-&nbsp;
-
 ### ⚙️ Components ⚙️
 
 | Name | Product | Price |
