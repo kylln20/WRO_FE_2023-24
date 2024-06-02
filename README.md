@@ -84,7 +84,7 @@ The Furitek Micro Komodo specifically is also very small compared to other RC ca
 #### Turning Motor
 To control steering, we have a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo that has a three-wire connection, which we can control and power with the Raspberry Pi HAT. 
 
-### ESC
+#### ESC
 To send signals to both these components, we use a Furitek Lizard Pro Electronic Speed Controller (ESC), which came with the brushless motor.
 
 &nbsp;
