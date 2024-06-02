@@ -17,7 +17,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 
 ## Content of README
-* #### Hardware {#hardware}
+* #### Hardware {#custom-id}
   * Mobility
   * Power and Sensors
 * #### Software
