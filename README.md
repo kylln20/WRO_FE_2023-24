@@ -25,7 +25,7 @@
 ## 📖 Content of README 📖
 
 * ### Hardware
- - [x] [`Components`](#components) - list of components 
+  * [`Components`](#components) - list of components 
   * [`Mobility`](#mobility) - hardware for robot movement
   * [`Sensors`](#sensors) - sensors used
   * [`Electricity`](#electricity) - electrical wiring and circuit boards
