@@ -77,7 +77,7 @@
 
 &nbsp;
 
-^*for a list of the components, please look [here](#components)^
+<sup>*for a list of the components, please look [here](#components)</sup>
 
 #### Chassis
  - information
