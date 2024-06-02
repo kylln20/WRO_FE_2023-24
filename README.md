@@ -43,7 +43,7 @@
 
 ---
 
-# 🦿 Hardware 🦿
+## 🦿 Hardware 🦿
 
 &nbsp;
 
