@@ -62,9 +62,11 @@
 
 ### Mobility
 
+&nbsp;
+
 <img src="v-photos/rock.webp" width="700" height=auto>
 
-*for a list of the components, please look [here](#components)*
+> *for a list of the components, please look [here](#components)*
 
 #### Chassis
  - information
