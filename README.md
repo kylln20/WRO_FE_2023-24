@@ -17,9 +17,10 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 
 ## Content of README
-* Mobility
-* Power and Sensors
-* Software and Code
+* Hardware
+  * Mobility
+  * Power and Sensors
+* Software 
 * Design Process (A better name could be made for this)
 
 ## Mobility
