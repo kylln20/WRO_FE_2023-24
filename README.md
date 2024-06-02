@@ -36,7 +36,7 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Hardware
 
-### My Great Heading {#custom-id}
+### [My Great Heading](#custom-id)
 
 *insert car img here*
 
