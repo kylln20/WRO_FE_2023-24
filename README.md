@@ -36,9 +36,9 @@ This repository details Team <>’s building and programming process in our 2nd 
 
 ## Hardware
 
-#### Mobility
+### Mobility
 
-![car photo](v-photos/rock.webp)
+<img src="v-photos/rock.webp" width="200" height=auto>
 
   Last year, we used a pre-built 1/18 scale RC car (26.5 cm in length). However, with the addition of the magenta parking lot in the obstacle challenge, we decided that we wanted a smaller chassis. Since the length of the parking lot is always 20 cm, by choosing a car of shorter length then 20 cm, we avoid having to parallel park. As such, we chose a 1/24 scale RC car (15 cm in length).
 
