@@ -125,7 +125,11 @@ if __name__ == '__main__':
     lTurn = False
     rTurn = False
   
+<<<<<<< HEAD
     kp = 0.02 #value of proportional for proportional steering
+=======
+    kp = 0.01 #value of proportional for proportional steering
+>>>>>>> 053ef45c30c9e37f6bdff655be4dba8110ce4b25
     kd = 0.01  #value of derivative for proportional and derivative sterring
 
     cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
@@ -387,6 +391,7 @@ if __name__ == '__main__':
                 pDist = temp_dist
         
         #print("num pillars:", num_pillars, end = " ")
+<<<<<<< HEAD
                 
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
@@ -399,6 +404,19 @@ if __name__ == '__main__':
             cKd = 0.2 #value of derivative for proportional and derivative sterring for avoiding signal pillars
             cy = 0.05 #value used to affect pd steering based on how close the pillar is based on its y coordinate
             
+=======
+    
+        #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
+        if (num_pillars_r >= 2 or num_pillars_g >= 2):
+            
+            LED2(0, 0, 0)
+            
+            endConst = 70
+            
+            if rightArea > 1000 and leftArea > 1000:
+                endConst = 0
+        
+>>>>>>> 053ef45c30c9e37f6bdff655be4dba8110ce4b25
         #any other combination of number of pillars
         else:
             
@@ -723,4 +741,3 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
-
