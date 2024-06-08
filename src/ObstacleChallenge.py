@@ -29,7 +29,6 @@ def displayROI(ROIs):
 
 #controls buzzer
 def buzz():
-
     Board.setBuzzer(1)
     time.sleep(0.5)
     Board.setBuzzer(0)
@@ -115,7 +114,7 @@ if __name__ == '__main__':
     ROI2 = [330, 165, 640, 255]
     #ROI1 = [20, 170, 240, 220]
     #ROI2 = [400, 170, 620, 220]
-    ROI3 = [redTarget - 50, 100, greenTarget + 50, 300]
+    ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
     ROI4 = [200, 250, 440, 300]
     #ROI5 = [220, 130, 270, 200]
     #ROI6 = [370, 130, 410, 200]
@@ -126,12 +125,12 @@ if __name__ == '__main__':
     lTurn = False
     rTurn = False
   
-    kp = 0.005 #value of proportional for proportional steering
-    kd = 0.005  #value of derivative for proportional and derivative sterring
+    kp = 0.02 #value of proportional for proportional steering
+    kd = 0.01  #value of derivative for proportional and derivative sterring
 
-    cKp = 0.17 #value of proportional for proportional steering for avoiding signal pillars
-    cKd = 0.17 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-    cy = 0.125 #value used to affect pd steering based on how close the pillar is based on its y coordinate
+    cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
+    cKd = 0.2 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+    cy = 0.15 #value used to affect pd steering based on how close the pillar is based on its y coordinate
   
     straightConst = 87 #angle in which car goes straight
     exitThresh = 4000 #if area of both lanes is over this threshold car exits a turn
@@ -142,7 +141,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1643 #variable for initial speed of the car
+    speed = 1650 #variable for initial speed of the car
     #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
     reverseSpeed = 1340 #variable for speed of the car going backwards
     
@@ -310,8 +309,7 @@ if __name__ == '__main__':
         num_pillars_g = 0
         num_pillars_r = 0
         
-        #stores distance between the y coordinates of 2 signal pillars
-        yDiff = 480
+        #distance of the pillar from the bottom middle of the screen
         pDist = 100000
 
         #iterate through green contours
@@ -320,7 +318,6 @@ if __name__ == '__main__':
           area = cv2.contourArea(cnt)
 
           if area > 100:
-              num_pillars_g += 1
               
               #get width, height, and x and y coordinates by bounding rect
               approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
@@ -332,19 +329,18 @@ if __name__ == '__main__':
               
               print("green", area, y)
               
-              temp_dist = math.dist([x, y], [320, 480])
+              temp_dist = math.dist([x + w // 2, y], [320, 480])
               
               print(temp_dist, "pixels away")
               
-              if y > ROI3[3] - endConst or temp_dist > 390:
+              if temp_dist < 370:
+                  num_pillars_g += 1
+              
+              if y > ROI3[3] - endConst or temp_dist > 370 or (leftArea > 13000 and (turnDir == "none" or turnDir == "left")):
                   continue
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-        
-              
-              #update the y difference of the pillars
-              yDiff = min(yDiff, abs(contY - y))
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if temp_dist < pDist:
@@ -360,8 +356,6 @@ if __name__ == '__main__':
 
           if area > 100:
               
-              num_pillars_r += 1
-              
               #get width, height, and x and y coordinates by bounding rect
               approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
               x,y,w,h=cv2.boundingRect(approx)
@@ -372,18 +366,18 @@ if __name__ == '__main__':
               
               print("red", area, y)
               
-              temp_dist = math.dist([x, y], [320, 480])
+              temp_dist = math.dist([x + w // 2, y], [320, 480])
               
               print(temp_dist, "pixels away")
               
-              if y > ROI3[3] - endConst or temp_dist > 390:
+              if temp_dist < 370:
+                  num_pillars_r += 1
+              
+              if y > ROI3[3] - endConst or temp_dist > 370 or (rightArea > 13000 and (turnDir == "none" or turnDir == "right")):
                   continue
-
+            
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
-            
-              #update the y difference of the pillars
-              yDiff = min(yDiff, abs(contY - y))
 
               #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
               if temp_dist < pDist:
@@ -393,101 +387,28 @@ if __name__ == '__main__':
                 pDist = temp_dist
         
         #print("num pillars:", num_pillars, end = " ")
-        
-        #if the difference between the current pillar and another pillar is below 100 set close to true
-        if yDiff <= 100:
-            close = True
-        
-        #state is a variable
-        if not state:
-                if (num_pillars_r == 1 and prevPillarCountR == 2 and close) or (num_pillars_g == 1 and prevPillarCountG == 2 and close):
-                    close = False
-                    state = True
-                        
-        if state:
-            if num_pillars_r == 0 and num_pillars_g == 0:
-                state = False
-                
-        state = False
                 
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
             
-            '''
-            
-            cy = 0.1
-            
-            kp = 0.003 #value of proportional for proportional steering
-            kd = 0.003  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.20 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.20 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 130
-            greenTarget = 510
-            
-            ROI3 = [redTarget - 50, 125, greenTarget + 50, 350]
-            
-            LED2(0, 0, 0)
-            '''
-            
-            LED2(0, 0, 0)
-            
-            cy = 0.15
-            
-            kp = 0.01 #value of proportional for proportional steering
-            kd = 0.01  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.3 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.3 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 120
-            greenTarget = 520
-            
-            ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
-            
-            endConst = 70
-            
-            if rightArea > 1000 and leftArea > 1000:
-                endConst = 0
-        
-        #state is a state where there was previously 2 pillars of the same colour and now there is one meaning we are in the second half of an inside corner turn, if state is true, change control variables
-        elif state:
-            
             LED2(255, 255, 255)
             
-            cy = 0.1
+            endConst = 50
             
-            kp = 0.003 #value of proportional for proportional steering
-            kd = 0.003  #value of derivative for proportional and derivative sterring
+            cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.2 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+            cy = 0.05 #value used to affect pd steering based on how close the pillar is based on its y coordinate
             
-            cKp = 0.15 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.15 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 130
-            greenTarget = 510
-            
-            ROI3 = [redTarget - 20, 125, greenTarget + 20, 350]
-
         #any other combination of number of pillars
         else:
             
             LED2(0, 0, 0)
             
-            cy = 0.15
-            
-            kp = 0.01 #value of proportional for proportional steering
-            kd = 0.01  #value of derivative for proportional and derivative sterring
-            
-            cKp = 0.2 #0.15 value of proportional for proportional steering for avoiding signal pillars
-            cKd = 0.2 #0.15 value of derivative for proportional and derivative sterring for avoiding signal pillars
-            
-            redTarget = 120
-            greenTarget = 520
-            
-            ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
-            
             endConst = 30
+            
+            cKp = 0.25 #value of proportional for proportional steering for avoiding signal pillars
+            cKd = 0.25 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+            cy = 0.15 #value used to affect pd steering based on how close the pillar is based on its y coordinate
         
 
         #iterate through orange contours
@@ -594,9 +515,11 @@ if __name__ == '__main__':
             #setting tempR to "d" allows for us to alter the three-point turn process slightly for this special case
             if tempR == "w":
                 if turnDir == "right":
-                    turnDir == "left"
+                    turnDir = "left"
                 else:
                     turnDir = "right"
+                
+                time.sleep(3)
                     
                 reverse = True
                 tempR = "d"
@@ -654,11 +577,23 @@ if __name__ == '__main__':
                 
                 #add a turn
                 t += 1
+                
+                if leftArea + rightArea > 0 and lastTarget == redTarget and (t == 8 or mReverse):
+                    
+                    reverse = True
+                    
+                    time.sleep(1)
+                    
+                    if turnDir == "right":
+                        turnDir = "left"
+                    else:
+                        turnDir = "right"
+                    
 
                 #if a turn is added and we still see a pillar, set tempR to "w" and wait for no pillars to be detected in future iterations
                 #do this only if 2 laps is completed and pillar is red 
                 #also do this if mReverse is true (debugging purposes)
-                if (t == 8 or mReverse) and cTarget == redTarget:
+                elif (t == 8 or mReverse) and cTarget == redTarget:
                     tempR = "w"
             
             #calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
@@ -687,61 +622,32 @@ if __name__ == '__main__':
 
             LED1(0, 0, 255)
             
-            if turnDir == "left": 
-
-
-                #special case when a pillar had to be passed first before the three-point turn could start
-                if tempR == "d":
-                    write("dc", 1660) 
-                    write("servo", sharpLeft)
-                    time.sleep(5)
-                else:
-
-                    write("dc", 1660) 
-                    write("servo", straightConst)
-                    time.sleep(1)
-                    write("servo", sharpLeft)
-                    time.sleep(2.5)
-                    
-                write("dc", 1500)
-                time.sleep(0.5)
-                write("servo", sharpRight)
-                write("dc", reverseSpeed)
-                time.sleep(4)
-                write("dc", 1500)
-                time.sleep(0.5)
-                write("dc", speed)
-                #write("servo", sharpLeft)
-                #write("dc", speed)
-                #time.sleep(4)
-            
-            else: #turn sequence if turn direction is right
+            if turnDir == "left": #car is turning right before the change in direction
                 
-                '''
-                if tempR == "d":
-                    write("dc", 1660) 
-                    write("servo", sharpRight)
-                    time.sleep(5)
-                else:
-
-                    write("dc", 1660) 
-                    write("servo", straightConst)
-                    time.sleep(1)
-                    write("servo", sharpRight)
-                    time.sleep(2.5)
-                '''
-                
-                write("dc", 1500)
-                time.sleep(0.5)
                 write("servo", sharpLeft)
-                write("dc", reverseSpeed)
-                time.sleep(5)
-                write("dc", 1500)
-                time.sleep(0.5)
-                write("dc", speed)
-                write("servo", sharpRight)
-                write("dc", speed)
-                time.sleep(1)
+                
+                if areaFront > 2000:
+                    write("dc", 1500)
+                    write("servo", sharpRight)
+                    write("dc", reverseSpeed)
+                    time.sleep(1.5)
+                    write("dc", 1500)
+                else:
+                    continue
+
+            else: #turn sequence if turn direction is left before change in direction
+                
+                write("servo", sharpLeft)
+                print("u turn")
+                
+                if areaFront > 2000:
+                    write("dc", 1500)
+                    write("servo", straightConst)
+                    write("dc", reverseSpeed)
+                    time.sleep(2.5)
+                    write("dc", 1500)
+                else:
+                    continue
                 
             reverse = False
             
@@ -750,7 +656,6 @@ if __name__ == '__main__':
                 stopCar()
                 break
             
-        
         #if angle is different from previous angle
         if angle != prevAngle:
           
@@ -770,7 +675,7 @@ if __name__ == '__main__':
                       reverse = True
                       
                       if turnDir == "right":
-                        turnDir == "left"
+                        turnDir = "left"
                       else:
                         turnDir = "right"
 
@@ -812,6 +717,8 @@ if __name__ == '__main__':
 
             #show image
             print("turns", t)
+            print(turnDir)
+            print("areas:", leftArea, rightArea)
 
             cv2.imshow("finalColor", img) 
 
