@@ -329,13 +329,16 @@ if __name__ == '__main__':
               
               print("green", area, y)
               
+              #calculates the distance between the pillar and the bottom middle of the screen
               temp_dist = math.dist([x + w // 2, y], [320, 480])
               
               print(temp_dist, "pixels away")
               
+              #if the pillar is close enough add it to the number of pillars
               if temp_dist < 370:
                   num_pillars_g += 1
               
+              #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
               if y > ROI3[3] - endConst or temp_dist > 370 or (leftArea > 13000 and (turnDir == "none" or turnDir == "left")):
                   continue
 
@@ -366,13 +369,17 @@ if __name__ == '__main__':
               
               print("red", area, y)
               
+              #calculates the distance between the pillar and the bottom middle of the screen
               temp_dist = math.dist([x + w // 2, y], [320, 480])
               
               print(temp_dist, "pixels away")
               
+              #if the pillar is close enough add it to the number of pillars
               if temp_dist < 370:
                   num_pillars_r += 1
-              
+            
+
+              #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
               if y > ROI3[3] - endConst or temp_dist > 370 or (rightArea > 13000 and (turnDir == "none" or turnDir == "right")):
                   continue
             
@@ -578,10 +585,12 @@ if __name__ == '__main__':
                 #add a turn
                 t += 1
                 
-                if leftArea + rightArea > 0 and lastTarget == redTarget and (t == 8 or mReverse):
+                #special case where there is a pillar in the middle of the section where the direction is changed
+                if leftArea + rightArea > 1000 and lastTarget == redTarget and (t == 8 or mReverse):
                     
                     reverse = True
                     
+                    #add a pause so the car can fully complete three laps
                     time.sleep(1)
                     
                     if turnDir == "right":
@@ -626,6 +635,7 @@ if __name__ == '__main__':
                 
                 write("servo", sharpLeft)
                 
+                #stop turning once right in front of wall
                 if areaFront > 2000:
                     write("dc", 1500)
                     write("servo", sharpRight)
@@ -638,8 +648,8 @@ if __name__ == '__main__':
             else: #turn sequence if turn direction is left before change in direction
                 
                 write("servo", sharpLeft)
-                print("u turn")
                 
+                #stop turning once right in front of wall
                 if areaFront > 2000:
                     write("dc", 1500)
                     write("servo", straightConst)
