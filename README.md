@@ -89,10 +89,7 @@ To send signals to both these components, we use a `Furitek Lizard Pro Electroni
 
 &nbsp;
 
-### Electricity
+### Electricity & Power
 
 &nbsp;
 
-### Power
-
-&nbsp;
