@@ -82,14 +82,11 @@ To send signals to both these components, we use a `Furitek Lizard Pro Electroni
 
 &nbsp;
 
-### 👀 Sensors 👀
-
-#### Camera
- - information
+### 👀 Camera Vision 👀
 
 &nbsp;
 
-### Electricity & Power
+### ⚡ Electricity & Power ⚡
 
 &nbsp;
 
