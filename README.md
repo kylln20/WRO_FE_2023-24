@@ -82,17 +82,11 @@ To send signals to both these components, we use a `Furitek Lizard Pro Electroni
 
 &nbsp;
 
-### 👀 Sensors 👀
+### 👀 Camera Vision 👀
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Based on said pixel data, we can determine the size (and distance) of surrounding objects, such as the red and green obstacles, the blue and orange lines on the game mat, and the black walls.
+&nbsp;
 
-#### Camera
- - information
+### ⚡ Electricity & Power ⚡
 
 &nbsp;
 
-### Electricty
-
-&nbsp;
-
-### Power
-
-&nbsp;
