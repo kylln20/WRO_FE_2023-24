@@ -251,7 +251,7 @@ if __name__ == '__main__':
         img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         #create red mask
-        lower_red = np.array([173, 175, 50])
+        lower_red = np.array([172, 175, 50])
         upper_red = np.array([180, 255, 255])
       
         r_mask = cv2.inRange(img_hsv, lower_red, upper_red)
@@ -335,12 +335,18 @@ if __name__ == '__main__':
               print(temp_dist, "pixels away")
               
               #if the pillar is close enough add it to the number of pillars
-              if temp_dist < 370:
+              if temp_dist < 395:
                   num_pillars_g += 1
               
               #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
-              if y > ROI3[3] - endConst or temp_dist > 370 or (leftArea > 13000 and (turnDir == "none" or turnDir == "left")):
+              if y > ROI3[3] - endConst or temp_dist > 370:
                   continue
+                
+              
+              if leftArea > 13000 and (turnDir == "none" or turnDir == "left"):
+                  #time.sleep()
+                  continue
+              
 
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
@@ -375,13 +381,19 @@ if __name__ == '__main__':
               print(temp_dist, "pixels away")
               
               #if the pillar is close enough add it to the number of pillars
-              if temp_dist < 370:
+              if temp_dist < 395:
                   num_pillars_r += 1
             
 
               #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
-              if y > ROI3[3] - endConst or temp_dist > 370 or (rightArea > 13000 and (turnDir == "none" or turnDir == "right")):
+              if y > ROI3[3] - endConst or temp_dist > 370:
                   continue
+            
+    
+              if rightArea > 13000 and (turnDir == "none" or turnDir == "right"):
+                  #time.sleep(1)
+                  continue
+              
             
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
@@ -394,7 +406,26 @@ if __name__ == '__main__':
                 pDist = temp_dist
         
         #print("num pillars:", num_pillars, end = " ")
+        '''  
+        if rightArea > 13000 and (turnDir == "none" or turnDir == "right"):
+            
+                endConst = 50
                 
+                cKp = 0.0 #value of proportional for proportional steering for avoiding signal pillars
+                cKd = 0.0 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+                cy = 0.00 #value used to affect pd steering based on how close the pillar is based on its y coordinate
+                #time.sleep(1)
+                continue
+            
+        elif leftArea > 13000 and (turnDir == "none" or turnDir == "left"):
+                #time.sleep()
+            
+                endConst = 50
+                
+                cKp = 0.0 #value of proportional for proportional steering for avoiding signal pillars
+                cKd = 0.0 #value of derivative for proportional and derivative sterring for avoiding signal pillars
+                cy = 0.00 #value used to affect pd steering based on how close the pillar is based on its y coordinate
+        '''
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
             
@@ -415,7 +446,7 @@ if __name__ == '__main__':
             
             cKp = 0.25 #value of proportional for proportional steering for avoiding signal pillars
             cKd = 0.25 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-            cy = 0.15 #value used to affect pd steering based on how close the pillar is based on its y coordinate
+            cy = 0.08 #value used to affect pd steering based on how close the pillar is based on its y coordinate, 0.15
         
 
         #iterate through orange contours
@@ -733,3 +764,4 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
+
