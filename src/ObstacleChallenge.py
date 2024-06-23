@@ -337,6 +337,19 @@ if __name__ == '__main__':
               #if the pillar is close enough add it to the number of pillars
               if temp_dist < 395:
                   num_pillars_g += 1
+                  
+                #if the pillar is too close, stop the car and reverse to give it enough space
+              if area > 6500 and x + w // 2 <= 340:
+                  LED2(255, 255, 0)
+                  
+                  write("servo", 87)
+                  write("dc", 1500)
+                  write("dc", reverseSpeed)
+                  time.sleep(1)
+                  write("dc", speed)
+                  
+              else:
+                  LED2(0, 0, 0)
               
               #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
               if y > ROI3[3] - endConst or temp_dist > 370:
@@ -383,7 +396,21 @@ if __name__ == '__main__':
               #if the pillar is close enough add it to the number of pillars
               if temp_dist < 395:
                   num_pillars_r += 1
-            
+              
+              #if the pillar is too close, stop the car and reverse to give it enough space
+              if area > 6500 and x + w // 2 >= 300:
+                  LED2(255, 255, 0)
+                  
+                  write("servo", 87)
+                  write("dc", 1500)
+                  write("dc", reverseSpeed)
+                  time.sleep(1)
+                  write("dc", speed)
+                  
+              else:
+                  LED2(0, 0, 0)
+                  
+              
 
               #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
               if y > ROI3[3] - endConst or temp_dist > 370:
