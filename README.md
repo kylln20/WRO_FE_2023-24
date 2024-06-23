@@ -76,7 +76,7 @@ Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to
 
 The Furitek Micro Komodo specifically is also very small compared to other RC car motors on the market, making it fit well with our small chassis.
 
-To control steering, we have use a `Hitec HS-5055MG Servo Motor`, which is a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo that has a three-wire connection, which we can control and power with the Raspberry Pi Hardware Attached on Top (HAT). 
+To control steering, we have use a `Hitec HS-5055MG Servo Motor`, which is a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo that has a three-wire connection, which we can control and power with the `Raspberry Pi Hardware Attached on Top` (HAT). 
 
 To send signals to both these components, we use a `Furitek Lizard Pro Electronic Speed Controller (ESC)`, which came with the brushless motor.
 
