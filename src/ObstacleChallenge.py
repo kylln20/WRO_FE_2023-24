@@ -1,4 +1,5 @@
-#import necessary libraries
+# ------------------------------------------------------------{ libraries }-------------------------------------------------------------------------
+
 import cv2
 import sys
 sys.path.append('/home/pi/TurboPi/')
@@ -8,6 +9,8 @@ import RPi.GPIO as GPIO
 import numpy as np
 import HiwonderSDK.Board as Board
 import math
+
+# ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
 #function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 def write(motor, value):
@@ -56,6 +59,8 @@ def stopCar():
 
 if __name__ == '__main__':
 
+# ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
+
     #initialize camera
     picam2 = Picamera2()
     picam2.preview_configuration.main.size = (640,480)
@@ -66,8 +71,8 @@ if __name__ == '__main__':
     picam2.start()
 
     #set the target x coordinates for each red and green pillar
-    redTarget = 120 #160
-    greenTarget = 520 #480
+    redTarget = 120 
+    greenTarget = 520
 
     #variable that keeps track of the target of the last pillar the car has passed
     lastTarget = 0
@@ -75,19 +80,11 @@ if __name__ == '__main__':
     #boolean that is used for when the car has to turn around to the opposite direction so the car can complete the last lap the other way around
     reverse = False
 
-    tempR = ""
+    #variable helping to delay a three point turn until the current pillar is passed
+    tempR = False
 
     #boolean storing the only direction the car is turning during the run
     turnDir = "none" 
-    
-    #lists storing coordinates for the regions of interest to find contours of different areas
-    #ROI1: for finding left lane
-    #ROI2: for finding right lane
-    #ROI3: for finding signal pillars
-    #ROI4: for detecting blue and orange lines on mat
-    # order: x1, y1, x2, y2
-    #ROI1 = [0, 165, 330, 285]
-    #ROI2 = [330, 165, 640, 285]
     
     #variables to indicate when the car should park and whether it parks on the right or left side
     parkingR = False
@@ -110,14 +107,15 @@ if __name__ == '__main__':
     pDist = 0
     
     #regions of interest
+    #ROI1: for finding left lane
+    #ROI2: for finding right lane
+    #ROI3: for finding signal pillars
+    #ROI4: for detecting blue and orange lines on mat
+    # order: x1, y1, x2, y2
     ROI1 = [0, 165, 330, 255]
     ROI2 = [330, 165, 640, 255]
-    #ROI1 = [20, 170, 240, 220]
-    #ROI2 = [400, 170, 620, 220]
     ROI3 = [redTarget - 40, 120, greenTarget + 40, 350]
     ROI4 = [200, 250, 440, 300]
-    #ROI5 = [220, 130, 270, 200]
-    #ROI6 = [370, 130, 410, 200]
     
     ROIs = [ROI1, ROI2, ROI3, ROI4]
 
@@ -125,8 +123,8 @@ if __name__ == '__main__':
     lTurn = False
     rTurn = False
   
-    kp = 0.02
-    kd = 0.01  #value of derivative for proportional and derivative sterring
+    kp = 0.02 #proportional value for PD steering 
+    kd = 0.01 #derivative value for PD steering
 
     cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
     cKd = 0.2 #value of derivative for proportional and derivative sterring for avoiding signal pillars
@@ -142,11 +140,7 @@ if __name__ == '__main__':
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
     speed = 1650 #variable for initial speed of the car
-    #tSpeed = 1434 #variable for speed of the car during turn to opposite direction
     reverseSpeed = 1340 #variable for speed of the car going backwards
-    
-    stopTime = 0 #stores the time of when the car begins its stopping progress
-    s = 0 #stores for how many seconds the car runs after stopTime
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
@@ -158,8 +152,6 @@ if __name__ == '__main__':
     contX = 0 #stores x value of the current signal pillar
     contY = 0 #stores y value of the current signal pillar
     pArea = 0 #stores the area of a signal pillar
-    
-    close = False #boolean indicating whether a signal pillar is within a certain proximity of the camera
     
     t = 0 #tracks number of turns
     
@@ -181,7 +173,6 @@ if __name__ == '__main__':
     
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(key2_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-    
     
     LED1(0, 255, 0)
     
@@ -206,12 +197,15 @@ if __name__ == '__main__':
         
     LED1(0, 0, 0)
     time.sleep(0.5)
+
     #write initial values to car
     write("dc", speed) 
     write("servo", angle)
 
-    #main loop
+# ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
+
+# ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
             
         #reset rightArea, and leftArea variables
         rightArea, leftArea = 0, 0
@@ -291,7 +285,6 @@ if __name__ == '__main__':
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         #create magenta mask
-
         if tempParking: 
             lm = np.array([168, 175, 50])
             um = np.array([172, 255, 255])
@@ -304,6 +297,8 @@ if __name__ == '__main__':
             
             contours_magenta_r = cv2.findContours(m_mask[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+# ------------------------------------------------------------{ processing contours }-------------------------------------------------------------------------
         
         #count number of red and green pillars
         num_pillars_g = 0
@@ -313,7 +308,8 @@ if __name__ == '__main__':
         pDist = 100000
         pArea = 0
 
-        #iterate through green contours
+# -----------------{ green signal pillar contour processing }--------------
+
         for i in range(len(contours_green)):
           cnt = contours_green[i]
           area = cv2.contourArea(cnt)
@@ -342,13 +338,11 @@ if __name__ == '__main__':
                 #if the pillar is too close, stop the car and reverse to give it enough space
               if area > 6500 and x + w // 2 <= 340:
                   LED2(255, 255, 0)
-                  
                   write("servo", 87)
                   write("dc", 1500)
                   write("dc", reverseSpeed)
                   time.sleep(1)
                   write("dc", speed)
-                  
               else:
                   LED2(0, 0, 0)
               
@@ -356,12 +350,10 @@ if __name__ == '__main__':
               if y > ROI3[3] - endConst or temp_dist > 370:
                   continue
                 
-              
+              #if the area of the right wall is too big stop worrying about the pillar so the regular lane control algorithm can move away from the wall
               if leftArea > 13000 and (turnDir == "none" or turnDir == "left"):
-                  #time.sleep()
                   continue
               
-
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
 
@@ -373,7 +365,8 @@ if __name__ == '__main__':
                 cTarget = greenTarget
                 pDist = temp_dist
                 
-        #iterate through red contours
+# -----------------{ red signal pillar contour processing }--------------
+
         for i in range(len(contours_red)):
           cnt = contours_red[i]
           area = cv2.contourArea(cnt)
@@ -411,18 +404,14 @@ if __name__ == '__main__':
                   
               else:
                   LED2(0, 0, 0)
-                  
-              
-
+                
               #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
               if y > ROI3[3] - endConst or temp_dist > 370:
                   continue
             
-    
+              #if the area of the right wall is too big stop worrying about the pillar so the regular lane control algorithm can move away from the wall
               if rightArea > 13000 and (turnDir == "none" or turnDir == "right"):
-                  #time.sleep(1)
                   continue
-              
             
               #draw rectangle around signal pillar
               cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
@@ -434,28 +423,9 @@ if __name__ == '__main__':
                 contX = x + w // 2
                 cTarget = redTarget
                 pDist = temp_dist
-        
-        #print("num pillars:", num_pillars, end = " ")
-        '''  
-        if rightArea > 13000 and (turnDir == "none" or turnDir == "right"):
-            
-                endConst = 50
-                
-                cKp = 0.0 #value of proportional for proportional steering for avoiding signal pillars
-                cKd = 0.0 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-                cy = 0.00 #value used to affect pd steering based on how close the pillar is based on its y coordinate
-                #time.sleep(1)
-                continue
-            
-        elif leftArea > 13000 and (turnDir == "none" or turnDir == "left"):
-                #time.sleep()
-            
-                endConst = 50
-                
-                cKp = 0.0 #value of proportional for proportional steering for avoiding signal pillars
-                cKd = 0.0 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-                cy = 0.00 #value used to affect pd steering based on how close the pillar is based on its y coordinate
-        '''
+
+# -----------------{ control variable manipulation based on number of pillars }--------------
+
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
             
@@ -477,10 +447,15 @@ if __name__ == '__main__':
             cKp = 0.25 #value of proportional for proportional steering for avoiding signal pillars
             cKd = 0.25 #value of derivative for proportional and derivative sterring for avoiding signal pillars
             cy = 0.08 #value used to affect pd steering based on how close the pillar is based on its y coordinate, 0.15
-        
+
+# -----------------{ orange line contour processing }---------------
+
+        #used in the three point turn, as in our turn we check if we can see a pillar after seeing the orange or blue line we use temp to ensure it only checks for the iteration one time
         temp = False
+
+        #number of orange contours detected
         oCount = 0
-        #iterate through orange contours
+
         for i in range(len(contours_orange)):
           cnt = contours_orange[i]
           area = cv2.contourArea(cnt)
@@ -498,23 +473,17 @@ if __name__ == '__main__':
                   #set tTurn and tSignal to true to indicate a right turn
                   rTurn = True
                   tSignal = True
-                
+            
+              #check for three point turn
               elif not temp:
                   
                   temp = True
-                  '''
-                  print(leftArea, rightArea, pArea, pDist, "------------------------------------------")
-                  #reverse = True
-                  stopCar()
-                  '''
                   
+                  #this indicates there is a pillar at the very end of the second lap
                   if (t == 8 or mReverse) and cTarget == redTarget and reverse == False:
-                      tempR = "w"
-                    
-                      #add a pause so the car can fully complete three laps
-                      #time.sleep(1)
-                    
-                      #turnDir = "right"
+                      tempR = True
+                
+                  #no pillar after turn, so if previous pillar was red perform a three point turn
                   elif (t == 8 or mReverse) and cTarget == 0 and reverse == False and lastTarget == redTarget:
                       reverse = True
                     
@@ -523,10 +492,15 @@ if __name__ == '__main__':
                     
                       turnDir = "right"
         
+        #if orange line isnt detected anymore reset temp
         if oCount == 0:
             temp = False
-            
+
+# -----------------{ blue line contour processing }--------------
+
+        #number of blue contours detected
         bCount = 0
+
         #iterate through blue contours
         for i in range(len(contours_blue)):
           cnt = contours_blue[i]
@@ -544,22 +518,17 @@ if __name__ == '__main__':
                   #set tTurn and tSignal to true to indicate a left turn
                   lTurn = True
                   tSignal = True
+
+              #check for three point turn
               elif not temp:
-                  '''
-                  print(leftArea, rightArea, pArea, pDist, "------------------------------------------")
-                  #reverse = True
-                
-                  stopCar()
-                  '''
                   
+                  temp = True
                   
+                  #this indicates there is a pillar at the very end of the second lap
                   if (t == 8 or mReverse) and cTarget == redTarget and reverse == False:
-                      tempR = "w"
-                    
-                      #add a pause so the car can fully complete three laps
-                      #time.sleep(1)
-                    
-                      #turnDir = "left"
+                      tempR = True
+
+                  #no pillar after turn, so if previous pillar was red perform a three point turn
                   elif (t == 8 or mReverse) and cTarget == 0 and reverse == False and lastTarget == redTarget:
                       reverse = True
                     
@@ -568,20 +537,20 @@ if __name__ == '__main__':
                     
                       turnDir = "left"
                 
-        
+        #if blue line isnt detected anymore reset temp
         if bCount == 0:
             temp = False
+
+# ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
                       
-        
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
-
         if (t >= 12 and tempParking) or pl or pr:
             if turnDir == "right" or pl:
                 
-                #cy = 0.175
                 redTarget = greenTarget
                 ROI3 = [redTarget - 50, 180, greenTarget + 50, 350]
+
             elif turnDir == "left" or pr: 
                 greenTarget = redTarget
         
@@ -633,24 +602,21 @@ if __name__ == '__main__':
                 
                 if parkingR: 
                     angle = sharpRight
-        
-        #print("contY:", contY)
-                  
-        #if cTarget is 0 meaning no pillar is detected
+
+# ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
+
+# -----------------{ no pillar detected }--------------
         if cTarget == 0 and not parkingL and not parkingR:
 
             #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
-            #setting tempR to "d" allows for us to alter the three-point turn process slightly for this special case
-            if tempR == "w":
+            if tempR:
                 if turnDir == "right":
                     turnDir = "left"
                 else:
                     turnDir = "right"
-                
-                #time.sleep(3)
                     
                 reverse = True
-                tempR = "d"
+                tempR = False
 
 
             #set tempParking to true after 12 turns to indicate pillars should be passed on the outside
@@ -658,9 +624,6 @@ if __name__ == '__main__':
                 tempParking = True
             
             LED1(0, 0, 0)
-            
-            #since no pillar is detected none can be close so set close to false
-            close = False
 
             #calculate the difference in the left and right lane areas
             aDiff = rightArea - leftArea
@@ -682,7 +645,7 @@ if __name__ == '__main__':
                     #print("red")
             
         
-        #if pillar is detected
+# -----------------{ pillar detected }--------------
         elif not parkingR and not parkingL:
             
             if debug:
@@ -690,20 +653,6 @@ if __name__ == '__main__':
                     LED1(255, 0, 0)
                 elif cTarget == greenTarget:
                     LED1(0, 255, 0)
-            
-            '''
-            if tSignal and (t == 8 or mReverse) and reverse == False:
-                if cTarget == redTarget:
-                    reverse = True
-                    
-                    #add a pause so the car can fully complete three laps
-                    time.sleep(1)
-                    
-                    if turnDir == "right":
-                        turnDir = "left"
-                    else:
-                        turnDir = "right"
-            '''   
           
             #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
             #in this case the turn is finished while still seeing a pillar
@@ -713,41 +662,8 @@ if __name__ == '__main__':
                 prevError = 0
                 prevDiff = 0
 
-                
-                
                 #add a turn
                 t += 1
-                
-                '''
-                print(leftArea, rightArea, pArea, pDist, "------------------------------------------")
-                
-                stopCar()
-                break
-                
-                
-                
-                
-                #special case where there is a pillar in the middle of the section where the direction is changed (pArea < 200) or (pArea > 300 and leftArea > 1000 and rightArea > 1000)
-                
-                if lastTarget == redTarget and (t == 8 or mReverse) and (pDist >= 360):
-                    
-                    reverse = True
-                    
-                    #add a pause so the car can fully complete three laps
-                    time.sleep(1)
-                    
-                    if turnDir == "right":
-                        turnDir = "left"
-                    else:
-                        turnDir = "right"
-                    
-
-                #if a turn is added and we still see a pillar, set tempR to "w" and wait for no pillars to be detected in future iterations
-                #do this only if 2 laps is completed and pillar is red 
-                #also do this if mReverse is true (debugging purposes) pArea > 300 and (leftArea < 1000 or rightArea < 1000)
-                elif (t == 8 or mReverse) and cTarget == redTarget and pDist < 360:
-                    tempR = "w"
-                '''
                 
                 #reset lTurn and rTurn booleans to indicate the turn is over
                 lTurn = False
@@ -774,7 +690,8 @@ if __name__ == '__main__':
             #make sure angle value is over 2000 
             angle = max(0, angle)
 
-        #sequence for three-point turn
+# ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
+
         if reverse:
 
             LED1(0, 0, 255)
@@ -814,10 +731,11 @@ if __name__ == '__main__':
                 stopCar()
                 break
             
-        #if angle is different from previous angle
+# ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
+
         if angle != prevAngle:
           
-            #if the area of the lane the car is turning towards is greater than or equal to exitThresh and tSignal is false meaning the blue or orange line is not currently detected
+            #if area of wall is large enough and turning line is not detected end turn
             if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal: 
               
                   #set turn variables to false as turn is over
@@ -847,7 +765,9 @@ if __name__ == '__main__':
                 
             #write the angle which is kept in the bounds of sharpLeft and sharpRight
             write("servo", max(min(angle, sharpLeft), sharpRight))
-                
+
+# ------------------------------------------------------------{ reset variables }------------------------------------------------------------------------
+
         prevAngle = angle #update previous angle
         tSignal = False #reset tSignal
         
@@ -859,8 +779,9 @@ if __name__ == '__main__':
         pArea = 0
         prevPillarCountR = num_pillars_r
         prevPillarCountG = num_pillars_g
-        
-        #additional debugging information in debugging mode
+
+# ------------------------------------------------------------{ debugging information }-------------------------------------------------------------------------
+
         if debug: 
         
             #if q is pressed break out of main loop and stop the car
@@ -870,8 +791,6 @@ if __name__ == '__main__':
             
             #display regions of interest
             displayROI(ROIs)
-            
-            #time.sleep(0.1)
 
             #show image
             print("turns", t)
