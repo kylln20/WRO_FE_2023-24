@@ -17,12 +17,13 @@ AA = 0.40  # Complementary filter constant
 # Calibrating the compass isn't mandatory, however, a calibrated
 # compass will result in a more accurate heading value.
 
-magXmin = 0
-magYmin = 0
-magZmin = 0
-magXmax = 0
-magYmax = 0
-magZmax = 0
+magXmin = -633
+magYmin = 2562
+magZmin = -1783
+magXmax = 693
+magYmax = 2972
+magZmax = -307
+
 
 # Kalman filter variables
 Q_angle = 0.02
@@ -178,7 +179,9 @@ def compute_heading():
 
         #Calculate pitch and roll
         pitch = math.asin(accXnorm)
-        roll = -math.asin(accYnorm/math.cos(pitch))
+        #print("debugging numbers", math.cos(pitch), accYnorm/math.cos(pitch))
+        roll = -math.asin(min(accYnorm/math.cos(pitch), 1))
+        
 
 
         #Calculate the new tilt compensated values

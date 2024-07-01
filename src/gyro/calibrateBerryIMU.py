@@ -21,7 +21,7 @@ import sys,signal,os
 import time
 import math
 
-import IMU
+from gyro import IMU
 import datetime
 
 
