@@ -9,6 +9,8 @@ import RPi.GPIO as GPIO
 import numpy as np
 import HiwonderSDK.Board as Board
 import math
+from gyro import berryIMU, IMU, LSM9DS0, LSM9DS1, LSM6DSL, LIS3MDL
+
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
@@ -58,7 +60,7 @@ def stopCar():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-
+    
 # ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
 
     #initialize camera
@@ -167,6 +169,13 @@ if __name__ == '__main__':
     pl = False #variable for left parking mode, a debug mode where it parks immedietly for testing purposes
     pr = False #variable for right parking mode, a debug mode where it parks immedietly for testing purposes
     mReverse = False #variable for reverse mode, a debug mode where it goes directly into a 3 point turn
+    
+    #variables used in parking
+    pKp = 0.1
+    pKd = 0.1
+    targetHeading = 0
+    heading = 0
+    stage = 1
 
     #code for starting button
     key2_pin = 16
@@ -204,6 +213,9 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
+        
+        heading, tHeading = berryIMU.compute_heading()
+        print("headings:", heading, tHeading)
 
 # ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
             
@@ -546,13 +558,29 @@ if __name__ == '__main__':
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
         if (t >= 12 and tempParking) or pl or pr:
+            
+            
+            
+            #if sta
+            
             if turnDir == "right" or pl:
-                
-                redTarget = greenTarget
-                ROI3 = [redTarget - 50, 180, greenTarget + 50, 350]
+                pass
+                #turn left until wall is close
+                #then adjust heading to go parallel to lane
+                #turn when area of wall infront is too big
+                #if magenta contours is detected on the left
+                #turn all the way left until heading is straight
+                #go forward until area of wall reaches a limit 
 
-            elif turnDir == "left" or pr: 
-                greenTarget = redTarget
+            elif turnDir == "left" or pr:
+                pass
+                
+                #turn right until wall is close
+                #then adjust heading to go parallel to lane
+                #turn when area of wall infront is too big
+                #if magenta contours is detected on the right
+                #turn all the way right until heading is straight
+                #go forward until area of wall reaches a limit 
         
         areaFront = 0
                 
@@ -606,7 +634,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
 # -----------------{ no pillar detected }--------------
-        if cTarget == 0 and not parkingL and not parkingR:
+        if cTarget == 0 and not tempParking:
 
             #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
             if tempR:
@@ -620,7 +648,7 @@ if __name__ == '__main__':
 
 
             #set tempParking to true after 12 turns to indicate pillars should be passed on the outside
-            if not tempParking and t == 12:
+            if t == 12:
                 tempParking = True
             
             LED1(0, 0, 0)
@@ -646,7 +674,7 @@ if __name__ == '__main__':
             
         
 # -----------------{ pillar detected }--------------
-        elif not parkingR and not parkingL:
+        elif not tempParking:
             
             if debug:
                 if cTarget == redTarget:
@@ -800,4 +828,3 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
-
