@@ -14,8 +14,6 @@ from gyro import berryIMU, IMU, LSM9DS0, LSM9DS1, LSM6DSL, LIS3MDL
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
-# ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
-
 #function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 def write(motor, value):
     
@@ -63,8 +61,6 @@ def stopCar():
 
 if __name__ == '__main__':
     
-# ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
-
 # ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
 
     #initialize camera
