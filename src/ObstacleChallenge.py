@@ -213,9 +213,6 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
-        
-        heading, tHeading = berryIMU.compute_heading()
-        print("headings:", heading, tHeading)
 
 # ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
             
@@ -297,7 +294,7 @@ if __name__ == '__main__':
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         #create magenta mask
-        if tempParking: 
+        if tempParking or pl or pr: 
             lm = np.array([168, 175, 50])
             um = np.array([172, 255, 255])
 
@@ -336,12 +333,12 @@ if __name__ == '__main__':
               x += ROI3[0]
               y += ROI3[1] + h
               
-              print("green", area, y)
+              #print("green", area, y)
               
               #calculates the distance between the pillar and the bottom middle of the screen
               temp_dist = math.dist([x + w // 2, y], [320, 480])
               
-              print(temp_dist, "pixels away")
+              #print(temp_dist, "pixels away")
               
               #if the pillar is close enough add it to the number of pillars
               if temp_dist < 395:
@@ -393,12 +390,12 @@ if __name__ == '__main__':
               x += ROI3[0]
               y += ROI3[1] + h
               
-              print("red", area, y)
+              #print("red", area, y)
               
               #calculates the distance between the pillar and the bottom middle of the screen
               temp_dist = math.dist([x + w // 2, y], [320, 480])
               
-              print(temp_dist, "pixels away")
+              #print(temp_dist, "pixels away")
               
               #if the pillar is close enough add it to the number of pillars
               if temp_dist < 395:
@@ -554,12 +551,21 @@ if __name__ == '__main__':
             temp = False
 
 # ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
-                      
+        heading, tHeading = berryIMU.compute_heading()
+        print("headings:", heading, tHeading)
+        
+        #North, West, South, East
+        targetHeadings = [280, 190, 95, 15]
+        pKp = 0.2
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
         if (t >= 12 and tempParking) or pl or pr:
             
+            error = tHeading - targetHeadings[3]
             
+            angle = int(straightConst - pKp * error)
+            
+            print(angle)
             
             #if sta
             
@@ -634,7 +640,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
 # -----------------{ no pillar detected }--------------
-        if cTarget == 0 and not tempParking:
+        if cTarget == 0 and not tempParking and not pr and not pl:
 
             #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
             if tempR:
@@ -674,7 +680,7 @@ if __name__ == '__main__':
             
         
 # -----------------{ pillar detected }--------------
-        elif not tempParking:
+        elif not tempParking and not pl and not pr:
             
             if debug:
                 if cTarget == redTarget:
@@ -821,9 +827,11 @@ if __name__ == '__main__':
             displayROI(ROIs)
 
             #show image
+            '''
             print("turns", t)
             print(turnDir)
             print("areas:", leftArea, rightArea)
+            '''
 
             cv2.imshow("finalColor", img) 
 
