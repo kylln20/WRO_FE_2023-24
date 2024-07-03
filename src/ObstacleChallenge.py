@@ -176,6 +176,18 @@ if __name__ == '__main__':
     targetHeading = 0
     heading = 0
     stage = 1
+    
+    headingIndex = 0
+    
+    #North, West, South, East
+    targetHeadings = [270, 180, 92, 350]
+    
+    heading, tHeading = berryIMU.compute_heading()
+    
+    for i in range(len(targetHeadings)):
+        if abs(tHeading - targetHeadings[i]) <= 10:
+            headingIndex = i
+            break
 
     #code for starting button
     key2_pin = 16
@@ -196,6 +208,7 @@ if __name__ == '__main__':
         elif sys.argv[1].lower() == "turn":
             mReverse = True
         elif sys.argv[1].lower() == "steer":
+            pr = True
             speed = 1500
         
     #if no mode is specified, assume the regular program and wait for button put
@@ -482,6 +495,15 @@ if __name__ == '__main__':
                   #set tTurn and tSignal to true to indicate a right turn
                   rTurn = True
                   tSignal = True
+                  '''
+                  if not temp:
+                      headingIndex -= 1
+                      
+                      if headingIndex < 0:
+                          headingIndex = 3
+                        
+                      temp = True
+                  '''
             
               #check for three point turn
               elif not temp:
@@ -527,7 +549,17 @@ if __name__ == '__main__':
                   #set tTurn and tSignal to true to indicate a left turn
                   lTurn = True
                   tSignal = True
-
+                  
+                  '''
+                  if not temp:
+                      headingIndex += 1
+                      
+                      if headingIndex > 3:
+                          headingIndex = 0
+                    
+                      temp = True
+                  '''
+                  
               #check for three point turn
               elif not temp:
                   
@@ -552,41 +584,21 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
         heading, tHeading = berryIMU.compute_heading()
-        print("headings:", heading, tHeading)
+        if headingIndex == 3 and tHeading < 20:
+            tHeading + 360
+        print("heading and target heading:", tHeading, targetHeadings[headingIndex])
         
-        #North, West, South, East
-        targetHeadings = [280, 190, 95, 15]
-        pKp = 0.2
+        
+        pKp = 0.5
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
-        if (t >= 12 and tempParking) or pl or pr:
+        if ((t >= 12 and tempParking) or pl or pr) and not parkingR and not parkingL:
             
-            error = tHeading - targetHeadings[3]
+            error = tHeading - targetHeadings[headingIndex]
             
-            angle = int(straightConst - pKp * error)
+            angle = int(straightConst + pKp * error)
             
             print(angle)
-            
-            #if sta
-            
-            if turnDir == "right" or pl:
-                pass
-                #turn left until wall is close
-                #then adjust heading to go parallel to lane
-                #turn when area of wall infront is too big
-                #if magenta contours is detected on the left
-                #turn all the way left until heading is straight
-                #go forward until area of wall reaches a limit 
-
-            elif turnDir == "left" or pr:
-                pass
-                
-                #turn right until wall is close
-                #then adjust heading to go parallel to lane
-                #turn when area of wall infront is too big
-                #if magenta contours is detected on the right
-                #turn all the way right until heading is straight
-                #go forward until area of wall reaches a limit 
         
         areaFront = 0
                 
@@ -602,18 +614,51 @@ if __name__ == '__main__':
         
         if tempParking or pr or pl: 
             maxAreaL = 0 #biggest magenta contour on left ROI
+            leftY = 0
             maxAreaR = 0 #biggest magenta contour on right ROI
+            rightY = 0
             areaFront = 0 #area of black contour on main ROI
             
             for i in range(len(contours_magenta_l)):
                 cnt = contours_magenta_l[i]
-                maxAreaL = max(cv2.contourArea(cnt), maxAreaL)
+                area = cv2.contourArea(cnt)
+                
+                if area > 100:
+                
+                    #get width, height, and x and y coordinates by bounding rect
+                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
+                    x,y,w,h=cv2.boundingRect(approx)
+
+                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
+                    x += ROI1[0]
+                    y += ROI1[1] + h
+                
+                    if area > maxAreaL:
+                        maxAreaL = area
+                        leftY = y
             
             for i in range(len(contours_magenta_r)):
                 cnt = contours_magenta_r[i]
-                maxAreaR = max(cv2.contourArea(cnt), maxAreaR)
+                area = cv2.contourArea(cnt)
+                
+                if area > 100:
+                
+                    #get width, height, and x and y coordinates by bounding rect
+                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
+                    x,y,w,h=cv2.boundingRect(approx)
+
+                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
+                    x += ROI2[0]
+                    y += ROI2[1] + h
+                
+                    if area > maxAreaR:
+                        maxAreaR = area
+                        rightY = y
+            
+            print("right parking lane:", maxAreaR, rightY)
 
             #conditions for initiating parking on the left side
+            '''
             if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
                 
                 if not parkingL and not parkingR:
@@ -625,14 +670,17 @@ if __name__ == '__main__':
                 
                 if parkingL: 
                     angle = sharpLeft
+            '''
 
             #conditions for initiating parking on the right side
-            elif (maxAreaR > 3800 or (lTurn and maxAreaR > 100)) and (t >= 12 or pr):
+            if rightY > 230 and (t >= 12 or pr):
+                
                 if not parkingL and not parkingR:
+                    write("dc", 1640)
                     parkingR = True
                     
-                    if debug: 
-                        LED1(220, 255, 125)
+                    if pr: 
+                        LED1(0, 255, 0)
                 
                 if parkingR: 
                     angle = sharpRight
@@ -770,7 +818,20 @@ if __name__ == '__main__':
         if angle != prevAngle:
           
             #if area of wall is large enough and turning line is not detected end turn
-            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal: 
+            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal:
+                
+                  if lTurn:
+                      headingIndex += 1
+                      
+                      if headingIndex > 3:
+                          headingIndex = 0
+                          
+                  elif rTurn:
+                      headingIndex -= 1
+                  
+                      if headingIndex < 0:
+                          headingIndex = 3
+                        
               
                   #set turn variables to false as turn is over
                   lTurn = False 
