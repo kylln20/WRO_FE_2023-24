@@ -1,5 +1,5 @@
 # ------------------------------------------------------------{ libraries }-------------------------------------------------------------------------
-
+#command to calibrate gyro "python3 -m gyro.calibrateBerryIMU.py"
 import cv2
 import sys
 sys.path.append('/home/pi/TurboPi/')
@@ -176,20 +176,28 @@ if __name__ == '__main__':
     targetHeading = 0
     heading = 0
     stage = 1
+    pGyroError = 0
     
     headingIndex = 0
     
     #North, West, South, East
-    #array storing headings of directions
-    targetHeadings = [270, 180, 92, 350]
+    targetHeadings = [4, 281, 183, 95]
     
     heading, tHeading = berryIMU.compute_heading()
+    print("initial", heading, tHeading)
+    if tHeading > 340:
+        tHeading -= 360
     
-    #set initial heading
+    closest = 360
+    
     for i in range(len(targetHeadings)):
-        if abs(tHeading - targetHeadings[i]) <= 10:
+        if abs(tHeading - targetHeadings[i]) <= closest:
+            print(tHeading, targetHeadings[i])
+            closest = abs(tHeading - targetHeadings[i])
             headingIndex = i
-            break
+    
+    print(headingIndex)
+            
 
     #code for starting button
     key2_pin = 16
@@ -497,6 +505,15 @@ if __name__ == '__main__':
                   #set tTurn and tSignal to true to indicate a right turn
                   rTurn = True
                   tSignal = True
+                  '''
+                  if not temp:
+                      headingIndex -= 1
+                      
+                      if headingIndex < 0:
+                          headingIndex = 3
+                        
+                      temp = True
+                  '''
             
               #check for three point turn
               elif not temp:
@@ -543,6 +560,16 @@ if __name__ == '__main__':
                   lTurn = True
                   tSignal = True
                   
+                  '''
+                  if not temp:
+                      headingIndex += 1
+                      
+                      if headingIndex > 3:
+                          headingIndex = 0
+                    
+                      temp = True
+                  '''
+                  
               #check for three point turn
               elif not temp:
                   
@@ -566,29 +593,27 @@ if __name__ == '__main__':
             temp = False
 
 # ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
-
-        #get heading values
         heading, tHeading = berryIMU.compute_heading()
-
-        #adjust theading since heading can jump from 360 straight to 0 we want to make sure the values are consistent enough
-        if headingIndex == 3 and tHeading < 20:
-            tHeading + 360
-
-        print("heading and target heading:", tHeading, targetHeadings[headingIndex])
+        if headingIndex == 0 and tHeading > 320:
+            tHeading -= 360
+            
+        print("heading and target heading:", heading, tHeading, targetHeadings[headingIndex])
         
-        #proportional value for following gyro headinsg
+        
+        
         pKp = 0.5
-
+        pKd = 0.1
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
         if ((t >= 12 and tempParking) or pl or pr) and not parkingR and not parkingL:
             
-            #calculate new angle from error of current heading and target heading
             error = tHeading - targetHeadings[headingIndex]
             
-            angle = int(straightConst + pKp * error)
+            angle = int(straightConst + pKp * error + pKd * (error - pGyroError))
             
             print(angle)
+            
+            pGyroError = error
         
         areaFront = 0
                 
@@ -609,7 +634,6 @@ if __name__ == '__main__':
             rightY = 0
             areaFront = 0 #area of black contour on main ROI
             
-            #track the y coordinate of the largest magenta contour
             for i in range(len(contours_magenta_l)):
                 cnt = contours_magenta_l[i]
                 area = cv2.contourArea(cnt)
@@ -628,7 +652,6 @@ if __name__ == '__main__':
                         maxAreaL = area
                         leftY = y
             
-            #track the y coordinate of the largest magenta contour
             for i in range(len(contours_magenta_r)):
                 cnt = contours_magenta_r[i]
                 area = cv2.contourArea(cnt)
@@ -806,13 +829,12 @@ if __name__ == '__main__':
                 break
             
 # ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
-
+        
         if angle != prevAngle:
           
             #if area of wall is large enough and turning line is not detected end turn
             if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal:
                 
-                  #update target headings by increasing or decreasing the index to indicate a different target heading in the array
                   if lTurn:
                       headingIndex += 1
                       
@@ -853,6 +875,7 @@ if __name__ == '__main__':
                 
             #write the angle which is kept in the bounds of sharpLeft and sharpRight
             write("servo", max(min(angle, sharpLeft), sharpRight))
+        
 
 # ------------------------------------------------------------{ reset variables }------------------------------------------------------------------------
 
