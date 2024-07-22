@@ -181,7 +181,7 @@ if __name__ == '__main__':
     headingIndex = 0
     
     #North, West, South, East
-    targetHeadings = [4, 281, 183, 95]
+    targetHeadings = [-5, 274, 179, 89]
     
     heading, tHeading = berryIMU.compute_heading()
     print("initial", heading, tHeading)
@@ -189,12 +189,16 @@ if __name__ == '__main__':
         tHeading -= 360
     
     closest = 360
+    timeStraight = 1000000
     
     for i in range(len(targetHeadings)):
         if abs(tHeading - targetHeadings[i]) <= closest:
             print(tHeading, targetHeadings[i])
             closest = abs(tHeading - targetHeadings[i])
             headingIndex = i
+            
+    startTime = 0
+    curTime = 0
     
     print(headingIndex)
             
@@ -319,7 +323,7 @@ if __name__ == '__main__':
         #create magenta mask
         if tempParking or pl or pr: 
             lm = np.array([168, 175, 50])
-            um = np.array([172, 255, 255])
+            um = np.array([174, 255, 255])
 
             m_mask = cv2.inRange(img_hsv, lm, um)
 
@@ -368,7 +372,7 @@ if __name__ == '__main__':
                   num_pillars_g += 1
                   
                 #if the pillar is too close, stop the car and reverse to give it enough space
-              if area > 6500 and x + w // 2 <= 340:
+              if area > 6500 and x + w // 2 <= 340 and not pr and not pl:
                   LED2(255, 255, 0)
                   write("servo", 87)
                   write("dc", 1500)
@@ -425,7 +429,7 @@ if __name__ == '__main__':
                   num_pillars_r += 1
               
               #if the pillar is too close, stop the car and reverse to give it enough space
-              if area > 6500 and x + w // 2 >= 300:
+              if area > 6500 and x + w // 2 >= 300 and not pr and not pl:
                   LED2(255, 255, 0)
                   
                   write("servo", 87)
@@ -500,7 +504,7 @@ if __name__ == '__main__':
                   turnDir = "right"
 
               #if the turn direction is right
-              if turnDir == "right":
+              if turnDir == "right" and not parkingR and not parkingL:
 
                   #set tTurn and tSignal to true to indicate a right turn
                   rTurn = True
@@ -554,7 +558,7 @@ if __name__ == '__main__':
                   turnDir = "left" 
             
               #if the turn direction is left
-              if turnDir == "left":
+              if turnDir == "left" and not parkingL and not parkingR:
 
                   #set tTurn and tSignal to true to indicate a left turn
                   lTurn = True
@@ -605,7 +609,7 @@ if __name__ == '__main__':
         pKd = 0.1
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
-        if ((t >= 12 and tempParking) or pl or pr) and not parkingR and not parkingL:
+        if ((t >= 12 and tempParking) or pl or pr):
             
             error = tHeading - targetHeadings[headingIndex]
             
@@ -622,8 +626,10 @@ if __name__ == '__main__':
             areaFront = max(cv2.contourArea(cnt), areaFront)
 
         #if the area of the wall in front is above a limit stop as we are very close to the wall
-        if areaFront > 7000:
+        if areaFront > 7500:
             time.sleep(0.3)
+            write("servo", straightConst)
+            time.sleep(0.5)
             stopCar()
             break
         
@@ -671,34 +677,81 @@ if __name__ == '__main__':
                         rightY = y
             
             print("right parking lane:", maxAreaR, rightY)
+            
+            
+            
 
             #conditions for initiating parking on the left side
-            '''
-            if ((maxAreaL > 500 and num_pillars_r == 0 and num_pillars_g == 0) or (maxAreaL > 2000 and num_pillars_g + num_pillars_r == 1) or (rTurn and maxAreaL > 230)) and (t >= 12 or pl):
+            if leftY >= 240 and (t >= 12 or pl):
                 
                 if not parkingL and not parkingR:
+                    write("dc", 1640)
                     parkingL = True
-                    if debug: 
-                        LED1(255, 0, 255)
                     
-                time.sleep(0.5)
-                
-                if parkingL: 
-                    angle = sharpLeft
-            '''
+                    timeStraight = 8.5
+                    startTime = time.time()
+                    
+                    
+                    
+                    if pl: 
+                        LED1(255, 0, 255)
 
             #conditions for initiating parking on the right side
-            if rightY > 230 and (t >= 12 or pr):
+            if rightY >= 240 and (t >= 12 or pr):
                 
                 if not parkingL and not parkingR:
                     write("dc", 1640)
                     parkingR = True
                     
+                    timeStraight = 5.75
+                    startTime = time.time()
+                    
                     if pr: 
-                        LED1(0, 255, 0)
+                        LED1(255, 0, 255)
+                        
+            if curTime != -1: 
+                curTime = time.time()
                 
+            if curTime - startTime >= timeStraight and curTime != -1 and (parkingR or parkingL):
+                
+                if parkingR:
+                    
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", reverseSpeed)
+                    time.sleep(0.1)
+                    
+                    
+                    write("servo", sharpLeft)
+                    
+                    time.sleep(1.5)
+                    write("dc", 1640)
+                
+                elif parkingL:
+                    
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", reverseSpeed)
+                    time.sleep(0.1)
+                    write("servo", sharpRight)
+                    
+                    time.sleep(2.5)
+                    
+                    #break
+                    write("dc", 1640)
+                    write("servo", straightConst)
+                    
+                    headingIndex += 1
+                    
+                    if headingIndex > 3:
+                        headingIndex = 0 
+                    
+                curTime = -1
+            
+            if curTime == -1:
                 if parkingR: 
                     angle = sharpRight
+                
 
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
