@@ -17,12 +17,12 @@ AA = 0.40  # Complementary filter constant
 # Calibrating the compass isn't mandatory, however, a calibrated
 # compass will result in a more accurate heading value.
 
-magXmin = -2009
-magYmin = -151
-magZmin = -1750
-magXmax = -1556
-magYmax = 1074
-magZmax = -513
+magXmin = 516
+magYmin = -331
+magZmin = -1787
+magXmax = 1790
+magYmax = 1303
+magZmax = -256
 
 # Kalman filter variables
 Q_angle = 0.02
