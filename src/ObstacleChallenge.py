@@ -181,7 +181,7 @@ if __name__ == '__main__':
     headingIndex = 0
     
     #North, West, South, East
-    targetHeadings = [-5, 274, 179, 89]
+    targetHeadings = [176, 86, -1, 277]
     
     heading, tHeading = berryIMU.compute_heading()
     print("initial", heading, tHeading)
@@ -199,6 +199,10 @@ if __name__ == '__main__':
             
     startTime = 0
     curTime = 0
+    
+    lotAreas = [0, 0, 0, 0]
+    lotLocation = 0
+    
     
     print(headingIndex)
             
@@ -321,7 +325,7 @@ if __name__ == '__main__':
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         #create magenta mask
-        if tempParking or pl or pr: 
+        if tempParking or pl or pr or (5 > t > 0): 
             lm = np.array([168, 175, 50])
             um = np.array([174, 255, 255])
 
@@ -591,6 +595,11 @@ if __name__ == '__main__':
                       time.sleep(1)
                     
                       turnDir = "left"
+                      
+                      if lotLocation == 1:
+                          lotLocation = 3
+                      elif lotLocation == 3:
+                          lotLocation = 1
                 
         #if blue line isnt detected anymore reset temp
         if bCount == 0:
@@ -598,26 +607,37 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
         heading, tHeading = berryIMU.compute_heading()
-        if headingIndex == 0 and tHeading > 320:
+        if headingIndex == 2 and tHeading > 320:
             tHeading -= 360
             
         print("heading and target heading:", heading, tHeading, targetHeadings[headingIndex])
         
         
         
-        pKp = 0.5
+        if t > 4 and lotLocation == 0:
+            for i in range(4):
+                if lotAreas[i] > lotAreas[lotLocation]:
+                    lotLocation = i
+            
+            lotLocation += 1
+        
+        print("location of lot:", lotLocation)
+                
+        pKp = 1
         pKd = 0.1
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
-        if ((t >= 12 and tempParking) or pl or pr):
+        if ((t >= 12 and t % 4 == lotLocation and tempParking) or pl or pr):
             
-            error = tHeading - targetHeadings[headingIndex]
+            error = heading - targetHeadings[headingIndex]
             
             angle = int(straightConst + pKp * error + pKd * (error - pGyroError))
             
             print(angle)
             
             pGyroError = error
+            
+            #angle = 87
         
         areaFront = 0
                 
@@ -633,7 +653,7 @@ if __name__ == '__main__':
             stopCar()
             break
         
-        if tempParking or pr or pl: 
+        if tempParking or pr or pl or (5 > t > 0): 
             maxAreaL = 0 #biggest magenta contour on left ROI
             leftY = 0
             maxAreaR = 0 #biggest magenta contour on right ROI
@@ -678,9 +698,11 @@ if __name__ == '__main__':
             
             print("right parking lane:", maxAreaR, rightY)
             
-            
-            
-
+            if turnDir == "right":
+                lotAreas[t-1] = max(maxAreaL, lotAreas[t-1])
+            elif turnDir == "left":
+                lotAreas[t-1] = max(maxAreaR, lotAreas[t-1])
+                
             #conditions for initiating parking on the left side
             if leftY >= 240 and (t >= 12 or pl):
                 
@@ -764,6 +786,11 @@ if __name__ == '__main__':
                     turnDir = "left"
                 else:
                     turnDir = "right"
+                
+                if lotLocation == 1:
+                    lotLocation = 3
+                elif lotLocation == 3:
+                    lotLocation = 1
                     
                 reverse = True
                 tempR = False
@@ -886,7 +913,7 @@ if __name__ == '__main__':
         if angle != prevAngle:
           
             #if area of wall is large enough and turning line is not detected end turn
-            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal:
+            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn) or (pr and lTurn) or (pl and rTurn) or (tempParking and (lTurn or rTurn))) and not tSignal:
                 
                   if lTurn:
                       headingIndex += 1
@@ -913,10 +940,15 @@ if __name__ == '__main__':
                   if (t == 8 or mReverse) and lastTarget == redTarget:
                       reverse = True
                       
+                      if lotLocation == 1:
+                          lotLocation = 3
+                      elif lotLocation == 3: 
+                          lotLocation = 1
+                      
                       if turnDir == "right":
-                        turnDir = "left"
+                         turnDir = "left"
                       else:
-                        turnDir = "right"
+                          turnDir = "right"
 
             #if in a right turn and no pillar is detected set the angle to sharpRight
             if rTurn and cTarget == 0:
