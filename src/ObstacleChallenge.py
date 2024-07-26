@@ -513,15 +513,6 @@ if __name__ == '__main__':
                   #set tTurn and tSignal to true to indicate a right turn
                   rTurn = True
                   tSignal = True
-                  '''
-                  if not temp:
-                      headingIndex -= 1
-                      
-                      if headingIndex < 0:
-                          headingIndex = 3
-                        
-                      temp = True
-                  '''
             
               #check for three point turn
               elif not temp:
@@ -568,16 +559,6 @@ if __name__ == '__main__':
                   lTurn = True
                   tSignal = True
                   
-                  '''
-                  if not temp:
-                      headingIndex += 1
-                      
-                      if headingIndex > 3:
-                          headingIndex = 0
-                    
-                      temp = True
-                  '''
-                  
               #check for three point turn
               elif not temp:
                   
@@ -611,8 +592,6 @@ if __name__ == '__main__':
             tHeading -= 360
             
         print("heading and target heading:", heading, tHeading, targetHeadings[headingIndex])
-        
-        
         
         if t > 4 and lotLocation == 0:
             for i in range(4):
@@ -713,8 +692,6 @@ if __name__ == '__main__':
                     timeStraight = 8.5
                     startTime = time.time()
                     
-                    
-                    
                     if pl: 
                         LED1(255, 0, 255)
 
@@ -778,7 +755,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
 # -----------------{ no pillar detected }--------------
-        if cTarget == 0 and not tempParking and not pr and not pl:
+        if cTarget == 0 and t < 12 + lotLocation and not pr and not pl:
 
             #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
             if tempR:
@@ -787,6 +764,7 @@ if __name__ == '__main__':
                 else:
                     turnDir = "right"
                 
+                #flip location as we are heading in the opposite direction
                 if lotLocation == 1:
                     lotLocation = 3
                 elif lotLocation == 3:
@@ -796,9 +774,15 @@ if __name__ == '__main__':
                 tempR = False
 
 
-            #set tempParking to true after 12 turns to indicate pillars should be passed on the outside
+            #set tempParking to indicate the car should be parking and change pillars to be passed on the outside
             if t == 12:
+                if turnDir == "right": 
+                    redTarget = greenTarget
+                else: 
+                    greenTarget = redTarget
+
                 tempParking = True
+
             
             LED1(0, 0, 0)
 
@@ -823,7 +807,7 @@ if __name__ == '__main__':
             
         
 # -----------------{ pillar detected }--------------
-        elif not tempParking and not pl and not pr:
+        elif t < 12 + lotLocation and not pl and not pr:
             
             if debug:
                 if cTarget == redTarget:
@@ -940,6 +924,7 @@ if __name__ == '__main__':
                   if (t == 8 or mReverse) and lastTarget == redTarget:
                       reverse = True
                       
+                      #flip lot location as direction changed
                       if lotLocation == 1:
                           lotLocation = 3
                       elif lotLocation == 3: 
