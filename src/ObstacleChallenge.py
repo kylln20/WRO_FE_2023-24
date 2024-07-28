@@ -181,7 +181,7 @@ if __name__ == '__main__':
     headingIndex = 0
     
     #North, West, South, East
-    targetHeadings = [176, 86, -1, 277]
+    targetHeadings = [175, 85, 2, 281]
     
     heading, tHeading = berryIMU.compute_heading()
     print("initial", heading, tHeading)
@@ -285,7 +285,7 @@ if __name__ == '__main__':
         img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         #create red mask
-        lower_red = np.array([172, 175, 50])
+        lower_red = np.array([174, 175, 50])
         upper_red = np.array([180, 255, 255])
       
         r_mask = cv2.inRange(img_hsv, lower_red, upper_red)
@@ -608,7 +608,7 @@ if __name__ == '__main__':
         #do the same if pl and pr are true (debugging mode)
         if ((t >= 12 and t % 4 == lotLocation and tempParking) or pl or pr):
             
-            error = heading - targetHeadings[headingIndex]
+            error = tHeading - targetHeadings[headingIndex]
             
             angle = int(straightConst + pKp * error + pKd * (error - pGyroError))
             
@@ -674,13 +674,14 @@ if __name__ == '__main__':
                     if area > maxAreaR:
                         maxAreaR = area
                         rightY = y
-            
+             
             print("right parking lane:", maxAreaR, rightY)
             
-            if turnDir == "right":
-                lotAreas[t-1] = max(maxAreaL, lotAreas[t-1])
-            elif turnDir == "left":
-                lotAreas[t-1] = max(maxAreaR, lotAreas[t-1])
+            if 5 > t > 0: 
+                if turnDir == "right":
+                    lotAreas[t-1] = max(maxAreaL, lotAreas[t-1])
+                elif turnDir == "left":
+                    lotAreas[t-1] = max(maxAreaR, lotAreas[t-1])
                 
             #conditions for initiating parking on the left side
             if leftY >= 240 and (t >= 12 or pl):
@@ -868,6 +869,8 @@ if __name__ == '__main__':
                     write("dc", reverseSpeed)
                     time.sleep(1.5)
                     write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1650)
                 else:
                     continue
 
@@ -882,6 +885,8 @@ if __name__ == '__main__':
                     write("dc", reverseSpeed)
                     time.sleep(2)
                     write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1650)
                 else:
                     continue
                 
@@ -983,3 +988,4 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
+
