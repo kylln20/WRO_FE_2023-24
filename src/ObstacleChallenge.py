@@ -58,6 +58,22 @@ def stopCar():
     LED2(0, 0, 0)
     
     cv2.destroyAllWindows()
+    
+def initGyro(hList, h, val):
+    closest = 360
+    hIndex = 0
+    
+    for i in range(len(hList)):
+        if abs(h - hList[i]) <= closest:
+            print(h, hList[i])
+            closest = abs(h - hList[i])
+            hIndex = i
+    
+    if val == "index": 
+        return hIndex
+    else:
+        return closest
+    
 
 if __name__ == '__main__':
     
@@ -181,22 +197,19 @@ if __name__ == '__main__':
     headingIndex = 0
     
     #North, West, South, East
-    targetHeadings = [175, 85, 2, 281]
+    targetHeadings = [173, 94, 0, 271]
+    #targetHeadings = [180, 90, 0, 270]
     
     heading, tHeading = berryIMU.compute_heading()
     print("initial", heading, tHeading)
-    if tHeading > 340:
-        tHeading -= 360
     
-    closest = 360
-    timeStraight = 1000000
+    if heading > 340:
+        heading -= 360
     
-    for i in range(len(targetHeadings)):
-        if abs(tHeading - targetHeadings[i]) <= closest:
-            print(tHeading, targetHeadings[i])
-            closest = abs(tHeading - targetHeadings[i])
-            headingIndex = i
+    headingIndex = initGyro(targetHeadings, heading, "index")
             
+    timeStraight = 100000
+    
     startTime = 0
     curTime = 0
     
@@ -222,6 +235,7 @@ if __name__ == '__main__':
         if sys.argv[1].lower() == "parkingl":
             pl = True
         elif sys.argv[1].lower() == "parkingr":
+            greenTarget = redTarget
             pr = True
         elif sys.argv[1].lower() == "turn":
             mReverse = True
@@ -588,8 +602,8 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
         heading, tHeading = berryIMU.compute_heading()
-        if headingIndex == 2 and tHeading > 320:
-            tHeading -= 360
+        if headingIndex == 2 and heading > 320:
+            heading -= 360
             
         print("heading and target heading:", heading, tHeading, targetHeadings[headingIndex])
         
@@ -606,9 +620,9 @@ if __name__ == '__main__':
         pKd = 0.1
         #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
         #do the same if pl and pr are true (debugging mode)
-        if ((t >= 12 and t % 4 == lotLocation and tempParking) or pl or pr):
+        if ((t >= 12 and t - 11 >= lotLocation and tempParking) or pl or pr):
             
-            error = tHeading - targetHeadings[headingIndex]
+            error = heading - targetHeadings[headingIndex]
             
             angle = int(straightConst + pKp * error + pKd * (error - pGyroError))
             
@@ -693,7 +707,7 @@ if __name__ == '__main__':
                     timeStraight = 8.5
                     startTime = time.time()
                     
-                    if pl: 
+                    if pl or debug: 
                         LED1(255, 0, 255)
 
             #conditions for initiating parking on the right side
@@ -706,7 +720,7 @@ if __name__ == '__main__':
                     timeStraight = 5.75
                     startTime = time.time()
                     
-                    if pr: 
+                    if pr or debug: 
                         LED1(255, 0, 255)
                         
             if curTime != -1: 
@@ -756,7 +770,7 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
 # -----------------{ no pillar detected }--------------
-        if cTarget == 0 and t < 12 + lotLocation and not pr and not pl:
+        if cTarget == 0 and t < 11 + lotLocation and not pr and not pl:
 
             #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
             if tempR:
@@ -808,7 +822,9 @@ if __name__ == '__main__':
             
         
 # -----------------{ pillar detected }--------------
-        elif t < 12 + lotLocation and not pl and not pr:
+#and not pl and not pr
+
+        elif t < 12 + lotLocation and (cTarget == redTarget or cTarget == greenTarget) and not parkingR and not parkingL:
             
             if debug:
                 if cTarget == redTarget:
@@ -851,6 +867,8 @@ if __name__ == '__main__':
 
             #make sure angle value is over 2000 
             angle = max(0, angle)
+        else:
+            LED1(0, 0, 0)
 
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
@@ -901,8 +919,11 @@ if __name__ == '__main__':
         
         if angle != prevAngle:
           
+            diff = initGyro(targetHeadings, heading, "diff")
+            index = initGyro(targetHeadings, heading, "diff")
+            
             #if area of wall is large enough and turning line is not detected end turn
-            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn) or (pr and lTurn) or (pl and rTurn) or (tempParking and (lTurn or rTurn))) and not tSignal:
+            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn) or (tempParking and (lTurn or rTurn) and diff <= 10 and headingIndex != index)) and not tSignal:
                 
                   if lTurn:
                       headingIndex += 1
