@@ -16,13 +16,23 @@ AA = 0.40  # Complementary filter constant
 # Use calibrateBerryIMU.py to get calibration values
 # Calibrating the compass isn't mandatory, however, a calibrated
 # compass will result in a more accurate heading value.
-
+'''
 magXmin = 516
 magYmin = -331
 magZmin = -1787
 magXmax = 1790
 magYmax = 1303
 magZmax = -256
+'''
+
+magXmin = 874
+magYmin = -243
+magZmin = -1773
+magXmax = 1668
+magYmax = 1149
+magZmax = -259
+
+
 
 # Kalman filter variables
 Q_angle = 0.02
