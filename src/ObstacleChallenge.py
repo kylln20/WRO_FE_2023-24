@@ -65,7 +65,7 @@ def initGyro(hList, h, val):
     
     for i in range(len(hList)):
         if abs(h - hList[i]) <= closest:
-            print(h, hList[i])
+            #print(h, hList[i])
             closest = abs(h - hList[i])
             hIndex = i
     
@@ -233,9 +233,12 @@ if __name__ == '__main__':
         debug = True
         
         if sys.argv[1].lower() == "parkingl":
+            redTarget = greenTarget
+            tempParking = True
             pl = True
         elif sys.argv[1].lower() == "parkingr":
             greenTarget = redTarget
+            tempParking = True
             pr = True
         elif sys.argv[1].lower() == "turn":
             mReverse = True
@@ -599,6 +602,8 @@ if __name__ == '__main__':
         #if blue line isnt detected anymore reset temp
         if bCount == 0:
             temp = False
+        
+        print(turnDir)
 
 # ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
         heading, tHeading = berryIMU.compute_heading()
@@ -704,7 +709,7 @@ if __name__ == '__main__':
                     write("dc", 1640)
                     parkingL = True
                     
-                    timeStraight = 8.5
+                    timeStraight = 3
                     startTime = time.time()
                     
                     if pl or debug: 
@@ -717,7 +722,7 @@ if __name__ == '__main__':
                     write("dc", 1640)
                     parkingR = True
                     
-                    timeStraight = 5.75
+                    timeStraight = 3
                     startTime = time.time()
                     
                     if pr or debug: 
@@ -729,7 +734,7 @@ if __name__ == '__main__':
             if curTime - startTime >= timeStraight and curTime != -1 and (parkingR or parkingL):
                 
                 if parkingR:
-                    
+                    '''
                     write("dc", 1500)
                     time.sleep(0.1)
                     write("dc", reverseSpeed)
@@ -740,9 +745,45 @@ if __name__ == '__main__':
                     
                     time.sleep(1.5)
                     write("dc", 1640)
+                    '''
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1360)
+                    write("servo", 127)
+                    time.sleep(4)
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1640)
+                    write("servo", 47)
+                    time.sleep(3)
+                    #write("dc", 1500)
+                    write("servo", 87)
+                    
+                    headingIndex -= 1
+                    
+                    if headingIndex < 0:
+                        headingIndex = 3
                 
                 elif parkingL:
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1360)
+                    write("servo", 47)
+                    time.sleep(4)
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1640)
+                    write("servo", 127)
+                    time.sleep(3)
+                    #write("dc", 1500)
+                    write("servo", 87)
                     
+                    headingIndex += 1
+                    
+                    if headingIndex > 3:
+                        headingIndex = 0
+                        
+                    '''
                     write("dc", 1500)
                     time.sleep(0.1)
                     write("dc", reverseSpeed)
@@ -758,14 +799,15 @@ if __name__ == '__main__':
                     headingIndex += 1
                     
                     if headingIndex > 3:
-                        headingIndex = 0 
+                        headingIndex = 0
+                    '''
                     
                 curTime = -1
-            
+            '''
             if curTime == -1:
                 if parkingR: 
                     angle = sharpRight
-                
+            '''
 
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
@@ -824,7 +866,7 @@ if __name__ == '__main__':
 # -----------------{ pillar detected }--------------
 #and not pl and not pr
 
-        elif t < 12 + lotLocation and (cTarget == redTarget or cTarget == greenTarget) and not parkingR and not parkingL:
+        elif t < 12 + lotLocation and (cTarget == redTarget or cTarget == greenTarget) and not parkingR and not parkingL and not (pr and t == 1):
             
             if debug:
                 if cTarget == redTarget:
@@ -842,6 +884,18 @@ if __name__ == '__main__':
 
                 #add a turn
                 t += 1
+                
+                if lTurn:
+                    headingIndex += 1
+                      
+                    if headingIndex > 3:
+                        headingIndex = 0
+                          
+                elif rTurn:
+                    headingIndex -= 1
+                  
+                    if headingIndex < 0:
+                        headingIndex = 3
                 
                 #reset lTurn and rTurn booleans to indicate the turn is over
                 lTurn = False
@@ -917,13 +971,13 @@ if __name__ == '__main__':
             
 # ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
         
-        if angle != prevAngle:
+        if angle != prevAngle or rTurn or lTurn:
           
             diff = initGyro(targetHeadings, heading, "diff")
             index = initGyro(targetHeadings, heading, "diff")
             
             #if area of wall is large enough and turning line is not detected end turn
-            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn) or (tempParking and (lTurn or rTurn) and diff <= 10 and headingIndex != index)) and not tSignal:
+            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn) or (tempParking and (lTurn or rTurn) and diff <= 15 and headingIndex != index)) and not tSignal:
                 
                   if lTurn:
                       headingIndex += 1
