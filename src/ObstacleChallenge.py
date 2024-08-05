@@ -9,8 +9,6 @@ import RPi.GPIO as GPIO
 import numpy as np
 import HiwonderSDK.Board as Board
 import math
-from gyro import berryIMU, IMU, LSM9DS0, LSM9DS1, LSM6DSL, LIS3MDL
-
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
@@ -58,22 +56,6 @@ def stopCar():
     LED2(0, 0, 0)
     
     cv2.destroyAllWindows()
-    
-def initGyro(hList, h, val):
-    closest = 360
-    hIndex = 0
-    
-    for i in range(len(hList)):
-        if abs(h - hList[i]) <= closest:
-            #print(h, hList[i])
-            closest = abs(h - hList[i])
-            hIndex = i
-    
-    if val == "index": 
-        return hIndex
-    else:
-        return closest
-    
 
 if __name__ == '__main__':
     
@@ -177,6 +159,8 @@ if __name__ == '__main__':
     
     LED1(255, 0, 0)
     
+    time.sleep(0.5)
+    
     write("dc", 1500) 
 
     time.sleep(8) #delay 8 seconds for the servo to be ready
@@ -185,40 +169,6 @@ if __name__ == '__main__':
     pl = False #variable for left parking mode, a debug mode where it parks immedietly for testing purposes
     pr = False #variable for right parking mode, a debug mode where it parks immedietly for testing purposes
     mReverse = False #variable for reverse mode, a debug mode where it goes directly into a 3 point turn
-    
-    #variables used in parking
-    pKp = 0.1
-    pKd = 0.1
-    targetHeading = 0
-    heading = 0
-    stage = 1
-    pGyroError = 0
-    
-    headingIndex = 0
-    
-    #North, West, South, East
-    targetHeadings = [173, 94, 0, 271]
-    #targetHeadings = [180, 90, 0, 270]
-    
-    heading, tHeading = berryIMU.compute_heading()
-    print("initial", heading, tHeading)
-    
-    if heading > 340:
-        heading -= 360
-    
-    headingIndex = initGyro(targetHeadings, heading, "index")
-            
-    timeStraight = 100000
-    
-    startTime = 0
-    curTime = 0
-    
-    lotAreas = [0, 0, 0, 0]
-    lotLocation = 0
-    
-    
-    print(headingIndex)
-            
 
     #code for starting button
     key2_pin = 16
@@ -243,7 +193,8 @@ if __name__ == '__main__':
         elif sys.argv[1].lower() == "turn":
             mReverse = True
         elif sys.argv[1].lower() == "steer":
-            pr = True
+            #pl = True
+            redTarget = greenTarget
             speed = 1500
         
     #if no mode is specified, assume the regular program and wait for button put
@@ -265,16 +216,19 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
             
         #reset rightArea, and leftArea variables
-        rightArea, leftArea = 0, 0
+        rightArea, leftArea, areaFront = 0, 0, 0
 
         #get an image from pi camera
         img = picam2.capture_array()
+        
+        # convert from BGR to HSV
+        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        #convert to grayscale
-        imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-        #threshold image
-        ret, imgThresh = cv2.threshold(imgGray, 55, 255, cv2.THRESH_BINARY_INV)
+        #create black mask and threshold to find walls
+        lower_black = np.array([0, 0, 0])
+        upper_black = np.array([180, 255, 50])
+        
+        imgThresh = cv2.inRange(img_hsv, lower_black, upper_black)
 
         #find left and right contours of the lanes
         contours_left, hierarchy = cv2.findContours(imgThresh[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], 
@@ -282,7 +236,13 @@ if __name__ == '__main__':
     
         contours_right, hierarchy = cv2.findContours(imgThresh[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], 
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        
+        #convert to grayscale
+        imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+        #threshold image
+        ret, imgThresh = cv2.threshold(imgGray, 55, 255, cv2.THRESH_BINARY_INV)
+        
         #find black contours in the parking region of interest to determine when to stop during parking
         contours_parking, hierarchy = cv2.findContours(imgThresh[ROI4[1]:ROI4[3], ROI4[0]:ROI4[2]], 
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -297,9 +257,13 @@ if __name__ == '__main__':
             area = cv2.contourArea(cnt)
 
             rightArea = max(area, rightArea)
+                
+        for cnt in contours_parking:
+            area = cv2.contourArea(cnt)
+            
+            areaFront = max(area, areaFront)
+            
 
-        # convert from BGR to HSV
-        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         #create red mask
         lower_red = np.array([174, 175, 50])
@@ -342,9 +306,9 @@ if __name__ == '__main__':
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         #create magenta mask
-        if tempParking or pl or pr or (5 > t > 0): 
-            lm = np.array([168, 175, 50])
-            um = np.array([174, 255, 255])
+        if tempParking or pl or pr: 
+            lm = np.array([164, 100, 50])
+            um = np.array([173, 255, 255])
 
             m_mask = cv2.inRange(img_hsv, lm, um)
 
@@ -353,6 +317,9 @@ if __name__ == '__main__':
             cv2.CHAIN_APPROX_SIMPLE)[-2]
             
             contours_magenta_r = cv2.findContours(m_mask[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cv2.RETR_EXTERNAL,
+            cv2.CHAIN_APPROX_SIMPLE)[-2]
+            
+            contours_magenta_c = cv2.findContours(m_mask[ROI4[1]:ROI4[3], ROI4[0]:ROI4[2]], cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE)[-2]
 
 # ------------------------------------------------------------{ processing contours }-------------------------------------------------------------------------
@@ -593,11 +560,6 @@ if __name__ == '__main__':
                       time.sleep(1)
                     
                       turnDir = "left"
-                      
-                      if lotLocation == 1:
-                          lotLocation = 3
-                      elif lotLocation == 3:
-                          lotLocation = 1
                 
         #if blue line isnt detected anymore reset temp
         if bCount == 0:
@@ -605,58 +567,29 @@ if __name__ == '__main__':
         
         print(turnDir)
 
-# ------------------------------------------------------------{ final parking algorithm }-------------------------------------------------------------------------
-        heading, tHeading = berryIMU.compute_heading()
-        if headingIndex == 2 and heading > 320:
-            heading -= 360
-            
-        print("heading and target heading:", heading, tHeading, targetHeadings[headingIndex])
+# ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------
         
-        if t > 4 and lotLocation == 0:
-            for i in range(4):
-                if lotAreas[i] > lotAreas[lotLocation]:
-                    lotLocation = i
-            
-            lotLocation += 1
         
-        print("location of lot:", lotLocation)
-                
-        pKp = 1
-        pKd = 0.1
-        #if no pillar is detected (tempParking) and turns are greater than or equal to 12 change it so the car will always stay on the outside of signal pillars
-        #do the same if pl and pr are true (debugging mode)
-        if ((t >= 12 and t - 11 >= lotLocation and tempParking) or pl or pr):
-            
-            error = heading - targetHeadings[headingIndex]
-            
-            angle = int(straightConst + pKp * error + pKd * (error - pGyroError))
-            
-            print(angle)
-            
-            pGyroError = error
-            
-            #angle = 87
         
-        areaFront = 0
-                
-        for i in range(len(contours_parking)):
-            cnt = contours_parking[i]
-            areaFront = max(cv2.contourArea(cnt), areaFront)
+        if tempParking or pr or pl: 
+            areaFrontMagenta = 0
+            
+            for i in range(len(contours_magenta_c)):
+                cnt = contours_magenta_c[i]
+                areaFrontMagenta = max(cv2.contourArea(cnt), areaFrontMagenta)
 
         #if the area of the wall in front is above a limit stop as we are very close to the wall
         if areaFront > 7500:
-            time.sleep(0.3)
             write("servo", straightConst)
             time.sleep(0.5)
             stopCar()
             break
         
-        if tempParking or pr or pl or (5 > t > 0): 
+        if tempParking or pr or pl: 
             maxAreaL = 0 #biggest magenta contour on left ROI
             leftY = 0
             maxAreaR = 0 #biggest magenta contour on right ROI
             rightY = 0
-            areaFront = 0 #area of black contour on main ROI
             
             for i in range(len(contours_magenta_l)):
                 cnt = contours_magenta_l[i]
@@ -694,26 +627,23 @@ if __name__ == '__main__':
                         maxAreaR = area
                         rightY = y
              
-            print("right parking lane:", maxAreaR, rightY)
-            
-            if 5 > t > 0: 
-                if turnDir == "right":
-                    lotAreas[t-1] = max(maxAreaL, lotAreas[t-1])
-                elif turnDir == "left":
-                    lotAreas[t-1] = max(maxAreaR, lotAreas[t-1])
+            print("magenta", areaFrontMagenta, "black", areaFront)
+
                 
             #conditions for initiating parking on the left side
-            if leftY >= 240 and (t >= 12 or pl):
+            
+            if leftY >= 220 and (t >= 12 or pl):
                 
                 if not parkingL and not parkingR:
+                    
+                    
+                        
                     write("dc", 1640)
                     parkingL = True
                     
-                    timeStraight = 3
-                    startTime = time.time()
+                    print(maxAreaL)
                     
-                    if pl or debug: 
-                        LED1(255, 0, 255)
+                    
 
             #conditions for initiating parking on the right side
             if rightY >= 240 and (t >= 12 or pr):
@@ -721,98 +651,54 @@ if __name__ == '__main__':
                 if not parkingL and not parkingR:
                     write("dc", 1640)
                     parkingR = True
+
                     
-                    timeStraight = 3
-                    startTime = time.time()
-                    
-                    if pr or debug: 
-                        LED1(255, 0, 255)
+            print(f" left area: {leftArea} right area: {rightArea}")   
+                
+            if parkingR:
+                if pr or debug: 
+                    LED1(255, 0, 255)
                         
-            if curTime != -1: 
-                curTime = time.time()
-                
-            if curTime - startTime >= timeStraight and curTime != -1 and (parkingR or parkingL):
-                
-                if parkingR:
-                    '''
+                if areaFrontMagenta > 2000:
                     write("dc", 1500)
                     time.sleep(0.1)
-                    write("dc", reverseSpeed)
-                    time.sleep(0.1)
-                    
-                    
+                    write("dc", 1355)
                     write("servo", sharpLeft)
-                    
-                    time.sleep(1.5)
-                    write("dc", 1640)
-                    '''
+                    time.sleep(0.5)
                     write("dc", 1500)
-                    time.sleep(0.1)
-                    write("dc", 1360)
-                    write("servo", 127)
-                    time.sleep(4)
-                    write("dc", 1500)
-                    time.sleep(0.1)
+                else:
                     write("dc", 1640)
-                    write("servo", 47)
-                    time.sleep(3)
-                    #write("dc", 1500)
-                    write("servo", 87)
-                    
-                    headingIndex -= 1
-                    
-                    if headingIndex < 0:
-                        headingIndex = 3
+                    write("servo", sharpRight)
+            
+            elif parkingL:
                 
-                elif parkingL:
-                    write("dc", 1500)
-                    time.sleep(0.1)
-                    write("dc", 1360)
-                    write("servo", 47)
-                    time.sleep(4)
-                    write("dc", 1500)
-                    time.sleep(0.1)
-                    write("dc", 1640)
-                    write("servo", 127)
-                    time.sleep(3)
-                    #write("dc", 1500)
-                    write("servo", 87)
+                
                     
-                    headingIndex += 1
+                if areaFrontMagenta > 2000:
+                    if rightArea > 13000 and leftArea < 5000:
+                        write("dc", 1640)
+                        write("servo", sharpRight)
+                        time.sleep(1)
+                        continue
                     
-                    if headingIndex > 3:
-                        headingIndex = 0
-                        
-                    '''
+                    LED1(255, 0, 0)
                     write("dc", 1500)
                     time.sleep(0.1)
-                    write("dc", reverseSpeed)
+                    write("dc", 1355)
                     time.sleep(0.1)
                     write("servo", sharpRight)
-                    
-                    time.sleep(2.5)
-                    
-                    #break
+                    time.sleep(0.5)
+                    write("dc", 1500)
+                else:
+                    LED1(255, 0, 255)
                     write("dc", 1640)
-                    write("servo", straightConst)
+                    write("servo", sharpLeft)
                     
-                    headingIndex += 1
-                    
-                    if headingIndex > 3:
-                        headingIndex = 0
-                    '''
-                    
-                curTime = -1
-            '''
-            if curTime == -1:
-                if parkingR: 
-                    angle = sharpRight
-            '''
 
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
 # -----------------{ no pillar detected }--------------
-        if cTarget == 0 and t < 11 + lotLocation and not pr and not pl:
+        if cTarget == 0 and not parkingL and not parkingR:
 
             #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
             if tempR:
@@ -820,12 +706,6 @@ if __name__ == '__main__':
                     turnDir = "left"
                 else:
                     turnDir = "right"
-                
-                #flip location as we are heading in the opposite direction
-                if lotLocation == 1:
-                    lotLocation = 3
-                elif lotLocation == 3:
-                    lotLocation = 1
                     
                 reverse = True
                 tempR = False
@@ -866,7 +746,7 @@ if __name__ == '__main__':
 # -----------------{ pillar detected }--------------
 #and not pl and not pr
 
-        elif t < 12 + lotLocation and (cTarget == redTarget or cTarget == greenTarget) and not parkingR and not parkingL and not (pr and t == 1):
+        elif not parkingR and not parkingL:
             
             if debug:
                 if cTarget == redTarget:
@@ -884,18 +764,6 @@ if __name__ == '__main__':
 
                 #add a turn
                 t += 1
-                
-                if lTurn:
-                    headingIndex += 1
-                      
-                    if headingIndex > 3:
-                        headingIndex = 0
-                          
-                elif rTurn:
-                    headingIndex -= 1
-                  
-                    if headingIndex < 0:
-                        headingIndex = 3
                 
                 #reset lTurn and rTurn booleans to indicate the turn is over
                 lTurn = False
@@ -921,7 +789,7 @@ if __name__ == '__main__':
 
             #make sure angle value is over 2000 
             angle = max(0, angle)
-        else:
+        elif not parkingR and not parkingL:
             LED1(0, 0, 0)
 
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
@@ -972,26 +840,10 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
         
         if angle != prevAngle or rTurn or lTurn:
-          
-            diff = initGyro(targetHeadings, heading, "diff")
-            index = initGyro(targetHeadings, heading, "diff")
             
             #if area of wall is large enough and turning line is not detected end turn
-            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn) or (tempParking and (lTurn or rTurn) and diff <= 15 and headingIndex != index)) and not tSignal:
-                
-                  if lTurn:
-                      headingIndex += 1
-                      
-                      if headingIndex > 3:
-                          headingIndex = 0
-                          
-                  elif rTurn:
-                      headingIndex -= 1
-                  
-                      if headingIndex < 0:
-                          headingIndex = 3
+            if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal:
                         
-              
                   #set turn variables to false as turn is over
                   lTurn = False 
                   rTurn = False
@@ -1004,27 +856,30 @@ if __name__ == '__main__':
                   if (t == 8 or mReverse) and lastTarget == redTarget:
                       reverse = True
                       
-                      #flip lot location as direction changed
-                      if lotLocation == 1:
-                          lotLocation = 3
-                      elif lotLocation == 3: 
-                          lotLocation = 1
-                      
                       if turnDir == "right":
                          turnDir = "left"
                       else:
                           turnDir = "right"
 
             #if in a right turn and no pillar is detected set the angle to sharpRight
-            if rTurn and cTarget == 0:
-                angle = sharpRight
+            if not parkingR and not parkingL: 
+                if rTurn and cTarget == 0:
+                    if tempParking: 
+                        angle = straightConst - 25
+                    else:
+                        angle = sharpRight
 
-            #if in a left turn and no pillar is detected set the angle to sharpLeft
-            elif lTurn and cTarget == 0:
-                angle = sharpLeft
+                #if in a left turn and no pillar is detected set the angle to sharpLeft
+                elif lTurn and cTarget == 0:
+                   # if tempParking: 
+                   #     angle = straightConst + 25
+                   # else:
+                     angle = sharpLeft
+            
+            
                 
-            #write the angle which is kept in the bounds of sharpLeft and sharpRight
-            write("servo", max(min(angle, sharpLeft), sharpRight))
+                #write the angle which is kept in the bounds of sharpLeft and sharpRight
+                write("servo", max(min(angle, sharpLeft), sharpRight))
         
 
 # ------------------------------------------------------------{ reset variables }------------------------------------------------------------------------
@@ -1063,4 +918,5 @@ if __name__ == '__main__':
             cv2.imshow("finalColor", img) 
 
 cv2.destroyAllWindows()
+
 
