@@ -566,133 +566,6 @@ if __name__ == '__main__':
             temp = False
         
         print(turnDir)
-
-# ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------
-        
-        
-        
-        if tempParking or pr or pl: 
-            areaFrontMagenta = 0
-            
-            for i in range(len(contours_magenta_c)):
-                cnt = contours_magenta_c[i]
-                areaFrontMagenta = max(cv2.contourArea(cnt), areaFrontMagenta)
-
-        #if the area of the wall in front is above a limit stop as we are very close to the wall
-        if areaFront > 7500:
-            write("servo", straightConst)
-            time.sleep(0.5)
-            stopCar()
-            break
-        
-        if tempParking or pr or pl: 
-            maxAreaL = 0 #biggest magenta contour on left ROI
-            leftY = 0
-            maxAreaR = 0 #biggest magenta contour on right ROI
-            rightY = 0
-            
-            for i in range(len(contours_magenta_l)):
-                cnt = contours_magenta_l[i]
-                area = cv2.contourArea(cnt)
-                
-                if area > 100:
-                
-                    #get width, height, and x and y coordinates by bounding rect
-                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
-                    x,y,w,h=cv2.boundingRect(approx)
-
-                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-                    x += ROI1[0]
-                    y += ROI1[1] + h
-                
-                    if area > maxAreaL:
-                        maxAreaL = area
-                        leftY = y
-            
-            for i in range(len(contours_magenta_r)):
-                cnt = contours_magenta_r[i]
-                area = cv2.contourArea(cnt)
-                
-                if area > 100:
-                
-                    #get width, height, and x and y coordinates by bounding rect
-                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
-                    x,y,w,h=cv2.boundingRect(approx)
-
-                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-                    x += ROI2[0]
-                    y += ROI2[1] + h
-                
-                    if area > maxAreaR:
-                        maxAreaR = area
-                        rightY = y
-             
-            print("magenta", areaFrontMagenta, "black", areaFront)
-
-                
-            #conditions for initiating parking on the left side
-            
-            if leftY >= 220 and (t >= 12 or pl):
-                
-                if not parkingL and not parkingR:
-                    
-                    
-                        
-                    write("dc", 1640)
-                    parkingL = True
-                    
-                    print(maxAreaL)
-                    
-                    
-
-            #conditions for initiating parking on the right side
-            if rightY >= 240 and (t >= 12 or pr):
-                
-                if not parkingL and not parkingR:
-                    write("dc", 1640)
-                    parkingR = True
-
-                    
-            print(f" left area: {leftArea} right area: {rightArea}")   
-                
-            if parkingR:
-                if pr or debug: 
-                    LED1(255, 0, 255)
-                        
-                if areaFrontMagenta > 2000:
-                    write("dc", 1500)
-                    time.sleep(0.1)
-                    write("dc", 1355)
-                    write("servo", sharpLeft)
-                    time.sleep(0.5)
-                    write("dc", 1500)
-                else:
-                    write("dc", 1640)
-                    write("servo", sharpRight)
-            
-            elif parkingL:
-                
-                
-                    
-                if areaFrontMagenta > 2000:
-                    if rightArea > 13000 and leftArea < 5000:
-                        write("dc", 1640)
-                        write("servo", sharpRight)
-                        time.sleep(1)
-                        continue
-                    
-                    LED1(255, 0, 0)
-                    write("dc", 1500)
-                    time.sleep(0.1)
-                    write("dc", 1355)
-                    time.sleep(0.1)
-                    write("servo", sharpRight)
-                    time.sleep(0.5)
-                    write("dc", 1500)
-                else:
-                    LED1(255, 0, 255)
-                    write("dc", 1640)
-                    write("servo", sharpLeft)
                     
 
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
@@ -791,6 +664,129 @@ if __name__ == '__main__':
             angle = max(0, angle)
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
+
+# ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------
+
+        #if the area of the wall in front is above a limit stop as we are very close to the wall
+        if areaFront > 7500:
+            write("servo", straightConst)
+            time.sleep(0.5)
+            stopCar()
+            break
+        
+        if tempParking or pr or pl: 
+
+            areaFrontMagenta = 0
+            
+            for i in range(len(contours_magenta_c)):
+                cnt = contours_magenta_c[i]
+                areaFrontMagenta = max(cv2.contourArea(cnt), areaFrontMagenta)
+
+            maxAreaL = 0 #biggest magenta contour on left ROI
+            leftY = 0
+            maxAreaR = 0 #biggest magenta contour on right ROI
+            rightY = 0
+            
+            for i in range(len(contours_magenta_l)):
+                cnt = contours_magenta_l[i]
+                area = cv2.contourArea(cnt)
+                
+                if area > 100:
+                
+                    #get width, height, and x and y coordinates by bounding rect
+                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
+                    x,y,w,h=cv2.boundingRect(approx)
+
+                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
+                    x += ROI1[0]
+                    y += ROI1[1] + h
+                
+                    if area > maxAreaL:
+                        maxAreaL = area
+                        leftY = y
+            
+            for i in range(len(contours_magenta_r)):
+                cnt = contours_magenta_r[i]
+                area = cv2.contourArea(cnt)
+                
+                if area > 100:
+                
+                    #get width, height, and x and y coordinates by bounding rect
+                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
+                    x,y,w,h=cv2.boundingRect(approx)
+
+                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
+                    x += ROI2[0]
+                    y += ROI2[1] + h
+                
+                    if area > maxAreaR:
+                        maxAreaR = area
+                        rightY = y
+             
+            print("magenta", areaFrontMagenta, "black", areaFront)
+
+                
+            #conditions for initiating parking on the left side
+            
+            if leftY >= 220 and (t >= 12 or pl):
+                
+                if not parkingL and not parkingR:
+                    
+                    
+                        
+                    write("dc", 1640)
+                    parkingL = True
+                    
+                    print(maxAreaL)
+                    
+                    
+
+            #conditions for initiating parking on the right side
+            if rightY >= 240 and (t >= 12 or pr):
+                
+                if not parkingL and not parkingR:
+                    write("dc", 1640)
+                    parkingR = True
+
+                    
+            print(f" left area: {leftArea} right area: {rightArea}")   
+                
+            if parkingR:
+                if pr or debug: 
+                    LED1(255, 0, 255)
+                        
+                if areaFrontMagenta > 2000:
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1355)
+                    write("servo", sharpLeft)
+                    time.sleep(0.5)
+                    write("dc", 1500)
+                else:
+                    write("dc", 1640)
+                    write("servo", sharpRight)
+            
+            elif parkingL:
+                    
+                if areaFrontMagenta > 2000:
+                    if rightArea > 13000 and leftArea < 5000:
+                        write("dc", 1640)
+                        write("servo", sharpRight)
+                        time.sleep(1)
+                        continue
+                    
+                    LED1(255, 0, 0)
+                    write("dc", 1500)
+                    time.sleep(0.1)
+                    write("dc", 1355)
+                    time.sleep(0.1)
+                    write("servo", sharpRight)
+                    time.sleep(0.5)
+                    write("dc", 1500)
+                else:
+                    LED1(255, 0, 255)
+                    write("dc", 1640)
+                    write("servo", sharpLeft)
 
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
