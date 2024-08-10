@@ -708,8 +708,14 @@ if __name__ == '__main__':
 
             display_variables(variables)
 
-cv2.destroyAllWindows()
+            variables = {
+                "leftArea": leftArea,
+                "rightArea": rightArea
+            }
 
+            display_variables(variables)
+
+cv2.destroyAllWindows()
 
 
 
