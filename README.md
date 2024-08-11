@@ -9,7 +9,7 @@
 
 ---
 
-## 💻 Content of Repository 💻
+## Content of Repository 
 * `models` - 3D CAD files
 * `others` - other essential files
 * `schemes` - electrical schematics
@@ -88,6 +88,37 @@ We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via 
 &nbsp;
 
 ### ⚡ Electricity & Power ⚡
+
+&nbsp;
+
+---
+## 💻 Software 💻
+
+We use a Raspberry Pi 4 Board as our single board computer (SBC). It is connected to the HAT, from which it takes and processes sensor input to return turning-angle and speed values back to the HAT, which then get sent to the servo and DC motors respectively. 
+
+The program running on the Raspberry Pi is written in Python.     
+&nbsp;
+
+* ### Libraries in use:
+  * `OpenCV` (for computer vision)
+  * `picamera2` (for camera control)
+  * `HiwonderSDK.Board` (for HAT communication)
+  * `RPi.GPIO` (for GPIO control on the Raspberry Pi)
+  * `Time` (for time-related functions, mainly: sleep())
+  * `numpy` (for numerical operation and array processing)
+
+### Object Detection
+The camera captures an image which is converted from OpenCV’s default pixel data format of BGR (blue, green, red) to HSV (hue, saturation, value). Then, binary thresholding is applied, which changes the pixel data of the processed image such that areas of interest are white, and everything else is black. The bounded white areas can then be extracted as a list of contours within a specified region of interest. 
+Areas of interest are defined based on a colour mask (a range of HSV values). Such allows us to account for slight differences in lighting which would cause colour variation. Depending on the colour mask and the region of interest, we can, from the generated list of contours, measure the size of (and effectively, the distance from and position of) obstacles, coloured lines, and the walls themself. 
+
+&nbsp;
+
+#### Signal Pillar and Parking Wall Detection
+Signal pillars are found with green and/or red colour masks, and by searching in a region of interest specific to the locations of the obstacles. The parking walls are found with magenta colour masks and by searching in a region of interest near the walls.
+
+&nbsp;
+
+#### Corner Detection
 
 &nbsp;
 
