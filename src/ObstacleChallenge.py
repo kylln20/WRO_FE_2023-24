@@ -147,9 +147,6 @@ if __name__ == '__main__':
     prevPillarCountR = 0
     prevPillarCountG = 0
     
-    #variable for a state when 2 pillars were previously seen and only 1 pillar is currently seen
-    state = False
-    
     #determines the offset from the bottom of the ROI when the car should stop seeing a pillar
     endConst = 30
     
@@ -202,6 +199,9 @@ if __name__ == '__main__':
     contX = 0 #stores x value of the current signal pillar
     contY = 0 #stores y value of the current signal pillar
     pArea = 0 #stores the area of a signal pillar
+
+    #temp is used to make sure a three-point turn is only checked at one specific point during a turn
+    temp = False
     
     t = 0 #tracks number of turns
     
@@ -232,20 +232,20 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         debug = True
         
-        if sys.argv[1].lower() == "parkingl":
+        if sys.argv[1].lower() == "parkingl": 
             turnDir = "right"
             
-        if sys.argv[1].lower() == "parkingl":
+        if sys.argv[1].lower() == "parkingl": #for testing parking on the left side
             redTarget = greenTarget
             tempParking = True
             pl = True
-        elif sys.argv[1].lower() == "parkingr":
+        elif sys.argv[1].lower() == "parkingr": #for testing parking on the right side
             greenTarget = redTarget
             tempParking = True
             pr = True
-        elif sys.argv[1].lower() == "turn":
+        elif sys.argv[1].lower() == "turn": #for testing three-point turns
             mReverse = True
-        elif sys.argv[1].lower() == "steer":
+        elif sys.argv[1].lower() == "steer": #for stationary testing
             tempParking = True
             redTarget = greenTarget
             speed = 1500
@@ -317,7 +317,9 @@ if __name__ == '__main__':
         arr1 = [contours_green, contours_red]
         targets = [greenTarget, redTarget]
 
+        #iterate through both lists of contours
         for i in range(len(arr1)): 
+            #process each contour in each list
             for x in range(len(arr1[i])):
                 cnt = arr1[i][x]
                 area = cv2.contourArea(cnt)
@@ -342,14 +344,14 @@ if __name__ == '__main__':
                         else: 
                             num_pillars_r += 1
                         
-                        #if the pillar is too close, stop the car and reverse to give it enough space
+                    #if the pillar is too close, stop the car and reverse to give it enough space
                     if area > 6500 and x + w // 2 <= 340 and not pr and not pl:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 1500, reverseSpeed, 1, speed])
                     else:
                         LED2(0, 0, 0)
                     
-                    #deselects current pillar if it is past a certain limit on the bottom of the screen meaning its too close, if the pillars distance is too far, or the car is too close to the wall
+                    #deselects current pillar if it comes too close to bottom of the screen
                     if y > ROI3[3] - endConst or temp_dist > 370:
                         continue
                         
@@ -367,6 +369,8 @@ if __name__ == '__main__':
                         contX = x + w // 2
                         cTarget = targets[i]
                         pDist = temp_dist
+
+            #draw contours of pillars for debugging
             if i == 0: 
                 cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 238, 144), 3)
             else:
@@ -398,16 +402,15 @@ if __name__ == '__main__':
 
 # -----------------{ orange / blue line contour processing }---------------
 
-        #temp is used to make sure a three-point turn is only checked at one specific point during a turn
-        temp = False
-
         arr2 = [contours_orange, contours_blue]
         directions = ["right", "left"]
         
+        #iterate through both lists of contours
         for i in range(len(arr2)): 
             #number of contours detected
             count = 0
 
+            #process each contour in each list
             for x in range(len(arr2[i])):
                 cnt = arr2[i][x]
                 area = cv2.contourArea(cnt)
@@ -481,7 +484,8 @@ if __name__ == '__main__':
             #for each array representing a set of contours: area, y-coordinate, Region of Interest
             info = [[0, 0, ROI1], [0, 0, ROI2]]
             conts = [contours_magenta_l, contours_magenta_r]
-            
+
+            #finds the largest magenta contour in the left and right regions of interest and the y-coordinates
             for i in range(len(conts)): 
                 for x in range(len(conts[i])):
                     cnt = conts[i][x]
@@ -497,6 +501,7 @@ if __name__ == '__main__':
                         x += info[i][2][0]
                         y += info[i][2][1] + h
                         
+                        #replace largest contour 
                         if area > info[i][0]:
                             info[i][0] = area
                             info[i][1] = y
@@ -520,18 +525,22 @@ if __name__ == '__main__':
                 
             if parkingR:
                
+                #readjust if the parking lot is in front
                 if areaFrontMagenta > 2000:
                     if debug: LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1355, sharpLeft, 0.5, 1500])
+                #turn right into parking lot
                 else:
                     if debug: LED1(255, 0, 255) 
                     multi_write([1640, sharpRight])
             
             elif parkingL:
                 
+                #readjust if the parking lot is in front
                 if areaFrontMagenta > 2000:
                     if debug: LED1(255, 0, 0) 
                     multi_write([1640, sharpRight, 1]) if rightArea > 13000 and leftArea < 5000 else multi_write([1500, 0.1, 1355, 0.1, sharpRight, 0.5, 1500])
+                #turn left into parking lot
                 else:
                     if debug: LED1(255, 0, 255)
                     multi_write([1640, sharpLeft])
@@ -541,19 +550,20 @@ if __name__ == '__main__':
 # -----------------{ no pillar detected }--------------
         if cTarget == 0 and not parkingL and not parkingR:
 
-            #once a pillar is no longer detected after 2 laps (8 turns) have been completed begin the three point turn by changing the cars turn direction and setting reverse to true to start the turn
+            #start a three-point turn 
             if tempR:
                 #swap directions
                 turnDir = "left" if turnDir == "right" else "right"
             
                 reverse = True
-                
                 tempR = False
 
-            #set tempParking to indicate the car should be parking and change pillar targets so all are passed on the outside
+            #change pillar targets so all are passed on the outside 
             if t == 12:
 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
+
+                #used as an indication of when it is ok to park 
                 tempParking = True
 
             LED1(0, 0, 0)
@@ -659,14 +669,16 @@ if __name__ == '__main__':
                           #swap direction
                           turnDir = "left" if turnDir == "right" else "right"
 
-            #if in a right turn and no pillar is detected set the angle to sharpRight
+            # if a car is parking or performing a three-point turn
             if not parkingR and not parkingL and reverse != True: 
+
+                #change angles for a right and left turn 
+                
                 if rTurn and cTarget == 0:
                     angle = straightConst - 25 if tempParking else sharpRight
 
-                #if in a left turn and no pillar is detected set the angle to sharpLeft
                 elif lTurn and cTarget == 0:
-                     angle = sharpLeft
+                    angle = sharpLeft
                 
                 #write the angle which is kept in the bounds of sharpLeft and sharpRight
                 write(max(min(angle, sharpLeft), sharpRight))
