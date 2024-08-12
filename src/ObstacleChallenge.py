@@ -57,18 +57,19 @@ def stop_car():
     
     cv2.destroyAllWindows()
 
+#returns contours of a specific hsv range of a specific region of interest
 def contours(lower, upper, ROI): 
     lower_mask = np.array(lower)
     upper_mask = np.array(upper)
 
     mask = cv2.inRange(img_hsv, lower_mask, upper_mask)
 
-    #find red contours of signal pillars
     contours = cv2.findContours(mask[ROI[1]:ROI[3], ROI[0]:ROI[2]], cv2.RETR_EXTERNAL,
     cv2.CHAIN_APPROX_SIMPLE)[-2]
 
     return contours
 
+#returns the area of the largest contour in a group of contours
 def max_contour(contours): 
     maxArea = 0
 
@@ -79,16 +80,18 @@ def max_contour(contours):
 
     return maxArea
 
+#takes in an array of commands (dc, servo, sleep) and executes each
 def multi_write(sequence):
 
     for action in sequence: 
         
-        #delay command
+        #delay commands
         if action < sharpRight: 
             time.sleep(action)
         else: 
             write(action)
 
+#takes in a dictionary of values to print for debugging
 def display_variables(variables): 
 
     names = list(variables.keys())
@@ -180,7 +183,7 @@ if __name__ == '__main__':
     straightConst = 87 #angle in which car goes straight
     exitThresh = 4000 #if area of both lanes is over this threshold car exits a turn
   
-    angle = 87#variable for the current angle of the car
+    angle = 87 #variable for the current angle of the car
     prevAngle = angle #variable tracking the angle of the previous iteration
     tDeviation = 40 #value used to calculate the how far left and right the car turns during a turn
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
@@ -334,7 +337,10 @@ if __name__ == '__main__':
                     
                     #if the pillar is close enough add it to the number of pillars
                     if temp_dist < 395:
-                        num_pillars_g += 1
+                        if i == 0: 
+                            num_pillars_g += 1
+                        else: 
+                            num_pillars_r += 1
                         
                         #if the pillar is too close, stop the car and reverse to give it enough space
                     if area > 6500 and x + w // 2 <= 340 and not pr and not pl:
@@ -347,7 +353,7 @@ if __name__ == '__main__':
                     if y > ROI3[3] - endConst or temp_dist > 370:
                         continue
                         
-                    #if the area of the right wall is too big stop worrying about the pillar so the regular lane control algorithm can move away from the wall
+                    #if the area of either wall is too big deselect the pillar to let the car come closer to the middle
                     if (leftArea > 10000 and (turnDir == "none" or turnDir == "left")) or (rightArea > 10000 and (turnDir == "none" or turnDir == "right")):
                         break
 
@@ -364,7 +370,7 @@ if __name__ == '__main__':
             if i == 0: 
                 cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 238, 144), 3)
             else:
-                cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (238, 144, 144), 3)
+                cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 144, 238), 3)
                 
 # -----------------{ control variable manipulation based on number of pillars }--------------
 
@@ -392,7 +398,7 @@ if __name__ == '__main__':
 
 # -----------------{ orange / blue line contour processing }---------------
 
-        #used in the three point turn, as in our turn we check if we can see a pillar after seeing the orange or blue line we use temp to ensure it only checks for the iteration one time
+        #temp is used to make sure a three-point turn is only checked at one specific point during a turn
         temp = False
 
         arr2 = [contours_orange, contours_blue]
@@ -409,11 +415,11 @@ if __name__ == '__main__':
                 if area > 100:
                     count += 1
 
-                    #if the turn direction hasn't been changed yet change the turn direction to right
+                    #set the turn direction
                     if turnDir == "none":
                         turnDir = directions[i]
 
-                    #if the turn direction is right
+                    #if the turn direction corresponds to the correct line colour (orange line means right turn, blue means left)
                     if turnDir == directions[i] and not parkingR and not parkingL:
 
                         if i == 0: 
@@ -424,7 +430,7 @@ if __name__ == '__main__':
 
                         tSignal = True
                     
-                    #check for three point turn
+                    #check for three point turn, check at blue line when turning right and check at orange line when turning left
                     elif not temp and reverse != "done" and ((turnDir == "right" and i == 1) or (turnDir == "left" and i == 0)):
                         
                         temp = True
@@ -453,12 +459,14 @@ if __name__ == '__main__':
         leftY = 0
         maxAreaR = 0
         rightY = 0
+
         #if the area of the wall in front is above a limit stop as we are very close to the wall
         if areaFront > 7500:
             multi_write([straightConst, 0.5])
             stop_car()
             break
         
+        # detect magenta contours directly in front of car
         if reverse or pl or pr or tempParking:
             contours_magenta_c = contours([164, 100, 50], [173, 255, 255], ROI4)
             
@@ -466,9 +474,10 @@ if __name__ == '__main__':
         
         if tempParking or pr or pl:
             
+            #find magenta contours in left and right regions of interest
             contours_magenta_l = contours([164, 100, 50], [173, 255, 255], ROI1)
             contours_magenta_r = contours([164, 100, 50], [173, 255, 255], ROI2)
-                                   
+                                    
             #for each array representing a set of contours: area, y-coordinate, Region of Interest
             info = [[0, 0, ROI1], [0, 0, ROI2]]
             conts = [contours_magenta_l, contours_magenta_r]
@@ -541,7 +550,7 @@ if __name__ == '__main__':
                 
                 tempR = False
 
-            #set tempParking to indicate the car should be parking and change pillars to be passed on the outside
+            #set tempParking to indicate the car should be parking and change pillar targets so all are passed on the outside
             if t == 12:
 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
