@@ -4,6 +4,7 @@ import cv2
 import sys
 sys.path.append('/home/pi/TurboPi/')
 from picamera2 import Picamera2
+import libcamera
 import time
 import RPi.GPIO as GPIO
 import numpy as np
@@ -58,9 +59,9 @@ def stop_car():
     cv2.destroyAllWindows()
 
 #returns contours of a specific hsv range of a specific region of interest
-def contours(lower, upper, ROI): 
-    lower_mask = np.array(lower)
-    upper_mask = np.array(upper)
+def contours(hsvRange, ROI): 
+    lower_mask = np.array(hsvRange[0])
+    upper_mask = np.array(hsvRange[1])
 
     mask = cv2.inRange(img_hsv, lower_mask, upper_mask)
 
@@ -112,13 +113,18 @@ if __name__ == '__main__':
 # ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
 
     #initialize camera
+    
     picam2 = Picamera2()
+    
+    picam2.set_controls({"AeEnable": True})
     picam2.preview_configuration.main.size = (640,480)
     picam2.preview_configuration.main.format = "RGB888"
     picam2.preview_configuration.controls.FrameRate = 30
     picam2.preview_configuration.align()
     picam2.configure("preview")
+    
     picam2.start()
+
 
     #set the target x coordinates for each red and green pillar
     redTarget = 120 
@@ -164,11 +170,30 @@ if __name__ == '__main__':
     # order: x1, y1, x2, y2
     ROI1 = [0, 165, 330, 255]
     ROI2 = [330, 165, 640, 255]
-    ROI3 = [redTarget - 40, 110, greenTarget + 40, 340]
+    ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
     ROI4 = [200, 250, 440, 300]
     
     ROIs = [ROI1, ROI2, ROI3, ROI4]
-
+    
+    
+    '''
+    use in yellow lighting
+    rBlack = [[0, 0, 0], [180, 255, 50]]
+    rBlue = [[100, 100, 100], [135, 255, 255]]
+    rRed = [[170, 215, 50], [180, 255, 255]]
+    rGreen = [[58, 62, 55], [96, 255, 255]]
+    rMagenta = [[161, 180, 50], [168, 255, 255]]
+    rOrange = [[0, 100, 175], [25, 255, 255]]
+    '''
+    
+    rBlack = [[0, 0, 0], [180, 255, 50]]
+    rBlue = [[100, 100, 100], [135, 255, 255]]
+    rRed = [[174, 175, 50], [180, 255, 255]]
+    rGreen = [[58, 62, 55], [96, 255, 255]]
+    rMagenta = [[160, 140, 50], [170, 255, 255]]
+    rOrange = [[0, 100, 175], [25, 255, 255]]
+    
+    
     #booleans for tracking whether car is in a left or right turn
     lTurn = False
     rTurn = False
@@ -185,7 +210,7 @@ if __name__ == '__main__':
   
     angle = 87 #variable for the current angle of the car
     prevAngle = angle #variable tracking the angle of the previous iteration
-    tDeviation = 40 #value used to calculate the how far left and right the car turns during a turn
+    tDeviation = 50 #value used to calculate the how far left and right the car turns during a turn, could actually be 50
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
@@ -206,7 +231,7 @@ if __name__ == '__main__':
     #temp is used to make sure a three-point turn is only checked at one specific point during a turn
     temp = False
     
-    t = 0 #tracks number of turns
+    t = 11 #tracks number of turns
     
     t2 = -1
     prevT2 = -1
@@ -245,10 +270,14 @@ if __name__ == '__main__':
             redTarget = greenTarget
             tempParking = True
             pl = True
+            ##sharpRight = straightConst - 50
+            #sharpLeft = straightConst + 50
         elif sys.argv[1].lower() == "parkingr": #for testing parking on the right side
             greenTarget = redTarget
             tempParking = True
             pr = True
+            #sharpRight = straightConst - 50
+            #sharpLeft = straightConst + 50
         elif sys.argv[1].lower() == "turn": #for testing three-point turns
             mReverse = True
         elif sys.argv[1].lower() == "steer": #for stationary testing
@@ -283,8 +312,8 @@ if __name__ == '__main__':
         # convert from BGR to HSV
         img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        contours_left = contours([0, 0, 0], [180, 255, 50], ROI1)
-        contours_right = contours([0, 0, 0], [180, 255, 50], ROI2)
+        contours_left = contours(rBlack, ROI1)
+        contours_right = contours(rBlack, ROI2)
         
         #convert to grayscale
         imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -303,10 +332,10 @@ if __name__ == '__main__':
         areaFront = max_contour(contours_parking)
             
         #find contours 
-        contours_red = contours([174, 175, 50], [180, 255, 255], ROI3)
-        contours_green = contours([58, 62, 55], [96, 255, 255], ROI3)
-        contours_blue = contours([100, 100, 100], [135, 255, 255], ROI4)
-        contours_orange = contours([0, 100, 175], [25, 255, 255], ROI4)
+        contours_red = contours(rRed, ROI3)
+        contours_green = contours(rGreen, ROI3)
+        contours_blue = contours(rBlue, ROI4)
+        contours_orange = contours(rOrange, ROI4)
 
 # ------------------------------------------------------------{ processing contours }-------------------------------------------------------------------------
         
@@ -353,7 +382,7 @@ if __name__ == '__main__':
                             num_pillars_r += 1
                         
                     #if the pillar is too close, stop the car and reverse to give it enough space
-                    if area > 6500 and x + w // 2 <= 340 and not pr and not pl:
+                    if area > 6500 and ((x + w // 2 <= 340 and i == 0) or (x + w // 2 >= 300 and i == 1)) and not pr and not pl:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 1500, reverseSpeed, 1, speed])
                         ignore = True
@@ -442,6 +471,7 @@ if __name__ == '__main__':
                     #set the turn direction
                     if turnDir == "none":
                         turnDir = directions[i]
+                        print("setting direction:", turnDir)
 
                     #if the turn direction corresponds to the correct line colour (orange line means right turn, blue means left)
                     if turnDir == directions[i] and not parkingR and not parkingL:
@@ -472,14 +502,16 @@ if __name__ == '__main__':
                             tempR = True
                         
                         #no pillar after turn, so if previous pillar was red perform a three point turn
-                        elif (t2 == 7 or mReverse) and (cTarget == 0) and reverse == False and lastTarget == redTarget:
+                        elif (t2 == 7 or mReverse) and (cTarget == 0) and reverse == False and lastTarget == redTarget and tempR == False:
                             
                             reverse = True
                             
-                            #add a pause so the car can fully complete three laps
+                            #add a pause so the car can fully complete the second lap
                             time.sleep(1)
                             
+                            #print("turn 7:", turnDir)
                             turnDir = directions[i]
+                            #print("turn 7:", turnDir)
                         
                         #write(1500)
             #print("count:", count)
@@ -494,28 +526,24 @@ if __name__ == '__main__':
         leftY = 0
         maxAreaR = 0
         rightY = 0
-
-        #if the area of the wall in front is above a limit stop as we are very close to the wall
-        if areaFront > 7500:
-            multi_write([straightConst, 1])
-            stop_car()
-            break
+        centerY = 0
         
         # detect magenta contours directly in front of car
         if reverse or pl or pr or tempParking:
-            contours_magenta_c = contours([164, 100, 50], [173, 255, 255], ROI4)
+            contours_magenta_c = contours(rMagenta, ROI4)
             
             areaFrontMagenta = max_contour(contours_magenta_c)
         
         if tempParking or pr or pl:
             
             #find magenta contours in left and right regions of interest
-            contours_magenta_l = contours([164, 100, 50], [173, 255, 255], ROI1)
-            contours_magenta_r = contours([164, 100, 50], [173, 255, 255], ROI2)
+            contours_magenta_l = contours(rMagenta, ROI1)
+            contours_magenta_r = contours(rMagenta, ROI2)
+            contours_magenta_c = contours(rMagenta, ROI4)
                                     
             #for each array representing a set of contours: area, y-coordinate, Region of Interest
-            info = [[0, 0, ROI1], [0, 0, ROI2]]
-            conts = [contours_magenta_l, contours_magenta_r]
+            info = [[0, 0, ROI1], [0, 0, ROI2], [0, 0, ROI4]]
+            conts = [contours_magenta_l, contours_magenta_r, contours_magenta_c]
 
             #finds the largest magenta contour in the left and right regions of interest and the y-coordinates
             for i in range(len(conts)): 
@@ -542,50 +570,62 @@ if __name__ == '__main__':
             leftY = info[0][1]
             maxAreaR = info[1][0] #biggest magenta contour on right ROI
             rightY = info[1][1]
+            centerY = info[2][1]
                 
             #conditions for initiating parking on the left side
-            if leftY >= 220 and maxAreaL > 500 and (t >= 12 or pl):
+            if leftY >= 220 and maxAreaL > 100 and (t >= 12 or pl or pr):
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingL = True
                     
                     
-                    if maxAreaL > 5000:
+                    if maxAreaL > 4500:
                         buzz() if debug else time.sleep(0.5)
                     
-                #ROI4 = [250, 250, 390, 300]
-                #ROIs = [ROI1, ROI2, ROI3, ROI4]
+                    
+                ROI4 = [250, 250, 390, 300]
+                ROIs = [ROI1, ROI2, ROI3, ROI4]
                     
             #conditions for initiating parking on the right side
-            if rightY >= 240 and maxAreaR > 100 and (t >= 12 or pr):
+            if rightY >= 240 and maxAreaR > 100 and (t >= 12 or pr or pl):
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingR = True
                 
-                #ROI4 = [250, 250, 390, 300]
-                #ROIs = [ROI1, ROI2, ROI3, ROI4]
+                ROI4 = [250, 250, 390, 300]
+                ROIs = [ROI1, ROI2, ROI3, ROI4]
                 
             if parkingR:
                
                 #readjust if the parking lot is in front
-                if areaFrontMagenta > 1400:
+                if centerY > 290:
                     if debug: LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpLeft, 0.5, 1500])
                 #turn right into parking lot
                 else:
-                    if debug: LED1(255, 0, 255) 
+                    #if debug: LED1(255, 0, 255) 
                     multi_write([1640, sharpRight])
             
             elif parkingL:
                 
                 #readjust if the parking lot is in front
-                if areaFrontMagenta > 1400:
+                if rightArea > 8000:
+                    multi_write([1640, sharpRight, 1])
+                elif centerY > 290:
                     if debug: LED1(255, 0, 0) 
-                    multi_write([1640, sharpRight, 1]) if rightArea > 12000 and leftArea < 5000 else multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
+                    multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
                 #turn left into parking lot
                 else:
-                    if debug: LED1(255, 0, 255)
+                    #if debug: LED1(255, 0, 255)
+                        
                     multi_write([1640, sharpLeft])
+                        
+            
+            #if the area of the wall in front is above a limit stop as we are very close to the wall
+            if areaFront > 3500:
+                multi_write([straightConst, 1])
+                stop_car()
+                break
                     
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
@@ -595,7 +635,12 @@ if __name__ == '__main__':
             #start a three-point turn 
             if tempR:
                 #swap directions
+                
+                #print("tempR:", turnDir)
+                
                 turnDir = "left" if turnDir == "right" else "right"
+                
+                #print("tempR:", turnDir)
             
                 reverse = True
                 tempR = False
@@ -607,6 +652,9 @@ if __name__ == '__main__':
 
                 #used as an indication of when it is ok to park 
                 tempParking = True
+                
+                #sharpRight = straightConst - 40
+                #sharpLeft = straightConst + 40
 
             LED1(0, 0, 0)
 
@@ -677,7 +725,7 @@ if __name__ == '__main__':
                  
             #stop turning once right in front of wall
             if areaFront > 2000 or areaFrontMagenta > 1000:
-                multi_write([1500, 0.1, sharpRight, reverseSpeed, 1.5, 1500, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, reverseSpeed, 2, 1500, 0.1, 1650])
+                multi_write([1500, 0.1, sharpRight, reverseSpeed, 1, 1500, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, reverseSpeed, 2, 1500, 0.1, 1650])
             else:
                 continue
 
@@ -705,12 +753,14 @@ if __name__ == '__main__':
                   
                   #if 2 laps have been completed or mReverse is true (debugging mode) and the last pillar is red initiate a regular three point turn
                   if (t == 8 or mReverse) and lastTarget == redTarget:
-                      if reverse != "done":
+                      if reverse != "done" and not tempR:
                           reverse = True
                       
                           #swap direction
+                          print("sees walls:", turnDir)
                           turnDir = "left" if turnDir == "right" else "right"
-
+                          print("sees walls:", turnDir)
+                          
             # if a car is parking or performing a three-point turn
             if not parkingR and not parkingL and reverse != True: 
 
