@@ -78,7 +78,7 @@ if __name__ == '__main__':
     #lists storing coordinates for the regions of interest to find contours of the lanes and the orange line 
     # order: x1, y1, x2, y2
     ROI1 = [20, 170, 240, 220]
-    ROI2 = [400, 170, 620, 220]
+    ROI2 = [380, 170, 600, 220]
     ROI3 = [200, 300, 440, 350]
 
     #booleans for tracking whether car is in a left or right turn
@@ -87,7 +87,7 @@ if __name__ == '__main__':
   
     t = 0 #number of turns car has completed
     
-    kp = 0.006 #value of proportional for proportional steering
+    kp = 0.02 #value of proportional for proportional steering
     kd = 0.006 #value of derivative for proportional and derivative sterring
     
     straightConst = 87 #angle in which car goes straight
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1650 #variable for the speed of the car
+    speed = 1660 #variable for the speed of the car, 1660
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
@@ -155,7 +155,7 @@ if __name__ == '__main__':
         
         # black mask
         lower_black = np.array([0, 0, 0])
-        upper_black = np.array([180, 255, 50])
+        upper_black = np.array([180, 255, 65])
         
         imgThresh = cv2.inRange(img_hsv, lower_black, upper_black)
         
@@ -190,6 +190,8 @@ if __name__ == '__main__':
             area = cv2.contourArea(cnt)
 
             rightArea = max(area, rightArea)
+            
+        print(leftArea, rightArea)
 
         #iterate through the contours in the centre region of interest to find the orange line
         for i in range(len(contours_orange)):
@@ -217,13 +219,14 @@ if __name__ == '__main__':
 
         #if the area of either lane is less than or equal to turnThresh and the car is not in a turn going the other direction, set the boolean of the respective direction turn to true
         if leftArea <= turnThresh and not rTurn:
+            print("turned left")
             lTurn = True
             
             if debug: 
                 LED1(255, 0, 0)
 
         elif rightArea <= turnThresh and not lTurn:
-            #print("turned right")
+            print("turned right")
             rTurn = True
             if debug: 
                 LED1(255, 0, 0)
@@ -279,7 +282,7 @@ if __name__ == '__main__':
         prevAngle = angle #update previous angle
         
         if t == 12 and abs(angle - straightConst) <= 10:
-            sleep(2)
+            sleep(0.8)
             stopCar() 
             break
     
