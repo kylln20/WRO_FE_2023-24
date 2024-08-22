@@ -81,6 +81,45 @@ def max_contour(contours):
 
     return maxArea
 
+def return_contour(contours): 
+    maxArea = 0
+    cont = 0
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        
+        if area > maxArea:
+            cont = cnt
+            maxArea = area
+
+    return cont
+
+def contour_location(contours):
+    
+    maxArea = 0
+    maxX = 0
+    maxY = 0
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        
+        #get width, height, and x and y coordinates by bounding rect
+        approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
+        x,y,w,h=cv2.boundingRect(approx)
+
+        #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
+        x += ROI3[0] + w // 2
+        y += ROI3[1] + h 
+
+        
+        
+        if area > maxArea:
+            maxArea = area
+            maxX = x
+            maxY = y
+
+    return maxArea, maxX, maxY
+
 #takes in an array of commands (dc, servo, sleep) and executes each
 def multi_write(sequence):
 
@@ -192,6 +231,7 @@ if __name__ == '__main__':
     rGreen = [[58, 62, 55], [96, 255, 255]]
     rMagenta = [[160, 140, 50], [170, 255, 255]]
     rOrange = [[0, 100, 175], [25, 255, 255]]
+    rWhite = [[0, 0, 150], [255, 28, 255]]
     
     
     #booleans for tracking whether car is in a left or right turn
@@ -231,10 +271,12 @@ if __name__ == '__main__':
     #temp is used to make sure a three-point turn is only checked at one specific point during a turn
     temp = False
     
-    t = 11 #tracks number of turns
+    t = 0 #tracks number of turns
     
-    t2 = -1
-    prevT2 = -1
+    t2 = 0
+    prevT2 = 0
+    
+    maxR = 0
     
     tSignal = False #boolean that makes sure that a pillar doesn't affect a turn too early
     
@@ -336,6 +378,14 @@ if __name__ == '__main__':
         contours_green = contours(rGreen, ROI3)
         contours_blue = contours(rBlue, ROI4)
         contours_orange = contours(rOrange, ROI4)
+        contours_black = contours(rBlack, ROI3)
+        contours_white = contours(rWhite, ROI3)
+        
+        max_white = return_contour(contours_white)
+        
+        cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], max_white, -1, (255, 0, 0), 3)
+        
+        bArea, bx, by = contour_location(contours_black)
 
 # ------------------------------------------------------------{ processing contours }-------------------------------------------------------------------------
         
@@ -368,11 +418,32 @@ if __name__ == '__main__':
                     x,y,w,h=cv2.boundingRect(approx)
 
                     #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-                    x += ROI3[0]
+                    x += ROI3[0] + w // 2 
                     y += ROI3[1] + h
                     
+                    
+                    '''
+                    if ((y < by or x < bx) and leftArea > 10000) or ((y < by or x > bx) and rightArea > 10000):
+                        continue
+                    '''
+                    
+                    points_inside = 0
+                    closest_dist = -1000000
+                    
+                    for point in cnt:
+                        point = tuple(point[0])
+                        for wCont in contours_white:
+                            distance = cv2.pointPolygonTest(wCont, point, True)
+                            
+                            closest_dist = max(closest_dist, distance)
+                    
+                    if closest_dist < -10:
+                        continue
+                    
+                    
+                    
                     #calculates the distance between the pillar and the bottom middle of the screen
-                    temp_dist = math.dist([x + w // 2, y], [320, 480])
+                    temp_dist = math.dist([x, y], [320, 480])
                     
                     #if the pillar is close enough add it to the number of pillars
                     if temp_dist < 395:
@@ -382,7 +453,7 @@ if __name__ == '__main__':
                             num_pillars_r += 1
                         
                     #if the pillar is too close, stop the car and reverse to give it enough space
-                    if area > 6500 and ((x + w // 2 <= 340 and i == 0) or (x + w // 2 >= 300 and i == 1)) and not pr and not pl:
+                    if area > 6500 and ((x <= 340 and i == 0) or (x >= 300 and i == 1)) and not pr and not pl:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 1500, reverseSpeed, 1, speed])
                         ignore = True
@@ -401,13 +472,13 @@ if __name__ == '__main__':
                         break
 
                     #draw rectangle around signal pillar
-                    cv2.rectangle(img,(x,y - h),(x+w,y),(0,0,255),2)
+                    cv2.rectangle(img,(x - w // 2, y - h),(x+ w // 2,y),(0,0,255),2)
 
                     #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
                     if temp_dist < pDist:
                         pArea = area
                         contY = y
-                        contX = x + w // 2
+                        contX = x
                         cTarget = targets[i]
                         pDist = temp_dist
 
@@ -498,7 +569,7 @@ if __name__ == '__main__':
                         temp = True
                         
                         #this indicates there is a pillar at the very end of the second lap
-                        if (t == 8 or mReverse) and cTarget == redTarget and reverse == False:
+                        if (t2 == 7 or mReverse) and cTarget == redTarget and reverse == False:
                             tempR = True
                         
                         #no pillar after turn, so if previous pillar was red perform a three point turn
@@ -508,10 +579,13 @@ if __name__ == '__main__':
                             
                             #add a pause so the car can fully complete the second lap
                             time.sleep(1)
+                            write(straightConst)
+                            time.sleep(0.25)
                             
                             #print("turn 7:", turnDir)
                             turnDir = directions[i]
                             #print("turn 7:", turnDir)
+
                         
                         #write(1500)
             #print("count:", count)
@@ -571,6 +645,8 @@ if __name__ == '__main__':
             maxAreaR = info[1][0] #biggest magenta contour on right ROI
             rightY = info[1][1]
             centerY = info[2][1]
+            
+            maxR = max(maxR, maxAreaR)
                 
             #conditions for initiating parking on the left side
             if leftY >= 220 and maxAreaL > 100 and (t >= 12 or pl or pr):
@@ -578,9 +654,15 @@ if __name__ == '__main__':
                     write(1640)
                     parkingL = True
                     
+                    print(maxAreaL)
                     
                     if maxAreaL > 4500:
                         buzz() if debug else time.sleep(0.5)
+                    elif maxAreaL < 1500 and t == 12:
+                        write(1650)
+                        write(straightConst)
+                        time.sleep(2)
+                        write(1640)
                     
                     
                 ROI4 = [250, 250, 390, 300]
@@ -609,7 +691,7 @@ if __name__ == '__main__':
             elif parkingL:
                 
                 #readjust if the parking lot is in front
-                if rightArea > 8000:
+                if rightArea > 8000 and maxAreaR > 2000:
                     multi_write([1640, sharpRight, 1])
                 elif centerY > 290:
                     if debug: LED1(255, 0, 0) 
@@ -623,9 +705,13 @@ if __name__ == '__main__':
             
             #if the area of the wall in front is above a limit stop as we are very close to the wall
             if areaFront > 3500:
-                multi_write([straightConst, 1])
-                stop_car()
-                break
+                if maxR < 200:
+                    reverse = "parking"
+                    parkingL = False
+                else:    
+                    multi_write([straightConst, 1])
+                    stop_car()
+                    break
                     
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
@@ -716,13 +802,22 @@ if __name__ == '__main__':
 
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
-        if reverse != "done" and reverse == True:
-
+        if reverse != "done" and (reverse == True or reverse == "parking"):
+            
+            if reverse == "parking":
+                multi_write([1500, 0.1, sharpRight, reverseSpeed, 2, 1500, 0.1, 1650])
+                reverse = "done"
+                redTarget = 120
+                greenTarget = 120
+                continue
+            
+            #sharpRight = straightConst - 40 #the default angle sent to the car during a right turn
+            #sharpLeft = straightConst + 40 #the default angle sent to the car during a left turn
+            
             LED1(0, 0, 255)
             write(sharpLeft)
             
             # turnDir == "left": car is turning right before the change in direction
-                 
             #stop turning once right in front of wall
             if areaFront > 2000 or areaFrontMagenta > 1000:
                 multi_write([1500, 0.1, sharpRight, reverseSpeed, 1, 1500, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, reverseSpeed, 2, 1500, 0.1, 1650])
