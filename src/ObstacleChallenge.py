@@ -166,8 +166,8 @@ if __name__ == '__main__':
 
 
     #set the target x coordinates for each red and green pillar
-    redTarget = 120 
-    greenTarget = 520
+    redTarget = 110 
+    greenTarget = 530
 
     #variable that keeps track of the target of the last pillar the car has passed
     lastTarget = 0
@@ -437,8 +437,10 @@ if __name__ == '__main__':
                             
                             closest_dist = max(closest_dist, distance)
                     
+                    
                     if closest_dist < -10:
                         continue
+                    
                     
                     
                     
@@ -455,7 +457,7 @@ if __name__ == '__main__':
                     #if the pillar is too close, stop the car and reverse to give it enough space
                     if area > 6500 and ((x <= 340 and i == 0) or (x >= 300 and i == 1)) and not pr and not pl:
                         LED2(255, 255, 0)
-                        multi_write([straightConst, 1500, reverseSpeed, 1, speed])
+                        multi_write([straightConst, 1500, reverseSpeed, 0.5, speed])
                         ignore = True
                        # print("ignore set to true -------------------------------------", ignore)
                       ##  write(1500)
@@ -494,7 +496,7 @@ if __name__ == '__main__':
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
             
             if debug: LED2(255, 255, 255)
-            
+        
             endConst = 60
             
             cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
@@ -502,11 +504,11 @@ if __name__ == '__main__':
             cy = 0.05 #value used to affect pd steering based on how close the pillar is based on its y coordinate
             
         #any other combination of number of pillars
-        else:
+        else: 
             
-            if debug: LED2(0, 0, 0) 
+            if debug: LED2(0, 0, 0)     
             
-            endConst = 40
+            endConst = 30
             
             cKp = 0.25 #value of proportional for proportional steering for avoiding signal pillars
             cKd = 0.25 #value of derivative for proportional and derivative sterring for avoiding signal pillars
@@ -661,7 +663,7 @@ if __name__ == '__main__':
                     elif maxAreaL < 1500 and t == 12:
                         write(1650)
                         write(straightConst)
-                        time.sleep(2)
+                        time.sleep(1)
                         write(1640)
                     
                     
@@ -693,7 +695,7 @@ if __name__ == '__main__':
                 #readjust if the parking lot is in front
                 if rightArea > 8000 and maxAreaR > 2000:
                     multi_write([1640, sharpRight, 1])
-                elif centerY > 290:
+                elif centerY > 290 and areaFront < 3000:
                     if debug: LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
                 #turn left into parking lot
@@ -724,6 +726,13 @@ if __name__ == '__main__':
                 
                 #print("tempR:", turnDir)
                 
+                if turnDir == "right": 
+                    write(straightConst)
+                    time.sleep(0.25)
+                '''
+                write(sharpLeft)
+                time.sleep(1)
+                '''
                 turnDir = "left" if turnDir == "right" else "right"
                 
                 #print("tempR:", turnDir)
@@ -820,7 +829,7 @@ if __name__ == '__main__':
             # turnDir == "left": car is turning right before the change in direction
             #stop turning once right in front of wall
             if areaFront > 2000 or areaFrontMagenta > 1000:
-                multi_write([1500, 0.1, sharpRight, reverseSpeed, 1, 1500, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, reverseSpeed, 2, 1500, 0.1, 1650])
+                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1, 1500, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1.5, 1500, 0.1, 1650])
             else:
                 continue
 
