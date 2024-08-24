@@ -48,21 +48,21 @@ def stopCar():
         LED2(0, 0, 0)
 
 #function which displays the regions of interest on the image
-def displayROI():
-    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[2], ROI1[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[0], ROI1[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[2], ROI1[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[0], ROI1[3]), (0, 255, 255), 4)
+def displayROI(color):
+    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[2], ROI1[1]), color, 4)
+    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[0], ROI1[3]), color, 4)
+    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[2], ROI1[1]), color, 4)
+    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[0], ROI1[3]), color, 4)
     
-    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[2], ROI2[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[0], ROI2[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[2], ROI2[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[0], ROI2[3]), (0, 255, 255), 4)
+    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[2], ROI2[1]), color, 4)
+    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[0], ROI2[3]), color, 4)
+    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[2], ROI2[1]), color, 4)
+    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[0], ROI2[3]), color, 4)
 
-    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[2], ROI3[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[0], ROI3[3]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[2], ROI3[1]), (0, 255, 255), 4)
-    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[0], ROI3[3]), (0, 255, 255), 4)
+    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[2], ROI3[1]), color, 4)
+    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[0], ROI3[3]), color, 4)
+    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[2], ROI3[1]), color, 4)
+    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[0], ROI3[3]), color, 4)
 
 if __name__ == '__main__':
 
@@ -294,7 +294,7 @@ if __name__ == '__main__':
                 break
           
             #display regions of interest
-            displayROI()
+            displayROI((255, 204, 0))
 
             #show image
             cv2.imshow("finalColor", img)
