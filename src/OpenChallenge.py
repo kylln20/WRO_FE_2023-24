@@ -78,7 +78,7 @@ if __name__ == '__main__':
     #lists storing coordinates for the regions of interest to find contours of the lanes and the orange line 
     # order: x1, y1, x2, y2
     ROI1 = [20, 170, 240, 220]
-    ROI2 = [380, 170, 600, 220]
+    ROI2 = [400, 170, 620, 220] # 380, 600
     ROI3 = [200, 300, 440, 350]
 
     #booleans for tracking whether car is in a left or right turn
@@ -100,6 +100,9 @@ if __name__ == '__main__':
     tDeviation = 25 #value used to calculate the how far left and right the car turns during a turn
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
+    
+    maxRight = straightConst - 50
+    maxLeft = straightConst + 50
     
     speed = 1660 #variable for the speed of the car, 1660
     
@@ -155,15 +158,24 @@ if __name__ == '__main__':
         
         # black mask
         lower_black = np.array([0, 0, 0])
-        upper_black = np.array([180, 255, 65])
+        upper_black = np.array([180, 255, 75])
         
         imgThresh = cv2.inRange(img_hsv, lower_black, upper_black)
         
         # orange mask
-        lower_orange = np.array([0, 100, 20])
+        lower_orange = np.array([0, 100, 175])
         upper_orange = np.array([25, 255, 255])
+        
+        # second orange mask
+        lo2 = np.array([170, 100, 175])
+        ho2 = np.array([180, 255, 255])
+        
+        #rOrange = [[0, 100, 175], [25, 255, 255]]
 
         o_mask = cv2.inRange(img_hsv, lower_orange, upper_orange)
+        o_mask_2 = cv2.inRange(img_hsv, lo2, ho2)
+        
+        o_mask = cv2.bitwise_or(o_mask, o_mask_2)
 
         #find contours to detect orange line
         contours_orange = cv2.findContours(o_mask[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cv2.RETR_EXTERNAL,
@@ -191,7 +203,7 @@ if __name__ == '__main__':
 
             rightArea = max(area, rightArea)
             
-        print(leftArea, rightArea)
+        #print(leftArea, rightArea)
 
         #iterate through the contours in the centre region of interest to find the orange line
         for i in range(len(contours_orange)):
@@ -219,17 +231,23 @@ if __name__ == '__main__':
 
         #if the area of either lane is less than or equal to turnThresh and the car is not in a turn going the other direction, set the boolean of the respective direction turn to true
         if leftArea <= turnThresh and not rTurn:
-            print("turned left")
+
             lTurn = True
             
             if debug: 
                 LED1(255, 0, 0)
 
         elif rightArea <= turnThresh and not lTurn:
-            print("turned right")
+
             rTurn = True
             if debug: 
                 LED1(255, 0, 0)
+        
+        print(angle)
+        print(prevAngle)
+        print(leftArea, rightArea)
+        print(lTurn, rTurn)
+        
 
         #if angle is different from previous angle
         if angle != prevAngle:
@@ -248,9 +266,11 @@ if __name__ == '__main__':
                   #reset prevDiff
                   prevDiff = 0 
                   
+                  
                   #increase number of turns by 1 only if the orange line has been detected 
                   if lDetected: 
                       t += 1
+                      print(t)
                       
                       if debug: 
                           if t == 4:
@@ -263,12 +283,13 @@ if __name__ == '__main__':
 
               #if car is still in a left turn set the angle to the maximum of angle and sharpLeft
               elif lTurn:
-                  angle = max(angle, sharpLeft)
+                  angle = min(max(angle, sharpLeft), maxLeft)
               #if car is still in a right turn set the angle to the minimum of angle and sharpRight
               elif rTurn: 
-                  angle = min(angle, sharpRight)
+                  angle = max(min(angle, sharpRight), maxRight)
 
               #write angle to arduino to change servo
+              
               write("servo", angle)
               time.sleep(0.01)
             #if not in a turn write the angle and if the angle is over sharpLeft or sharpRight values it will be rounded down to those values
