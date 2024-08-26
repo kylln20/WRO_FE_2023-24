@@ -217,16 +217,19 @@ if __name__ == '__main__':
     ROIs = [ROI1, ROI2, ROI3, ROI4]
     
     
+    
+    #use in yellow lighting
     '''
-    use in yellow lighting
     rBlack = [[0, 0, 0], [180, 255, 50]]
     rBlue = [[100, 100, 100], [135, 255, 255]]
-    rRed = [[170, 215, 50], [180, 255, 255]]
+    rRed = [[166, 185, 50], [180, 255, 255]]
     rGreen = [[58, 62, 55], [96, 255, 255]]
-    rMagenta = [[161, 180, 50], [168, 255, 255]]
+    rMagenta = [[150, 180, 50], [166, 255, 255]]
     rOrange = [[0, 100, 175], [25, 255, 255]]
+    rWhite = [[0, 0, 150], [180, 28, 255]]
     '''
     
+    #mask header
     rBlack = [[0, 0, 0], [180, 255, 50]]
     rBlue = [[100, 100, 100], [135, 255, 255]]
     rRed = [[171, 175, 50], [180, 255, 255]]
@@ -273,7 +276,7 @@ if __name__ == '__main__':
     #temp is used to make sure a three-point turn is only checked at one specific point during a turn
     temp = False
     
-    t = 7 #tracks number of turns
+    t = 0 #tracks number of turns
     
     t2 = 0
     prevT2 = 0
@@ -469,14 +472,14 @@ if __name__ == '__main__':
                     temp_dist = math.dist([x, y], [320, 480])
                     
                     #if the pillar is close enough add it to the number of pillars
-                    if temp_dist < 395:
+                    if temp_dist < 380: #395
                         if i == 0: 
                             num_pillars_g += 1
                         else: 
                             num_pillars_r += 1
                     
                     #if the pillar is too close, stop the car and reverse to give it enough space
-                    if area > 6500 and ((x <= 360 and i == 0) or (x >= 280 and i == 1)) and not pr and not pl:
+                    if ((area > 6500 and ((x <= 400 and i == 0) or (x >= 240 and i == 1)))) and not pr and not pl:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
                         ignore = True
@@ -593,7 +596,7 @@ if __name__ == '__main__':
                         
                         #this indicates there is a pillar at the very end of the second lap
                         if (t2 == 7 or mReverse) and cTarget == redTarget and reverse == False:
-                            write(1500)
+                            #write(1500)
                             tempR = True
                         
                         #no pillar after turn, so if previous pillar was red perform a three point turn
@@ -673,7 +676,7 @@ if __name__ == '__main__':
             maxR = max(maxR, maxAreaR)
                 
             #conditions for initiating parking on the left side
-            if leftY >= 220 and maxAreaL > 100 and (t >= 12 or pl or pr):
+            if leftY >= 220 and maxAreaL > 100 and (t >= 13 or pl or pr):
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingL = True
@@ -693,7 +696,7 @@ if __name__ == '__main__':
                 ROIs = [ROI1, ROI2, ROI3, ROI4]
                     
             #conditions for initiating parking on the right side
-            if rightY >= 240 and maxAreaR > 100 and (t >= 12 or pr or pl):
+            if rightY >= 240 and maxAreaR > 100 and (t >= 13 or pr or pl):
                 if not parkingL and not parkingR:
                     
                     
