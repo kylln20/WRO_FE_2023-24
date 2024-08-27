@@ -165,7 +165,7 @@ if __name__ == '__main__':
     picam2.start()
     
     eTurnMethod = ""
-
+    lapsComplete = False
 
     #set the target x coordinates for each red and green pillar
     redTarget = 110 
@@ -186,6 +186,9 @@ if __name__ == '__main__':
     #variables to indicate when the car should park and whether it parks on the right or left side
     parkingR = False
     parkingL = False
+    
+    sTime = 0
+    sec = 0
 
     #makes sure the car begins to park when no pillar is detected
     tempParking = False
@@ -276,7 +279,7 @@ if __name__ == '__main__':
     #temp is used to make sure a three-point turn is only checked at one specific point during a turn
     temp = False
     
-    t = 0 #tracks number of turns
+    t = 11 #tracks number of turns
     
     t2 = 0
     prevT2 = 0
@@ -344,6 +347,8 @@ if __name__ == '__main__':
     #write initial values to car
     write(angle)
     time.sleep(0.1)
+    write(1680)
+    time.sleep(0.1)
     write(speed) 
     
 
@@ -351,7 +356,12 @@ if __name__ == '__main__':
     while True:
 
 # ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
-            
+        
+        if sTime != 0 and not lapsComplete:
+            if time.time() - sTime > s:
+                multi_write([1500, 5, 1680, 0.1, 1650])
+                lapsComplete = True
+                
         #reset rightArea, and leftArea variables
         rightArea, leftArea, areaFront, areaFrontMagenta = 0, 0, 0, 0
 
@@ -479,7 +489,7 @@ if __name__ == '__main__':
                             num_pillars_r += 1
                     
                     #if the pillar is too close, stop the car and reverse to give it enough space
-                    if ((area > 6500 and ((x <= 400 and i == 0) or (x >= 240 and i == 1)))) and not pr and not pl:
+                    if ((area > 6500 and ((x <= 420 and i == 0) or (x >= 220 and i == 1)))) and not pr and not pl:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
                         ignore = True
@@ -494,8 +504,11 @@ if __name__ == '__main__':
                         continue
                         
                     #if the area of either wall is too big deselect the pillar to let the car come closer to the middle
-                    if (leftArea > 13000 and (turnDir == "none" or turnDir == "left")) or (rightArea > 13000 and (turnDir == "none" or turnDir == "right")):
-                        break
+                    ##if (leftArea > 13000 and (turnDir == "none" or turnDir == "left")) or (rightArea > 13000 and (turnDir == "none" or turnDir == "right")):
+                        #break
+                    
+                    if leftArea > 13000 or rightArea > 13000:
+                        continue
 
                     #draw rectangle around signal pillar
                     cv2.rectangle(img,(x - w // 2, y - h),(x+ w // 2,y),(0,0,255),2)
@@ -601,6 +614,8 @@ if __name__ == '__main__':
                         
                         #no pillar after turn, so if previous pillar was red perform a three point turn
                         elif (t2 == 7 or mReverse) and (cTarget == 0) and reverse == False and lastTarget == redTarget and tempR == False:
+                            
+                            t = 8 
                             
                             reverse = True
                             
@@ -742,13 +757,15 @@ if __name__ == '__main__':
             
             #if the area of the wall in front is above a limit stop as we are very close to the wall
             if areaFront > 3500:
+                '''
                 if maxR < 200:
                     reverse = "parking"
                     parkingL = False
-                else:    
-                    multi_write([straightConst, 1])
-                    stop_car()
-                    break
+                else:
+                '''
+                multi_write([straightConst, 1])
+                stop_car()
+                break
                     
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
 
@@ -795,11 +812,14 @@ if __name__ == '__main__':
 
             #update the previous difference
             prevDiff = aDiff
-
+        
             #if the areas of the two walls are above a threshold meaning we are facing the wall and are also close to the wall
-            if leftArea > 7000 and rightArea > 7000:
+            if leftArea > 6000 and rightArea > 6000:
                 #if the last pillar the car passed was green take a hard right turn and if the last pillar was red take a hard left turn
-                angle = sharpRight if lastTarget == greenTarget else sharpLeft
+                
+                if t == 8 and reverse == "done":
+                    reverse = True
+            
         
 # -----------------{ pillar detected }--------------
 
@@ -819,7 +839,12 @@ if __name__ == '__main__':
                 #add a turn
                 if reverse == False or reverse == "done":
                     eTurnMethod = "pillar"
+                     
                     t += 1
+                    
+                    if t == 12:
+                        s = 4
+                        sTime = time.time()
                 
                 #reset lTurn and rTurn booleans to indicate the turn is over
                 lTurn = False
@@ -869,7 +894,7 @@ if __name__ == '__main__':
             # turnDir == "left": car is turning right before the change in direction
             #stop turning once right in front of wall
             if areaFront > 2000 or areaFrontMagenta > 1000:
-                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1, 1500, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1.5, 1500, 0.1, 1650])
+                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1, 1500, 0.1, 1680, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1.5, 1500, 0.1, 1680, 0.1, 1650])
             else:
                 continue
 
@@ -896,6 +921,9 @@ if __name__ == '__main__':
                   if reverse == False or reverse == "done":
                       eTurnMethod = "wall"
                       t += 1
+                      if t == 12: 
+                          s = 2
+                          sTime = time.time()
                   
                   #if 2 laps have been completed or mReverse is true (debugging mode) and the last pillar is red initiate a regular three point turn
                   if (t == 8 or mReverse) and lastTarget == redTarget:
@@ -919,7 +947,12 @@ if __name__ == '__main__':
                     angle = sharpLeft
                 
                 angle = max(min(angle, sharpLeft), sharpRight)
-                
+                '''
+                if t == 12 and not lapsComplete:
+                    if leftArea > 2000 and rightArea > 2000:
+                        lapsComplete = True
+                        #multi_write([1500, 5, 1680, 0.1, 1650])
+                '''
                 #write the angle which is kept in the bounds of sharpLeft and sharpRight
                 write(angle)
         
@@ -987,6 +1020,7 @@ if __name__ == '__main__':
         pArea = 0
         prevPillarCountR = num_pillars_r
         prevPillarCountG = num_pillars_g
+        
         
         prevIgnore = ignore
 
