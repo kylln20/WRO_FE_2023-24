@@ -3,7 +3,7 @@
 🛠️ Engineering Documentation 🛠️
 ======
 
-> This repository details Team Larry the Cucumber’s building and programming process in our second participating year of the 2024 WRO Future Engineers Competition.
+> This repository details Team Asparahus’ building and programming process in our second participating year of the 2024 WRO Future Engineers Competition.
 
 &nbsp; 
 
