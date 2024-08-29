@@ -1,1 +1,5 @@
-https://www.youtube.com/watch?v=J5yrJuZZ5P8
+Open Challenge: https://youtu.be/tpMi0W-kbOw
+
+***
+
+Obstacle Challenge: https://youtu.be/57hZoc80HFo
