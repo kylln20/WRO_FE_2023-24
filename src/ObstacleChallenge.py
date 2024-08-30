@@ -16,11 +16,11 @@ import math
 #function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
 def write(value):
     
-    if 180 > value > 0: 
+    if 180 > value > 0:
         pulseWidth = int(11.1*value+500)
         Board.setPWMServoPulse(1, pulseWidth, 1)
     
-    else: 
+    else:
         Board.setPWMServoPulse(5, value, 100)
 
 #function which displays the Regions of Interest on the image
@@ -50,7 +50,6 @@ def LED2(r, g, b):
 def stop_car():
 
     write(87)
-    
     write(1500)
     
     LED1(0, 0, 0)
@@ -100,32 +99,6 @@ def return_contour(contours):
             maxArea = area
 
     return cont
-
-def contour_location(contours):
-    
-    maxArea = 0
-    maxX = 0
-    maxY = 0
-
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        
-        #get width, height, and x and y coordinates by bounding rect
-        approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
-        x,y,w,h=cv2.boundingRect(approx)
-
-        #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-        x += ROI3[0] + w // 2
-        y += ROI3[1] + h 
-
-        
-        
-        if area > maxArea:
-            maxArea = area
-            maxX = x
-            maxY = y
-
-    return maxArea, maxX, maxY
 
 #takes in an array of commands (dc, servo, sleep) and executes each
 def multi_write(sequence):
@@ -212,6 +185,8 @@ if __name__ == '__main__':
     #distance from a pillar to the car
     pDist = 0
     
+    tList = []
+    
     ignore = False
     prevIgnore = False
     
@@ -226,10 +201,7 @@ if __name__ == '__main__':
     ROI3 = [redTarget - 40, 110, greenTarget + 40, 335] #+- 40
     ROI4 = [200, 250, 440, 300]
     
-    
     ROIs = [ROI1, ROI2, ROI3, ROI4]
-    
-    
     
     #use in yellow lighting
     '''
@@ -289,7 +261,7 @@ if __name__ == '__main__':
     #temp is used to make sure a three-point turn is only checked at one specific point during a turn
     temp = False
     
-    t = 7 #tracks number of turns
+    t = 0 #tracks number of turns
     
     t2 = 0
     prevT2 = 0
@@ -300,16 +272,12 @@ if __name__ == '__main__':
     
     LED1(255, 0, 0)
     
-    time.sleep(0.5)
-    
     write(1500) 
 
     time.sleep(8) #delay 8 seconds for the servo to be ready
     
     debug = False #boolean for debug mode
-    pl = False #variable for left parking mode, a debug mode where it parks immedietly for testing purposes
-    pr = False #variable for right parking mode, a debug mode where it parks immedietly for testing purposes
-    mReverse = False #variable for reverse mode, a debug mode where it goes directly into a 3 point turn
+   
 
     #code for starting button
     key2_pin = 16
@@ -323,26 +291,11 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         debug = True
         
-        if sys.argv[1].lower() == "parkingl": 
-            turnDir = "right"
-            
-        if sys.argv[1].lower() == "parkingl": #for testing parking on the left side
-            redTarget = greenTarget
-            tempParking = True
-            pl = True
-            ##sharpRight = straightConst - 50
-            #sharpLeft = straightConst + 50
-        elif sys.argv[1].lower() == "parkingr": #for testing parking on the right side
-            greenTarget = redTarget
-            tempParking = True
-            pr = True
-            #sharpRight = straightConst - 50
-            #sharpLeft = straightConst + 50
+        if sys.argv[1].lower() == "parking": #for testing parking on the left side
+            t = 12
         elif sys.argv[1].lower() == "turn": #for testing three-point turns
-            mReverse = True
+            t = 7
         elif sys.argv[1].lower() == "steer": #for stationary testing
-            #tempParking = True
-            #redTarget = greenTarget
             speed = 1500
         
     #if no mode is specified, assume the regular program and wait for button put
@@ -352,14 +305,15 @@ if __name__ == '__main__':
             pass
         
     LED1(0, 0, 0)
-    time.sleep(0.5)
 
     #write initial values to car
+    
+    write(speed)
     write(angle)
-    time.sleep(0.1)
-    write(1680)
-    time.sleep(0.1)
-    write(speed) 
+
+    #write(1680)
+    #time.sleep(0.5)
+    
     
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
@@ -405,7 +359,6 @@ if __name__ == '__main__':
         contours_green = contours(rGreen, ROI3)
         contours_blue = contours(rBlue, ROI4)
         contours_orange = contours(rOrange, ROI4)
-        #contours_black = contours(rBlack, ROI3)
         #contours_white = contours(rWhite, ROI3)
         ''' 
         max_white = return_contour(contours_white)
@@ -445,27 +398,7 @@ if __name__ == '__main__':
                     #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
                     x += ROI3[0] + w // 2 
                     y += ROI3[1] + h
-                    
-                    
-                    '''
-                    if ((y < by or x < bx) and leftArea > 10000) or ((y < by or x > bx) and rightArea > 10000):
-                        continue
-                    '''
-                    '''
-                    points_inside = 0
-                    closest_dist = -1000000
-                    
-                    for point in cnt:
-                        point = tuple(point[0])
-                        for wCont in contours_white:
-                            distance = cv2.pointPolygonTest(wCont, point, True)
-                            
-                            closest_dist = max(closest_dist, distance)
-                    
-                    
-                    if closest_dist < -10:
-                        continue
-                    '''
+                
                     '''
                     points_inside = 0
                     closest_dist = -1000000
@@ -483,45 +416,31 @@ if __name__ == '__main__':
                         continue
                     '''
                     
-                    
-                    
                     #calculates the distance between the pillar and the bottom middle of the screen
                     temp_dist = round(math.dist([x, y], [320, 480]), 0)
-                    if t == 8: 
-                        print(temp_dist, area)
-                    '''
-                    if (t == 7 or (mReverse and t2 == t)) and area > 800:
-                        ###print("within processing:", lastTarget)
-                        lastTarget = targets[i]
-                        ###print("within processing:", lastTarget)
-                    '''
+
                     #if the pillar is close enough add it to the number of pillars
-                    if temp_dist < 380 and not mReverse and t2 != 7 and not tempR: #395
+                    if temp_dist < 380: #395
                         if i == 0: 
                             num_pillars_g += 1
                         else: 
                             num_pillars_r += 1
                     
                     #if the pillar is too close, stop the car and reverse to give it enough space
-                    if ((area > 6500 and ((x <= 420 and i == 0) or (x >= 220 and i == 1)))) and not pr and not pl:
+                    if ((area > 6500 and ((x <= 420 and i == 0) or (x >= 220 and i == 1)))) and t < 13:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
                         ignore = True
-                       # ##print("ignore set to true -------------------------------------", ignore)
-                      ##  write(1500)
+
                     else:
                         LED2(0, 0, 0)
                     
                     #deselects current pillar if it comes too close to bottom of the screen
-                    if y > ROI3[3] - endConst or (temp_dist > 370 and not mReverse and t2 != 7 and not tempR) or ((t2 == 7 or mReverse or tempR) and temp_dist > 380): #370
-                        ###print("too far")
-                        
+                    if y > ROI3[3] - endConst or (temp_dist > 370 and t2 != 7 and not tempR) or ((t2 == 7 or tempR) and temp_dist > 380): #370
                         continue
                         
-                    #if the area of either wall is too big deselect the pillar to let the car come closer to the middle
-                    ##if (leftArea > 13000 and (turnDir == "none" or turnDir == "left")) or (rightArea > 13000 and (turnDir == "none" or turnDir == "right")):
-                        #break
                     
+                    #means we are to close to the wall so we need to move back to the middle
                     if leftArea > 13000 or rightArea > 13000:
                         continue
 
@@ -567,51 +486,33 @@ if __name__ == '__main__':
             cy = 0.08 #value used to affect pd steering based on how close the pillar is based on its y coordinate, 0.15
 
 # -----------------{ orange / blue line contour processing }---------------
-       # if ignore:
-            ###print("beginning of orange / blue processing")
-            
+
         arr2 = [contours_orange, contours_blue]
         directions = ["right", "left"]
         
         #iterate through both lists of contours
         for i in range(len(arr2)): 
-            #number of contours detected
-            count = 0
-            
-           # if ignore:
-               ## ##print(i)
-
-            #process each contour in each list
             for x in range(len(arr2[i])):
-                
-                ###print(ignore)
-
                     
                 cnt = arr2[i][x]
                 area = cv2.contourArea(cnt)
                 
                 if area > 100:
-                    print(i)
-                    count += 1
 
                     #set the turn direction
                     if turnDir == "none":
                         turnDir = directions[i]
-                        ###print("setting direction:", turnDir)
 
                     #if the turn direction corresponds to the correct line colour (orange line means right turn, blue means left)
                     if turnDir == directions[i] and not parkingR and not parkingL:
                         
                         if ignore == False and prevIgnore == True:
-                            ###print("turn documented")
-                            #LED1(133, 45, 77)
                             t -= 1
                             ignore = False
-                            
                         
                         t2 = t
                         
-                        if t2 == 7 or mReverse:
+                        if t2 == 7:
                             ROI3 = [redTarget - 40, 90, greenTarget + 40, 335]
                             ROIs = [ROI1, ROI2, ROI3, ROI4]
 
@@ -622,54 +523,7 @@ if __name__ == '__main__':
 
                         tSignal = True
                     
-                    #check for three point turn, check at blue line when turning right and check at orange line when turning left
-                    elif not temp and reverse != "done" and ((turnDir == "right" and i == 1) or (turnDir == "left" and i == 0)):
                         
-                        ##print("--------------------------------------------------------------------------------")
-                        
-                        #write(1500)
-                        #time.sleep(5)
-                        temp = True
-                        '''
-                        #this indicates there is a pillar at the very end of the second lap
-                        if (t2 == 7 or mReverse) and cTarget == redTarget and reverse == False:
-                            #write(1500)
-                            
-                            
-                            LED1(255, 0, 0)
-                            
-                            tempR = True
-                        elif (t2 == 7 or mReverse) and cTarget == greenTarget and reverse == False:
-                            reverse = "done"
-                        '''
-                        '''
-                        #no pillar after turn, so if previous pillar was red perform a three point turn
-                        elif (t2 == 7 or mReverse) and (cTarget == 0) and reverse == False and lastTarget == redTarget and tempR == False:
-                            
-                            t = 8 
-                            
-                            reverse = True
-                            
-                            ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                            ROIs = [ROI1, ROI2, ROI3, ROI4]
-                            
-                            #add a pause so the car can fully complete the second lap
-                            time.sleep(1)
-                            write(straightConst)
-                            time.sleep(0.25)
-                            
-                            ###print("turn 7:", turnDir)
-                            turnDir = directions[i]
-                            ###print("turn 7:", turnDir)
-                        '''
-                        
-                        #write(1500)
-            ###print("count:", count)
-            #if colored line isnt detected anymore reset temp
-            if count == 0:
-                temp = False
-                
-        ###print("after loop")
 # ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------      
             
         maxAreaL = 0
@@ -679,17 +533,19 @@ if __name__ == '__main__':
         centerY = 0
         
         # detect magenta contours directly in front of car
-        if reverse or pl or pr or tempParking:
+        if reverse or t == 8 or tempParking:
             contours_magenta_c = contours(rMagenta, ROI4)
             
             areaFrontMagenta = max_contour(contours_magenta_c)
-        
-        if tempParking or pr or pl:
+            
+            if areaFrontMagenta > 500 and t == 8:
+                angle = sharpLeft
+            
+        if tempParking:
             
             #find magenta contours in left and right regions of interest
             contours_magenta_l = contours(rMagenta, ROI1)
             contours_magenta_r = contours(rMagenta, ROI2)
-            contours_magenta_c = contours(rMagenta, ROI4)
                                     
             #for each array representing a set of contours: area, y-coordinate, Region of Interest
             info = [[0, 0, ROI1], [0, 0, ROI2], [0, 0, ROI4]]
@@ -725,45 +581,28 @@ if __name__ == '__main__':
             maxR = max(maxR, maxAreaR)
                 
             #conditions for initiating parking on the left side
-            if leftY >= 220 and maxAreaL > 100 and (t >= 13 or pl or pr):
+            if leftY >= 220 and maxAreaL > 100 and t2 >= 12:
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingL = True
                     
-                    ###print(maxAreaL)
-                    
                     if maxAreaL > 4500:
                         buzz() if debug else time.sleep(0.5)
-                    elif maxAreaL < 1500 and t == 12:
-                        write(1650)
-                        write(straightConst)
-                        time.sleep(1)
-                        write(1640)
-                    
                     
                 ROI4 = [250, 250, 390, 300]
                 ROIs = [ROI1, ROI2, ROI3, ROI4]
                     
             #conditions for initiating parking on the right side
-            if rightY >= 240 and maxAreaR > 100 and (t >= 13 or pr or pl):
+            if rightY >= 240 and maxAreaR > 100 and t2 >= 12:
                 if not parkingL and not parkingR:
                     
-                    
-                
-                    if maxAreaR > 6000 and t == 12:
-                        multi_write([straightConst, 1.5, 1500, 0.1, reverseSpeed, 0.1, sharpLeft, 0.5])
-                        continue
-                    
                     parkingR = True
-                        
                     write(1640)
                 
                 ROI4 = [250, 250, 390, 300]
                 ROIs = [ROI1, ROI2, ROI3, ROI4]
                 
             if parkingR:
-                
-                
                 
                 #readjust if the parking lot is in front
                 if centerY > 290:
@@ -791,12 +630,6 @@ if __name__ == '__main__':
             
             #if the area of the wall in front is above a limit stop as we are very close to the wall
             if areaFront > 3500:
-                '''
-                if maxR < 200:
-                    reverse = "parking"
-                    parkingL = False
-                else:
-                '''
                 multi_write([straightConst, 1])
                 stop_car()
                 break
@@ -805,35 +638,6 @@ if __name__ == '__main__':
 
 # -----------------{ no pillar detected }--------------
         if cTarget == 0 and not parkingL and not parkingR:
-            
-            
-
-            #start a three-point turn 
-            if tempR:
-                
-                if reverse == "done":
-                    tempR = False
-                    continue
-                #swap directions
-                
-                ###print("tempR:", turnDir)
-                
-                ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                ROIs = [ROI1, ROI2, ROI3, ROI4]
-                
-                #if turnDir == "right": 
-                    #write(straightConst)
-                    #time.sleep(0.25)
-                '''
-                write(sharpLeft)
-                time.sleep(1)
-                '''
-                turnDir = "left" if turnDir == "right" else "right"
-                
-                ###print("tempR:", turnDir)
-            
-                reverse = True
-                tempR = False
 
             #change pillar targets so all are passed on the outside 
             if t == 12:
@@ -842,9 +646,6 @@ if __name__ == '__main__':
 
                 #used as an indication of when it is ok to park 
                 tempParking = True
-                
-                #sharpRight = straightConst - 40
-                #sharpLeft = straightConst + 40
 
             LED1(0, 0, 0)
 
@@ -852,18 +653,17 @@ if __name__ == '__main__':
             aDiff = rightArea - leftArea
             #calculate angle using PD steering
             angle = max(0, int(straightConst + aDiff * kp + (aDiff - prevDiff) * kd))
-            print("wall", angle)
 
             #update the previous difference
             prevDiff = aDiff
             
-            if leftArea > 2000 and rightArea > 2000 and abs(aDiff) < 500:
+            #print("areas", leftArea, rightArea)
+            if leftArea > 2000 and rightArea > 2000 and not lTurn and not rTurn:
                 noPillar = True
             
             if leftArea < 1000 and rightArea < 1000 and abs(aDiff) < 500 and not lTurn and not rTurn:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
                 
-        
             #if the areas of the two walls are above a threshold meaning we are facing the wall and are also close to the wall
             if leftArea > 6000 and rightArea > 6000:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
@@ -872,21 +672,9 @@ if __name__ == '__main__':
                 if t == 8 and reverse == "done":
                     reverse = True
             
-            
-                
-                
-                
-                
-            
-        
 # -----------------{ pillar detected }--------------
 
         elif not parkingR and not parkingL:
-            
-            
-            
-            if tempR == "temp":
-                tempR = True
             
             if debug:
                 LED1(255, 0, 0) if cTarget == redTarget else LED1(0, 255, 0)
@@ -902,63 +690,54 @@ if __name__ == '__main__':
                 #add a turn
                 if reverse == False or reverse == "done":
                     eTurnMethod = "pillar"
-                    #write(1500)
                      
                     t += 1
                     
-                    if t == 8 or mReverse:
+                    if t == 8:
                         
-                        ##print("check three point")
-                            
-                        '''
-                        if cTarget == redTarget: 
-                            tempR = "temp"
-                        else:
-                            reverse = True
-                            ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                            ROIs = [ROI1, ROI2, ROI3, ROI4]
-                            
-                            turnDir = "right" if turnDir == "left" else "left"
-                        '''
                         if turnDir == "left":
                             
-                            if noPillar:
+                            if noPillar or lastTarget == 0:
                                 if area > 200 and cTarget == redTarget:
-                                    tempR = True
+                                    reverse = True
                                 
+                                elif area < 200 and lastTarget == redTarget:
+                                    reverse = True
+                            
 
-                            elif lastTarget == redTarget:
+                            if lastTarget == redTarget:
                                 if cTarget == redTarget:
-                                    tempR = True
+                                    reverse = True
                                 
                             elif lastTarget == greenTarget:
-                                if cTarget == redTarget and area > 800:
-                                    tempR = True
-                        else:
-                            if noPillar:
-                                if area > 200 and cTarget == redTarget:
-                                    tempR = True
+                                if cTarget == redTarget and area > 600:
+                                    reverse = True
                                     
-                            elif lastTarget == redTarget:
-                                if not (cTarget == greenTarget and area > 800):
-                                    tempR = True
+                                    
+                        else:
+                            if noPillar or lastTarget == 0:
+                                if area > 200 and cTarget == redTarget:
+                                    reverse = True
+                                
+                                elif area < 200 and lastTarget == redTarget:
+                                    reverse = True
+                                    
+                            if lastTarget == redTarget:
+                                if not (cTarget == greenTarget and area > 600):
+                                    reverse = True
                                 
                             elif lastTarget == greenTarget:
                                 if cTarget == redTarget:
-                                    tempR = True
+                                    reverse = True
                                 
-                            
-                            
-                    
                     if t == 12:
                         s = 4
                         sTime = time.time()
                 
-                #reset lTurn and rTurn booleans to indicate the turn is over
                 lTurn = False
                 rTurn = False
-                
-                noPillar = False
+            
+            noPillar = False
             
             #calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
             error = cTarget - contX
@@ -971,7 +750,6 @@ if __name__ == '__main__':
 
             #if the cTarget is equal to greenTarget or redTarget meaning we have a green pillar or a redPillar and the pillar has already exceeded its x target and is also close to the bottom of the ROI, set LastTarget to the respective target as we have basically passed the pillar. 
             if cTarget == greenTarget and contX > 320 and area > 1000:
-                ##print("changed to green")
                 lastTarget = greenTarget
 
             elif cTarget == redTarget and contX < 320 and area > 1000:
@@ -983,50 +761,51 @@ if __name__ == '__main__':
             
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
-
+            
+        if len(tList) == 5:
+            tList.append(True if cTarget != 0 else False)
+            tList.pop(0)
+        else:
+            tList.append(True if cTarget != 0 else False)
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
-        if reverse != "done" and (reverse == True or reverse == "parking"):
+        if reverse != "done" and reverse == True:
             
             rTurn = False
             lTurn = False
-            '''
-            if reverse == "parking":
-                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 2, 1500, 0.1, 1650])
-                reverse = "done"
-                redTarget = 120
-                greenTarget = 120
-                continue
-            '''
-            #sharpRight = straightConst - 40 #the default angle sent to the car during a right turn
-            #sharpLeft = straightConst + 40 #the default angle sent to the car during a left turn
             
-           # LED1(0, 0, 255)
-            ##print("parking", cTarget)
+            turnDir = "right" if turnDir == "left" else "left"
+
             if cTarget == 0 or cTarget == greenTarget:
-                
                 angle = sharpLeft
-            
+                
+            if all(target == False for target in tList): 
+                
+                ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
+                ROIs = [ROI1, ROI2, ROI3, ROI4]
+                
+            if ROI3[1] == 110:
+                angle = sharpLeft
+                          
             # turnDir == "left": car is turning right before the change in direction
             #stop turning once right in front of wall
-            if areaFront > 2000 or areaFrontMagenta > 1000:
+            if areaFront > 2000 or areaFrontMagenta > 750:
                 
-                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1, 1500, 0.1, 1680, 0.1, 1650]) if turnDir == "left" else multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, 1.5, 1500, 0.1, 1680, 0.1, 1650])
+                delay = 1.5 if areaFront > 2000 else 2
+                
+                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, delay, 1500, 0.1, 1680, 0.1, 1650])
+               
                 reverse = "done"
-            
-                #end the program if we just wanted to see the three-point turn
-                if mReverse:
-                    stop_car()
-                    break
-
-
-            
-            
+                
 # ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
         
-        if angle != prevAngle or rTurn or lTurn:
+        
+        
+        
             
-            print("3", angle)
+        
+            
+        if angle != prevAngle or rTurn or lTurn:
             
             #if area of wall is large enough and turning line is not detected end turn
             if ((rightArea >= exitThresh and rTurn) or (leftArea >= exitThresh and lTurn)) and not tSignal:
@@ -1039,45 +818,34 @@ if __name__ == '__main__':
                   #in this case the turn is ended without seeing a pillar
                   if reverse == False or reverse == "done":
                       eTurnMethod = "wall"
-                      #write(1500)
                       t += 1
                       if t == 12: 
                           s = 2
                           sTime = time.time()
                   
-                  #if 2 laps have been completed or mReverse is true (debugging mode) and the last pillar is red initiate a regular three point turn
+                  #if 2 laps have been completed and the last pillar is red initiate a regular three point turn
                   
-                  if (t == 8 or mReverse):
-                      if turnDir == "left" and lastTarget == redTarget:
-                            reverse = True
-                            ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                            ROIs = [ROI1, ROI2, ROI3, ROI4]
-                            
-                            turnDir = "right" if turnDir == "left" else "left"
-                      
-                  
+                  if t == 8:
+                      if lastTarget == redTarget:
+                          multi_write([straightConst, 0.25])    
+                          reverse = True
+
                   
             # if a car is parking or performing a three-point turn
             if not parkingR and not parkingL:
-                print("2", angle)
 
                 #change angles for a right and left turn 
                 
-                if rTurn and cTarget == 0 and rightArea < 10000:
+                if rTurn and cTarget == 0 and rightArea < 5000:
                     angle = straightConst - 25 if tempParking else sharpRight
 
-                elif lTurn and cTarget == 0 and leftArea < 10000:
+                elif lTurn and cTarget == 0 and leftArea < 5000:
                     angle = sharpLeft
                 
                 angle = max(min(angle, sharpLeft), sharpRight)
-                '''
-                if t == 12 and not lapsComplete:
-                    if leftArea > 2000 and rightArea > 2000:
-                        lapsComplete = True
-                        #multi_write([1500, 5, 1680, 0.1, 1650])
-                '''
+                
                 #write the angle which is kept in the bounds of sharpLeft and sharpRight
-                print(angle)
+                    
                 write(angle)
         
 
@@ -1131,12 +899,15 @@ if __name__ == '__main__':
                 "pillar distance": pDist, 
                 "# turns": t,
                 "t2": t2,
-                "turn status": turn_status
+                "turn status": turn_status,
+                "end turn method": eTurnMethod if eTurnMethod == "pillar" or eTurnMethod == "wall" else " ",
+                "no pillar?": noPillar,
+                "tList": tList
+                
                 
             }
 
-            #display_variables(variables)
-        print(eTurnMethod)
+            display_variables(variables)
 # ------------------------------------------------------------{ reset variables }------------------------------------------------------------------------
 
         prevAngle = angle #update previous angle
