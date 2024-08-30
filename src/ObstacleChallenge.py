@@ -20,7 +20,7 @@ def write(value):
         pulseWidth = int(11.1*value+500)
         Board.setPWMServoPulse(1, pulseWidth, 1)
     
-    else:
+    elif 2000 > value > 1000:
         Board.setPWMServoPulse(5, value, 100)
 
 #function which displays the Regions of Interest on the image
@@ -291,12 +291,19 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         debug = True
         
-        if sys.argv[1].lower() == "parking": #for testing parking on the left side
+        if sys.argv[1].lower() == "parkingl": #for testing parking on the left side
             t = 12
+            turnDir = "right"
+        elif sys.argv[1].lower() == "parkingr": #for testing parking on the left side
+            t = 12
+            turnDir = "left"
+        elif sys.argv[1].lower() == "stop": #for testing parking on the left side
+            t = 11
         elif sys.argv[1].lower() == "turn": #for testing three-point turns
             t = 7
         elif sys.argv[1].lower() == "steer": #for stationary testing
             speed = 1500
+        
         
     #if no mode is specified, assume the regular program and wait for button put
     else:
@@ -304,11 +311,14 @@ if __name__ == '__main__':
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
         
+        time.sleep(3)
+        
     LED1(0, 0, 0)
 
     #write initial values to car
     
     write(speed)
+    time.sleep(0.25)
     write(angle)
 
     #write(1680)
@@ -418,9 +428,10 @@ if __name__ == '__main__':
                     
                     #calculates the distance between the pillar and the bottom middle of the screen
                     temp_dist = round(math.dist([x, y], [320, 480]), 0)
+                    #print(temp_dist)
 
                     #if the pillar is close enough add it to the number of pillars
-                    if temp_dist < 380: #395
+                    if 160 < temp_dist < 380 : #395
                         if i == 0: 
                             num_pillars_g += 1
                         else: 
@@ -481,9 +492,9 @@ if __name__ == '__main__':
             
             endConst = 30
             
-            cKp = 0.25 #value of proportional for proportional steering for avoiding signal pillars
+            cKp = 0.25 #value of proportional for proportional steering for avoiding signal pillars, 0.25
             cKd = 0.25 #value of derivative for proportional and derivative sterring for avoiding signal pillars
-            cy = 0.08 #value used to affect pd steering based on how close the pillar is based on its y coordinate, 0.15
+            cy = 0.08 #value used to affect pd steering based on how close the pillar is based on its y coordinate, 0.15, 0.08
 
 # -----------------{ orange / blue line contour processing }---------------
 
@@ -533,7 +544,7 @@ if __name__ == '__main__':
         centerY = 0
         
         # detect magenta contours directly in front of car
-        if reverse or t == 8 or tempParking:
+        if t == 8 or tempParking:
             contours_magenta_c = contours(rMagenta, ROI4)
             
             areaFrontMagenta = max_contour(contours_magenta_c)
@@ -630,18 +641,28 @@ if __name__ == '__main__':
             
             #if the area of the wall in front is above a limit stop as we are very close to the wall
             if areaFront > 3500:
-                multi_write([straightConst, 1])
+                multi_write([straightConst, 0.2, 1640, 1])
                 stop_car()
                 break
                     
 # ------------------------------------------------------------{ servo motor calculations based on pillars and walls}-------------------------------------------------------------------------
-
+        
+        if t == 8 and areaFront > 4000:
+            turnDir = "right" if turnDir == "left" else "left"
+            reverse = True
+            
 # -----------------{ no pillar detected }--------------
         if cTarget == 0 and not parkingL and not parkingR:
 
             #change pillar targets so all are passed on the outside 
-            if t == 12:
-
+            if t == 12 and not tempParking:
+                
+                if turnDir == "left": 
+                    redTarget += 10
+                    greenTarget -= 10
+                    ROI3 = [redTarget - 40, 120, greenTarget + 40, 335] #+- 40
+                    ROIs = [ROI1, ROI2, ROI3, ROI4]
+                
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
 
                 #used as an indication of when it is ok to park 
@@ -657,20 +678,26 @@ if __name__ == '__main__':
             #update the previous difference
             prevDiff = aDiff
             
+            #print(leftArea, rightArea)
+           # print(angle)
             #print("areas", leftArea, rightArea)
             if leftArea > 2000 and rightArea > 2000 and not lTurn and not rTurn:
                 noPillar = True
             
             if leftArea < 1000 and rightArea < 1000 and abs(aDiff) < 500 and not lTurn and not rTurn:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
-                
+            '''
             #if the areas of the two walls are above a threshold meaning we are facing the wall and are also close to the wall
-            if leftArea > 6000 and rightArea > 6000:
+            if (leftArea > 6000 and rightArea > 6000) or areaFront > 4000:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
                 
                 #if the last pillar the car passed was green take a hard right turn and if the last pillar was red take a hard left turn
                 if t == 8 and reverse == "done":
+                    turnDir = "right" if turnDir == "left" else "left"
                     reverse = True
+            '''
+            
+            #print("2", angle)
             
 # -----------------{ pillar detected }--------------
 
@@ -731,7 +758,7 @@ if __name__ == '__main__':
                                     reverse = True
                                 
                     if t == 12:
-                        s = 4
+                        s = 3.75
                         sTime = time.time()
                 
                 lTurn = False
@@ -762,29 +789,31 @@ if __name__ == '__main__':
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
             
-        if len(tList) == 5:
+        if len(tList) == 10:
             tList.append(True if cTarget != 0 else False)
             tList.pop(0)
         else:
             tList.append(True if cTarget != 0 else False)
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
-        if reverse != "done" and reverse == True:
+        if reverse != "done" and (reverse == True or reverse == "turning"):
             
             rTurn = False
             lTurn = False
             
-            turnDir = "right" if turnDir == "left" else "left"
-
+            ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
+            ROIs = [ROI1, ROI2, ROI3, ROI4]
+            
+            
             if cTarget == 0 or cTarget == greenTarget:
                 angle = sharpLeft
                 
-            if all(target == False for target in tList): 
+            if all(target == False for target in tList) and reverse != "turning": 
                 
-                ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                ROIs = [ROI1, ROI2, ROI3, ROI4]
+                reverse = "turning"
                 
-            if ROI3[1] == 110:
+                
+            if reverse == "turning":
                 angle = sharpLeft
                           
             # turnDir == "left": car is turning right before the change in direction
@@ -794,6 +823,8 @@ if __name__ == '__main__':
                 delay = 1.5 if areaFront > 2000 else 2
                 
                 multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, delay, 1500, 0.1, 1680, 0.1, 1650])
+                
+                turnDir = "right" if turnDir == "left" else "left"
                
                 reverse = "done"
                 
@@ -891,6 +922,7 @@ if __name__ == '__main__':
                 "left parking lot area": maxAreaL,
                 "right parking lot area": maxAreaR,
                 "front parking area": areaFrontMagenta,
+                "front wall area": areaFront,
                 "three-point turn status": reverse,
                 "last pillar": pColour,
                 "current pillar": cpColour,
