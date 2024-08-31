@@ -43,9 +43,9 @@ def stopCar():
     write("servo", 87)
     write("dc", 1500)
     
-    if debug:
-        LED1(0, 0, 0)
-        LED2(0, 0, 0)
+
+    LED1(0, 0, 0)
+    LED2(0, 0, 0)
 
 #function which displays the regions of interest on the image
 def displayROI(color):
@@ -64,6 +64,22 @@ def displayROI(color):
     image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[2], ROI3[1]), color, 4)
     image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[0], ROI3[3]), color, 4)
 
+#takes in a dictionary of values to print for debugging
+def display_variables(variables): 
+
+    names = list(variables.keys())
+
+    for i in range(len(names)):
+        name = names[i]
+        value = variables[name]
+        # Print each item on a new line
+        print(f"{name}: {value}", end="\r\n")
+    
+    # Move the cursor up to overwrite the previous lines
+    print("\033[F" * len(names), end="")
+    
+    time.sleep(0.1)
+    
 if __name__ == '__main__':
 
     #initialize camera
@@ -104,7 +120,7 @@ if __name__ == '__main__':
     maxRight = straightConst - 50
     maxLeft = straightConst + 50
     
-    speed = 1660 #variable for the speed of the car, 1660
+    speed = 1650 #variable for the speed of the car, 1660
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
@@ -132,15 +148,20 @@ if __name__ == '__main__':
         buzz()
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
+        time.sleep(2)
         
     LED1(0, 0, 0)
         
-    if debug: 
-        LED2(0, 0, 255)
+    
+    LED2(0, 0, 255)
     
     #write initial values to car
-    write("dc", speed) 
     write("servo", angle)
+    time.sleep(0.5)
+    write("dc", speed) 
+
+    
+    
 
     #main loop
     while True:
@@ -233,20 +254,13 @@ if __name__ == '__main__':
         if leftArea <= turnThresh and not rTurn:
 
             lTurn = True
-            
-            if debug: 
-                LED1(255, 0, 0)
+            LED1(255, 0, 0)
 
         elif rightArea <= turnThresh and not lTurn:
 
             rTurn = True
-            if debug: 
-                LED1(255, 0, 0)
-        
-        print(angle)
-        print(prevAngle)
-        print(leftArea, rightArea)
-        print(lTurn, rTurn)
+            LED1(255, 0, 0)
+
         
 
         #if angle is different from previous angle
@@ -260,8 +274,8 @@ if __name__ == '__main__':
                   lTurn = False 
                   rTurn = False
                   
-                  if debug: 
-                      LED1(0, 255, 0)
+
+                  LED1(0, 255, 0)
 
                   #reset prevDiff
                   prevDiff = 0 
@@ -270,13 +284,12 @@ if __name__ == '__main__':
                   #increase number of turns by 1 only if the orange line has been detected 
                   if lDetected: 
                       t += 1
-                      print(t)
                       
-                      if debug: 
-                          if t == 4:
-                              LED2(255, 255, 0)
-                          elif t == 8:
-                              LED2(255, 255, 255)
+
+                      if t == 4:
+                          LED2(255, 255, 0)
+                      elif t == 8:
+                          LED2(255, 255, 255)
                         
                       
                       lDetected = False
@@ -303,7 +316,7 @@ if __name__ == '__main__':
         prevAngle = angle #update previous angle
         
         if t == 12 and abs(angle - straightConst) <= 10:
-            sleep(0.8)
+            sleep(1.5)
             stopCar() 
             break
     
@@ -319,6 +332,19 @@ if __name__ == '__main__':
 
             #show image
             cv2.imshow("finalColor", img)
+            
+            #cv2.imshow("walls", imgThresh)
+            
+            variables = {
+                "left wall area": leftArea,
+                "right wall area": rightArea,
+                "left turn": lTurn,
+                "right turn": rTurn,
+                "# turns": t
+
+            }
+
+            display_variables(variables)
               
     if debug: 
         #close all image windows
