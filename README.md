@@ -22,11 +22,10 @@
 
 ---
 ### Team Members:
-* Brian Yin
-* Kayla Lin
-* Eric Rao
-  
-&nbsp;
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/t-photos/Team_Official.jpg" width="40%" height="40%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/t-photos/Team_Funny.jpg" width="40%" height="40%">
+
+***Kayla Lin (Left), Eric Rao (Middle), Brian Yin (Right)***
 
 ---
 ## 📖 Content of README 📖
@@ -71,8 +70,6 @@
 
 ### 🚗 Mobility 🚗
 
-<img src="v-photos/rock.webp" width="700" height=auto>
-
 #### Chassis
 We use the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accomodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, which is a more efficient procedure compared to parallel parking. 
 
@@ -93,7 +90,12 @@ We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via 
 
 ### ⚡ Electricity & Power ⚡
 
-&nbsp;
+Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. 
+
+ Although the Raspberry Pi 4B runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
+
+The wires of the battery are connected to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
+
 
 ---
 ## 💻 Software 💻
