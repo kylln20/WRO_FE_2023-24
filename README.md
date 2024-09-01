@@ -118,9 +118,14 @@ Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Ras
 
 The wires of the battery are connected to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
-### Schematic
+The wires of the battery, Raspberry Pi, ESC, and switch are all soldered together, making the wiring very durable. 
 
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" width="80%" height="80%">
+The wiring is placed underneath the car base. The switch is secured near the back of the car with a zip tie, the battery cable comes out of the right, the Raspberry Pi Power Adapter comes out from the left, and the ESC is placed in the center. 
+
+
+### Schematic and Wiring
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" width="60%" height="60%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring.jpg" width="30%" height="30%"> 
 
 ---
 ## 💻 Software 💻
