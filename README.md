@@ -107,7 +107,7 @@ The `Furitek Micro Komodo Brushless Motor` receives power and signal from the `F
 &nbsp;
 
 ### 👀 Camera Vision 👀
-We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Based on said pixel data, we can determine the size (and distance) of surrounding objects, such as the red and green obstacles, the blue and orange lines on the game mat, and the black walls.
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Based on said pixel data, we can identify those objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 &nbsp;
 
 ### ⚡ Electricity & Power ⚡
