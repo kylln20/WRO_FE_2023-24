@@ -11,12 +11,12 @@
 
 ## Content of Repository 
 * `models` - 3D CAD files
-* `others` - other essential files
-* `schemes` - electrical schematics
-* `src` - main and other programs to run/control software
-* `t-photos` - team photos
-* `v-photos` - robot photos
-* `video` - video demonstration
+* `others` - Other essential files
+* `schemes` - Electrical schematics
+* `src` - Main and other programs to run/control software
+* `t-photos` - Team photos
+* `v-photos` - Robot photos
+* `video` - Video demonstration
 
 &nbsp; 
 
@@ -30,15 +30,14 @@
 ---
 ## 📖 Content of README 📖
 * ### Hardware
-  * [`Components`](#components) - list of components 
-  * [`Mobility`](#mobility) - hardware for robot movement
-  * [`Sensors`](#sensors) - sensors used
-  * [`Electricity`](#electricity) - electrical wiring and circuit boards
-  * [`Power`](#power) - power supply
+  * [`Components`](#components)
+  * [`Mobility`](#mobility)
+  * [`Sensors`](#sensors)
+  * [`Electricity & Power`](#electricity&power)
     
 * ### Software
-  * `Initialization and Connection Process` - 
-  * `Object Management` - 
+  * [`Initialization and Connection Process`](#initialization_and_connection_process)
+  * [`Object Management`](#object_management)
     
 * ### Design Process
 
@@ -139,77 +138,72 @@ We used the Raspberry Pi imager to write a custom Raspberry Pi operating system 
 
 ### Object Detection
 The camera captures an image which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to HSV (hue, saturation, value). Then, binary thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of HSV values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
-&nbsp;
+
 The bounded white areas can then be extracted as a list of contours within a specified region of interest. By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. The target objects may be the signal pillars, the coloured lines on the game mat, the magenta parking lot, or even the black walls around the track.
 
-[^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an OpenCV tutorial, which was modified to be the ColourTester.py code.
+[^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTester.py code.
 
 &nbsp;
 
 #### Wall Detection/Management
 The wall contours are detected with the colour mask ([0, 0, 0] to [180, 255, 50]), and two regions of interest—one for the left wall, and one for the right wall. To stay centred when driving straight, we use a PD algorithm. P stands for proportional, and D stands for derivative. The algorithm involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
-&nbsp;
+
 * A difference in contour areas (error)
 * A straight constant (straightConst)- the number that would be sent for the car to go straight
 * A proportional constant (cKp) - the constant that gets multiplied by error 
 * A derivative constant (cKd) - the constant that gets multiplied by the difference in the error and the previous error (prevError)
-&nbsp;
+
 The resulting calculation is:
 > angle = int(straightConst + error * cKp + (error - prevError) * cKd)
-&nbsp;
 
-PID is the standard algorithm (with a demonstration in this video here). “I” stands for integral, which represents a different constant that would be multiplied against an average error. However, while testing the cKp and cKd, we found our program was consistent enough without the added calculations, or the arduous trial and error that would be required to find a cKi value
+PID is the standard algorithm (with a demonstration in this video [here](https://www.youtube.com/watch?v=qKy98Cbcltw)). “I” stands for integral, which represents a different constant that would be multiplied against an average error. However, while testing the cKp and cKd, we found our program was consistent enough without the added calculations, or the arduous trial and error that would be required to find a cKi value
 &nbsp;
-
 
 #### Open Challenge Corner Detection
-
 The program detects when the car is approaching a corner when the area of one wall contour is significantly less than the area of the other wall contour. This is because, once the car has approached a corner, the wall on the side it needs to turn to is barely visible. Once it has reached the threshold, it starts turning until the difference between contour areas has decreased enough. Then the car returns to the PD algorithm.
-&nbsp;
-Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using binary thresholding, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
 
+Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using binary thresholding, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
 &nbsp;
 
 #### Obstacle Challenge Corner Detection
 Unlike the open challenge, in the obstacle challenge, it is not optimal for the car to be centred while turning as there may be a signal pillar to avoid immediately after the turn. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area. 
-&nbsp;
 
 The degree to which the car must turn depends on whether it detects a signal pillar after the turn while it approaches the turn. If it does detect a signal pillar, the program switches from turning mode to going straight mode. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold.
-
 &nbsp;
 
 #### Signal Pillar Detection/Management
 Signal pillars are found with green and red colour masks, and by searching in a region of interest specific to the locations of the obstacles. 
-&nbsp;
+
 A function called boundingRect() approximates a rectangle around the selected contour. boundingRect() also returns the x and y coordinates of the rectangle’s top left corner. When applied to the contour of the signal pillar, this can be used to determine its location.
-&nbsp;
+
 We avoid the signal pillars by using a PD (Proportional and Derivative) calculation based on the difference between the x-coordinate of the signal pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
-&nbsp;
+
 After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the right of the red and green pillars.
 &nbsp;
+
 #### Parking Lot Detection/Management
 The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
-&nbsp;
+
 Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking, if the left region of interest is found to have a greater area of magenta contour than the right region of interest, the car will turn slightly to the right. The opposite is also true. 
-&nbsp;
+
 The car stops once the area of the wall detected in the middle is large enough. 
 &nbsp;
 
 #### Three-Point Turn Detection/Management
 When the eighth turn has been counted, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
-&nbsp;
+
 Since each colour pillar would cause the angle of our approach to differ when reaching the corner, we have different cases for the following: 
-&nbsp;
+
 * When the pillar right before the corner is red 
 * When the pillar right before the corner is green 
-* When there is no pillar right before the corner 
-&nbsp;
+* When there is no pillar right before the corner
+
 If the pillar before the corner forces us to go wider into the corner, the contour area of the pillar right after the corner would be smaller because of the size of the region of interest. So if the next visible pillar is red, the program will run the three-point turn.
-&nbsp;
+
 If the pillar before the corner forces us into a tighter turn, the contour areas of the pillars would be larger. The program must check whether the area is large enough to guarantee the pillar detected is the last pillar of the lap. If it is, and the pillar is also red, the program will run the three-point turn.
-&nbsp;
+
 If there is no pillar right before the corner, the pillar areas will be between the first two cases. So the program checks if the area is above a certain limit. If the contour area is not above the limit, the currently visible pillar is not the last, but the first pillar of the lap. Based on the colour of the previous pillar, the program will decide whether to run the three-point turn. 
-&nbsp;
+
 If the turn ended by seeing a wall instead of a pillar, if the last pillar seen was red then the car turns as the last pillar seen is the last pillar of the second lap. 
 &nbsp;
 
