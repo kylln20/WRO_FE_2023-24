@@ -6,7 +6,7 @@
 > This repository details Team Asparagus’ building and programming process in our second participating year of the 2024 WRO Future Engineers Competition.
 
 &nbsp; 
-
+  
 ---
 
 ## Content of Repository 
@@ -21,9 +21,15 @@
 &nbsp; 
 
 ---
+### Team Members:
+* Brian Yin
+* Kayla Lin
+* Eric Rao
+  
+&nbsp;
 
+---
 ## 📖 Content of README 📖
-
 * ### Hardware
   * [`Components`](#components) - list of components 
   * [`Mobility`](#mobility) - hardware for robot movement
@@ -32,10 +38,8 @@
   * [`Power`](#power) - power supply
     
 * ### Software
-  * `Object Detection` - 
-  * `Movement Logic` - 
-  * `lorem` - 
-  * `ipsum` - 
+  * `Initialization and Connection Process` - 
+  * `Object Management` - 
     
 * ### Design Process
 
@@ -99,19 +103,36 @@ We use a Raspberry Pi 4 Board as our single board computer (SBC). It is connecte
 The program running on the Raspberry Pi is written in Python.     
 &nbsp;
 
-* ### Libraries in use:
-  * `OpenCV` (for computer vision)
-  * `picamera2` (for camera control)
-  * `HiwonderSDK.Board` (for HAT communication)
-  * `RPi.GPIO` (for GPIO control on the Raspberry Pi)
-  * `Time` (for time-related functions, mainly: sleep())
-  * `numpy` (for numerical operation and array processing)
+### Initialization and Connection Process
+ 
+We used the Raspberry Pi imager to write a custom Raspberry Pi operating system onto an SD card that allowed us to use our Pi hat. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
+
 &nbsp;
 
 ### Object Detection
-The camera captures an image which is converted from OpenCV’s default pixel data format of BGR (blue, green, red) to HSV (hue, saturation, value). Then, binary thresholding is applied, which changes the pixel data of the processed image such that areas of interest are white, and everything else is black. The bounded white areas can then be extracted as a list of contours within a specified region of interest. 
-Areas of interest are defined based on a colour mask (a range of HSV values). Such allows us to account for slight differences in lighting which would cause colour variation. Depending on the colour mask and the region of interest, we can, from the generated list of contours, measure the size of (and effectively, the distance from and position of) obstacles, coloured lines, and the walls themself. 
+The camera captures an image which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to HSV (hue, saturation, value). Then, binary thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of HSV values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
 &nbsp;
+The bounded white areas can then be extracted as a list of contours within a specified region of interest. By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. The target objects may be the signal pillars, the coloured lines on the game mat, the magenta parking lot, or even the black walls around the track.
+
+[^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an OpenCV tutorial, which was modified to be the ColourTester.py code.
+
+&nbsp;
+
+#### Wall Detection/Management
+The wall contours are detected with the colour mask ([0, 0, 0] to [180, 255, 50]), and two regions of interest—one for the left wall, and one for the right wall. To stay centred when driving straight, we use a PD algorithm. P stands for proportional, and D stands for derivative. The algorithm involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
+&nbsp;
+* A difference in contour areas (error)
+* A straight constant (straightConst)- the number that would be sent for the car to go straight
+* A proportional constant (cKp) - the constant that gets multiplied by error 
+* A derivative constant (cKd) - the constant that gets multiplied by the difference in the error and the previous error (prevError)
+&nbsp;
+The resulting calculation is:
+> angle = int(straightConst + error * cKp + (error - prevError) * cKd)
+&nbsp;
+
+PID is the standard algorithm (with a demonstration in this video here). “I” stands for integral, which represents a different constant that would be multiplied against an average error. However, while testing the cKp and cKd, we found our program was consistent enough without the added calculations, or the arduous trial and error that would be required to find a cKi value
+&nbsp;
+
 
 #### Signal Pillar and Parking Wall Detection
 Signal pillars are found with green and/or red colour masks, and by searching in a region of interest specific to the locations of the obstacles. The parking walls are found with magenta colour masks and by searching in a region of interest near the walls.
