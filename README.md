@@ -81,7 +81,7 @@ We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm i
 
 Our car consists of the chassis of the `Carisma GT24` with 3D-printed components placed on top to hold extra electronic components
 
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/Labeled.jpg" width="40%" height="40%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/Labeled2.jpg" width="40%" height="40%">
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" width="40%" height="40%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled2.jpg" width="40%" height="40%">
 
 1. **Base Nut Front / Back**: used to secure the 3D-printed base onto the chassis
 2. **Cable Barrier**: is attached to the chassis to prevent cables from interfering with tires
