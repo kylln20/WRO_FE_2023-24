@@ -125,7 +125,7 @@ def display_variables(variables):
     # Move the cursor up to overwrite the previous lines
     print("\033[F" * len(names), end="")
     
-    time.sleep(0.1)
+    #time.sleep(0.1)
 
 if __name__ == '__main__':
     
@@ -168,7 +168,7 @@ if __name__ == '__main__':
     parkingL = False
     
     sTime = 0
-    sec = 0
+    s = 0
     
     noPillar = False
 
@@ -311,15 +311,15 @@ if __name__ == '__main__':
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
         
-        time.sleep(3)
+        time.sleep(2)
         
     LED1(0, 0, 0)
 
     #write initial values to car
     
-    write(speed)
-    time.sleep(0.25)
     write(angle)
+    time.sleep(0.25)
+    write(speed)
 
     #write(1680)
     #time.sleep(0.5)
@@ -441,13 +441,21 @@ if __name__ == '__main__':
                     if ((area > 6500 and ((x <= 420 and i == 0) or (x >= 220 and i == 1)))) and t < 13:
                         LED2(255, 255, 0)
                         multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
+                        if s != 0:
+                            s += 1.5
                         ignore = True
+                        
+                        if reverse == "turning" and turnDir == "right":
+                            reverse = "done"
+                            turnDir = "left"
+                            t += 1
+                            
 
                     else:
                         LED2(0, 0, 0)
                     
                     #deselects current pillar if it comes too close to bottom of the screen
-                    if y > ROI3[3] - endConst or (temp_dist > 370 and t2 != 7 and not tempR) or ((t2 == 7 or tempR) and temp_dist > 380): #370
+                    if y > ROI3[3] - endConst or (temp_dist > 370 and t2 != 7) or (t2 == 7 and temp_dist > 380): #370
                         continue
                         
                     
@@ -456,7 +464,7 @@ if __name__ == '__main__':
                         continue
 
                     #draw rectangle around signal pillar
-                    cv2.rectangle(img,(x - w // 2, y - h),(x+ w // 2,y),(0,0,255),2)
+                    if debug: cv2.rectangle(img,(x - w // 2, y - h),(x+ w // 2,y),(0,0,255),2)
 
                     #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
                     if temp_dist < pDist:
@@ -467,17 +475,18 @@ if __name__ == '__main__':
                         pDist = temp_dist
 
             #draw contours of pillars for debugging
+            
             if i == 0: 
-                cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 238, 144), 3)
+                if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 238, 144), 3)
             else:
-                cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 144, 238), 3)
+                if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 144, 238), 3)
                 
 # -----------------{ control variable manipulation based on number of pillars }--------------
 
         #change control variables if there are more than 2 pillars of the same colour, most likely meaning we are turning along an inside corner. Make the control variables less strong
         if (num_pillars_r >= 2 or num_pillars_g >= 2):
             
-            if debug: LED2(255, 255, 255)
+            LED2(255, 255, 255)
         
             endConst = 60
             
@@ -488,7 +497,7 @@ if __name__ == '__main__':
         #any other combination of number of pillars
         else: 
             
-            if debug: LED2(0, 0, 0)     
+            LED2(0, 0, 0)     
             
             endConst = 30
             
@@ -527,12 +536,13 @@ if __name__ == '__main__':
                             ROI3 = [redTarget - 40, 90, greenTarget + 40, 335]
                             ROIs = [ROI1, ROI2, ROI3, ROI4]
 
-                        if i == 0: 
+                        if i == 0:
                             rTurn = True
                         else:
                             lTurn = True
 
                         tSignal = True
+                
                     
                         
 # ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------      
@@ -600,7 +610,7 @@ if __name__ == '__main__':
                     if maxAreaL > 4500:
                         buzz() if debug else time.sleep(0.5)
                     
-                ROI4 = [250, 250, 390, 300]
+                ROI4 = [230, 250, 370, 300]
                 ROIs = [ROI1, ROI2, ROI3, ROI4]
                     
             #conditions for initiating parking on the right side
@@ -609,6 +619,10 @@ if __name__ == '__main__':
                     
                     parkingR = True
                     write(1640)
+                    
+                    if maxAreaR > 6500:
+                        buzz() if debug else time.sleep(0.5)
+                    
                 
                 ROI4 = [250, 250, 390, 300]
                 ROIs = [ROI1, ROI2, ROI3, ROI4]
@@ -617,7 +631,7 @@ if __name__ == '__main__':
                 
                 #readjust if the parking lot is in front
                 if centerY > 290:
-                    if debug: LED1(255, 0, 0) 
+                    LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpLeft, 0.5, 1500])
                 #turn right into parking lot
                 else:
@@ -630,7 +644,7 @@ if __name__ == '__main__':
                 if rightArea > 8000 and maxAreaR > 2000:
                     multi_write([1640, sharpRight, 1])
                 elif centerY > 290 and areaFront < 3000:
-                    if debug: LED1(255, 0, 0) 
+                    LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
                 #turn left into parking lot
                 else:
@@ -657,11 +671,14 @@ if __name__ == '__main__':
             #change pillar targets so all are passed on the outside 
             if t == 12 and not tempParking:
                 
-                if turnDir == "left": 
+                '''
+                if turnDir == "left":
+                    
                     redTarget += 10
                     greenTarget -= 10
                     ROI3 = [redTarget - 40, 120, greenTarget + 40, 335] #+- 40
                     ROIs = [ROI1, ROI2, ROI3, ROI4]
+                '''
                 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
 
@@ -703,8 +720,8 @@ if __name__ == '__main__':
 
         elif not parkingR and not parkingL:
             
-            if debug:
-                LED1(255, 0, 0) if cTarget == redTarget else LED1(0, 255, 0)
+            
+            LED1(255, 0, 0) if cTarget == redTarget else LED1(0, 255, 0)
           
             #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
             #in this case the turn is finished while still seeing a pillar
@@ -798,6 +815,7 @@ if __name__ == '__main__':
 
         if reverse != "done" and (reverse == True or reverse == "turning"):
             
+            LED2(0, 0, 255)
             rTurn = False
             lTurn = False
             
@@ -808,8 +826,8 @@ if __name__ == '__main__':
             if cTarget == 0 or cTarget == greenTarget:
                 angle = sharpLeft
                 
-            if all(target == False for target in tList) and reverse != "turning": 
-                
+            if all(target == False for target in tList) and reverse != "turning":
+
                 reverse = "turning"
                 
                 
@@ -851,7 +869,7 @@ if __name__ == '__main__':
                       eTurnMethod = "wall"
                       t += 1
                       if t == 12: 
-                          s = 2
+                          s = 2.5
                           sTime = time.time()
                   
                   #if 2 laps have been completed and the last pillar is red initiate a regular three point turn
@@ -957,6 +975,7 @@ if __name__ == '__main__':
         
         prevIgnore = ignore
 
+picam2.stop()
 cv2.destroyAllWindows()
 
 
