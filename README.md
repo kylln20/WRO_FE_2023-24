@@ -87,7 +87,7 @@ Our car consists of the chassis of the `Carisma GT24` with 3D-printed components
 3. **Camera Extension**: a piece attaching to the car’s base to give the camera extra height and tilt
 4. **Camera Mount**: the piece the camera is attached to, adds height and tilt
 5. **Camera Support**: used to help stabilize the overall camera structure
-6. **Car Base**: the main platform of the car, is attached to the chassis through 4 posts, includes:
+6. **Car Base**: the main platform of the car, is attached to the chassis through 4 posts, components of the base includes:
     - Holder for Raspberry Pi
     - Holder for cooling fan 
     - Holder for battery
