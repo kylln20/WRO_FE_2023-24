@@ -81,9 +81,9 @@ Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to
 
 The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. The motor is mounted on a sturdy `aluminum mount` instead of the standard plastic mount, increasing durability and passive cooling. 
 
-To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo with a three-wire connection (signal, voltage, ground), which we can control and power with the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo. However, it is to be noted that the 3D printed piece is not perfectly secured to the axis and will, on the rare occasion, pop out.
+To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo with a three-wire connection (signal, voltage, ground), which we can control and power directly from a motor port on the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo. However, it is to be noted that the 3D printed piece is not perfectly secured to the axis and will, on the rare occasion, pop out.
 
-To send signals to both components, we use a `Furitek Lizard Pro Electronic Speed Controller (ESC)`, which comes with the brushless motor. The signals sent are PWM (pulse-width modulation) signals from the Pi HAT's motor ports. 
+The `Furitek Micro Komodo Brushless Motor` receives power and signal from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`, which comes with the brushless motor. Similarly to the servo, the signals used are PWM (pulse-width modulation) signals from the Pi HAT's motor ports. 
 &nbsp;
 
 ### 👀 Camera Vision 👀
