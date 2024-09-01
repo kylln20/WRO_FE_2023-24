@@ -73,8 +73,29 @@
 
 ### 🚗 Mobility 🚗
 
+
 #### Chassis
-We use the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accomodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, which is a more efficient procedure compared to parallel parking. 
+We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accommodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, which is a more efficient procedure compared to parallel parking. 
+
+#### Design 
+
+Our car consists of the chassis of the `Carisma GT24` with 3D-printed components placed on top to hold extra electronic components
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/Labeled.jpg" width="40%" height="40%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/Labeled2.jpg" width="40%" height="40%">
+
+1. **Base Nut Front / Back**: used to secure the 3D-printed base onto the chassis
+2. **Cable Barrier**: is attached to the chassis to prevent cables from interfering with tires
+3. **Camera Extension**: a piece attaching to the car’s base to give the camera extra height and tilt
+4. **Camera Mount**: the piece the camera is attached to, adds height and tilt
+5. **Camera Support**: used to help stabilize the overall camera structure
+6. **Car Base**: the main platform of the car, is attached to the chassis through 4 posts, includes:
+    - Holder for Raspberry Pi
+    - Holder for cooling fan 
+    - Holder for battery
+    - Vertical post to route battery cable
+    - Cable ladder organizer on the right side
+    - Hook on the left to hold the power cable in place
+7. **Servo Attachment**: attaches to the servo motor and controls steering
 
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration.
