@@ -125,7 +125,7 @@ The wiring is placed underneath the car base. The switch is secured near the bac
 
 🔌 Schematic and Wiring 🔌
 ---
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" width="60%" height="60%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring.jpg" width="30%" height="30%"> 
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring.jpg" height="400px"> 
 
 &nbsp;
 
@@ -148,20 +148,20 @@ The bounded white areas can then be extracted as a list of contours within a spe
 
 [^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTester.py code.
 
-#### Open Challenge Corner Detection
+### Open Challenge Corner Detection
 The car turns when one side of the camera shows a wall, and the other doesn't. In the camera feed, the area of one wall contour will be significantly less than the area of the other wall contour. The turning programs ends once both contours become similar again.
 
 Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using binary thresholding, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
 <br/><br/>
-#### Obstacle Challenge Corner Detection
+### Obstacle Challenge Corner Detection
 Unlike the open challenge, in the obstacle challenge, it is not optimal for the car to be centred while turning as there may be a signal pillar to avoid immediately after the turn. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area. 
 
 The degree to which the car must turn depends on whether it detects a signal pillar after the turn while it approaches the turn. If it does detect a signal pillar, the program switches from turning mode to going straight mode. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold.
 <br/><br/>
-#### Wall Detection/Management
+### Wall Detection/Management
 The wall contours are detected with the colour mask ([0, 0, 0] to [180, 255, 50]), and one region of interest for each wall. 
 
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" height="300px">
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wallcontour.png" height="300px">
 
 To stay centred when driving straight, we use a proportional derivitave (PD) algorithm, which involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
 
@@ -172,19 +172,17 @@ To stay centred when driving straight, we use a proportional derivitave (PD) alg
 
 The resulting calculation is:
 > angle = int(straightConst + error * cKp + (error - prevError) * cKd)
-
 <br/><br/>
-
-#### Signal Pillar Detection/Management
+### Signal Pillar Detection/Management
 Signal pillars are found with green and red colour masks, and by searching in a region of interest specific to the locations of the obstacles. 
 
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" height="300px">
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcontour.png" height="300px">
 
 A function called boundingRect() approximates a rectangle around the selected contour. boundingRect() also returns the x and y coordinates of the rectangle’s top left corner. When applied to the contour of the signal pillar, this can be used to determine its location.
 
 Then, a PD calculation is applied based on the difference between the x-coordinate of the pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
 
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" height="300px">
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcoord.png" height="300px">
 
 Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, this is done so the car can successfully navigate tight corner cases. 
 
@@ -192,14 +190,18 @@ While we detect a pillar, if the area of the left or right walls becomes too lar
 
 After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the outside of the red and green pillars.
 <br/><br/>
-#### Parking Lot Detection/Management
-The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
+### Parking Lot Detection/Management
+The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. It uses the same ROI as the orange/blue line to detect the two magenta walls as well as the outer black wall within the parking area.
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/parkingdetect.png" height="300px">
+
+This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
 
 Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left meaning we have to turn right. 
 
 The car stops once the area of the wall detected in the middle is large enough. 
 <br/><br/>
-#### Three-Point Turn
+### Three-Point Turn
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
 
 The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars. This is variation is caused by the placement/colour of a pillar in the previous section. 
