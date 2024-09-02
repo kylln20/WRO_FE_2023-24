@@ -4,9 +4,8 @@
 ======
 
 > This repository details Team Asparagus’ building and programming process in our second participating year of the 2024 WRO Future Engineers Competition.
-
 &nbsp; 
-  
+
 ---
 
 ## Content of Repository 
@@ -17,7 +16,6 @@
 * `t-photos` - Team photos
 * `v-photos` - Robot photos
 * `video` - Video demonstration
-
 &nbsp; 
 
 ---
@@ -72,12 +70,10 @@
 
 ### 🚗 Mobility 🚗
 
-
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accommodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, which is a more efficient procedure compared to parallel parking. 
 
 #### Design 
-
 Our car consists of the chassis of the `Carisma GT24` with 3D-printed components placed on top to hold extra electronic components
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" width="40%" height="40%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled2.jpg" width="40%" height="40%">
@@ -111,32 +107,27 @@ We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via 
 &nbsp;
 
 ### ⚡ Electricity & Power ⚡
-
 Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. 
 
- Although the Raspberry Pi 4B runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
+Although the Raspberry Pi 4B runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
 
 The wires of the battery are connected to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
-The wires of the battery, Raspberry Pi, ESC, and switch are all soldered together, making the wiring very durable. 
+The battery wires, Raspberry Pi, ESC, and switch are all soldered together, making the wiring very durable. 
 
 The wiring is placed underneath the car base. The switch is secured near the back of the car with a zip tie, the battery cable comes out of the right, the Raspberry Pi Power Adapter comes out from the left, and the ESC is placed in the center. 
 
-
 ### Schematic and Wiring
-
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" width="60%" height="60%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring.jpg" width="30%" height="30%"> 
 
 ---
 ## 💻 Software 💻
-
 We use a Raspberry Pi 4 Board as our single board computer (SBC). It is connected to the HAT, from which it takes and processes sensor input to return turning-angle and speed values back to the HAT, which then get sent to the servo and DC motors respectively. 
 
 The program running on the Raspberry Pi is written in Python.     
 &nbsp;
 
 ### Initialization and Connection Process
- 
 We used the Raspberry Pi imager to write a custom Raspberry Pi operating system onto an SD card that allowed us to use our Pi hat. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
 
 &nbsp;
@@ -185,7 +176,7 @@ We avoid the signal pillars by using a PD (Proportional and Derivative) calculat
 
 Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, this is done so the car can successfully navigate tight corner cases. 
 
-While we detect a pillar, if the area of the left or right walls becomes too large, we deselect the current pillar so the angle can be determined by the wall areas. This allows the car to turn towards the middle and avoid hitting the wall
+While we detect a pillar, if the area of the left or right walls becomes too large, we deselect the current pillar so the wall areas determine the angle instead. This allows the car to turn towards the middle and avoid hitting the wall
 
 After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the outside of the red and green pillars.
 &nbsp;
@@ -221,8 +212,4 @@ Once we know a three-point turn must be performed, the car will immediately turn
 After the initial three-point turn, if the car detects a large black area in front again, the initial three-point turn isn't sharp enough, so another three-point turn is performed.
 
 If the car doesn't the wall in front and instead comes too close to a pillar instead, it means the car has already turned around, so we count an extra turn and change turn direction. 
-
 &nbsp;
-
-
-
