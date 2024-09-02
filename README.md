@@ -96,6 +96,10 @@ Our car consists of the chassis of the `Carisma GT24` with 3D-printed components
     - Hook on the left to hold the power cable in place
 7. **Servo Attachment**: attaches to the servo motor and controls steering
 
+Although we have support to stabilize the camera structure, we found that the camera still shakes slightly during test runs. 
+
+Although this does not greatly impede the camera's performance, a more stable one-piece mount for the camera may be beneficial to increase the durability and simplicity of the car. 
+
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration.
 
@@ -111,6 +115,8 @@ The `Furitek Micro Komodo Brushless Motor` receives power and signal from the `F
 We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Based on said pixel data, we can identify those objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 &nbsp;
 
+Our camera is sensitive to different lighting conditions meaning colors may look different in different scenarios. This could have been improved by changing camera settings or attaching a lamp to the car to make sure the lighting conditions are always consistent. 
+
 ⚡ Electricity & Power ⚡
 ---
 Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. 
@@ -123,9 +129,13 @@ The battery wires, Raspberry Pi, ESC, and switch are all soldered together, maki
 
 The wiring is placed underneath the car base. The switch is secured near the back of the car with a zip tie, the battery cable comes out of the right, the Raspberry Pi Power Adapter comes out from the left, and the ESC is placed in the center. 
 
+One area that could be improved about our wiring is the switch. 
+
+Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimeters. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
+
 🔌 Schematic and Wiring 🔌
 ---
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring.jpg" height="400px"> 
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
 &nbsp;
 
@@ -139,31 +149,24 @@ The program running on the Raspberry Pi is written in Python.
 ---
 We used the Raspberry Pi imager to write a custom Raspberry Pi operating system onto an SD card that allowed us to use our Pi hat. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
 
-
-📷 Object Detection 📷
+Program Logic 
 ---
+
+### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
+
 The camera captures an image which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to HSV (hue, saturation, value). Then, binary thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of HSV values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
 
 The bounded white areas can then be extracted as a list of contours within a specified region of interest. By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. The target objects may be the signal pillars, the coloured lines on the game mat, the magenta parking lot, or even the black walls around the track.
 
 [^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTester.py code.
 
-### Open Challenge Corner Detection
-The car turns when one side of the camera shows a wall, and the other doesn't. In the camera feed, the area of one wall contour will be significantly less than the area of the other wall contour. The turning programs ends once both contours become similar again.
+### Wall Detection/Management <sub> (Open Challenge / Obstacle Challenge) </sub>
 
-Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using binary thresholding, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
-<br/><br/>
-### Obstacle Challenge Corner Detection
-Unlike the open challenge, in the obstacle challenge, it is not optimal for the car to be centred while turning as there may be a signal pillar to avoid immediately after the turn. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area. 
-
-The degree to which the car must turn depends on whether it detects a signal pillar after the turn while it approaches the turn. If it does detect a signal pillar, the program switches from turning mode to going straight mode. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold.
-<br/><br/>
-### Wall Detection/Management
 The wall contours are detected with the colour mask ([0, 0, 0] to [180, 255, 50]), and one region of interest for each wall. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wallcontour.png" height="300px">
 
-To stay centred when driving straight, we use a proportional derivitave (PD) algorithm, which involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
+To stay centered when driving straight, we use a proportional derivitave (PD) algorithm, which involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
 
 * A difference in contour areas (error)
 * A straight constant (straightConst)- the number that would be sent for the car to go straight
@@ -173,7 +176,10 @@ To stay centred when driving straight, we use a proportional derivitave (PD) alg
 The resulting calculation is:
 > angle = int(straightConst + error * cKp + (error - prevError) * cKd)
 <br/><br/>
-### Signal Pillar Detection/Management
+### Signal Pillar Detection/Management <sub> (Obstacle Challenge) </sub>
+
+In the Obstacle Challenge, if a signal pillar is detected, the program will switch from calculating the angle based on the walls to the signal pillar instead. 
+
 Signal pillars are found with green and red colour masks, and by searching in a region of interest specific to the locations of the obstacles. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcontour.png" height="300px">
@@ -181,6 +187,8 @@ Signal pillars are found with green and red colour masks, and by searching in a 
 A function called boundingRect() approximates a rectangle around the selected contour. boundingRect() also returns the x and y coordinates of the rectangle’s top left corner. When applied to the contour of the signal pillar, this can be used to determine its location.
 
 Then, a PD calculation is applied based on the difference between the x-coordinate of the pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
+
+In the event there are 2 or more pillars seen, we determine the one to focus on by calculating the distance between the bottom middle of the screen, to the bottom middle of the pillar. We use the closest pillar to calculate the servo angle. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcoord.png" height="300px">
 
@@ -190,7 +198,30 @@ While we detect a pillar, if the area of the left or right walls becomes too lar
 
 After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the outside of the red and green pillars.
 <br/><br/>
-### Parking Lot Detection/Management
+
+### Turning <sub> (Open Challenge) </sub>
+The car turns when one side of the camera shows a wall, and the other doesn't. In the camera feed, the area of one wall contour will be significantly less than the area of the other wall contour. The turning programs ends once both contours become similar again.
+
+During a turn, we set the servo to a default turning angle of 25 degrees. However, if the angle calculated through the difference of wall areas is greater than 25 degrees, the car will use this angle instead of the default 25 degrees. This ensures we don’t hit the wall during tighter turns. 
+
+Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using binary thresholding, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
+<br/><br/>
+
+### Turning <sub> (Obstacle Challenge) </sub>
+Unlike the open challenge, in the obstacle challenge, we can't detect turns by the areas of walls due to the need to avoid pillars. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area to ensure we are at a corner. 
+
+The car is automatically set to the maximum 50-degree turning angle to make sure it can see pillars as quickly as possible after a turn. 
+
+If it does detect a signal pillar, the turn ends immediately and the angle calculation is then based on the signal pillar. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold and the angle calculation will be based on the wall area difference.
+<br/><br/>
+
+### Possible Improvement <sub> (Open Challenge / Obstacle Challenge) </sub>
+
+One possible improvement that could be made is the placement of our regions of interest. Our regions of interest on the screen are placed perfectly symmetrically on both sides of the screen. This means we didn’t account for the fact that our camera is not perfectly aligned. 
+
+This causes the car to control slightly differently when the car is running clockwise or counter-clockwise. The car could be made a lot more consistent in the open challenge and obstacle challenge with better adjustment of our regions of interest tailored to the view of the camera. 
+
+### Parking Lot Detection/Management <sub> (Obstacle Challenge) </sub>
 
 The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
 
@@ -201,7 +232,8 @@ Once the magenta parking lot has been found in the left or right region of inter
 The car stops once the area of the wall detected in the middle is large enough, using the same ROI that detects the orange/blue lines.
 
 <br/><br/>
-### Three-Point Turn
+### Three-Point Turn <sub> (Obstacle Challenge) </sub>
+
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
 
 The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars. This is variation is caused by the placement/colour of a pillar in the previous section. 
