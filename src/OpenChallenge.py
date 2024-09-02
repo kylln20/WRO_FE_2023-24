@@ -3,7 +3,6 @@ import sys
 sys.path.append('/home/pi/TurboPi/')
 import cv2
 from picamera2 import Picamera2
-#import serial
 from time import sleep
 import RPi.GPIO as GPIO
 import numpy as np
@@ -22,17 +21,18 @@ def write(motor, value):
         Board.setPWMServoPulse(5, value, 100)
         #print("no motor")
         
-
+#for activating buzzer
 def buzz():
-
     Board.setBuzzer(1)
     time.sleep(0.5)
     Board.setBuzzer(0)
-    
+
+#controls LED1
 def LED1(r, g, b):
     Board.RGB.setPixelColor(0, Board.PixelColor(r, g, b))
     Board.RGB.show()
-    
+
+#controls LED2
 def LED2(r, g, b):
     Board.RGB.setPixelColor(1, Board.PixelColor(r, g, b))
     Board.RGB.show()
@@ -43,7 +43,6 @@ def stopCar():
     write("servo", 87)
     write("dc", 1500)
     
-
     LED1(0, 0, 0)
     LED2(0, 0, 0)
 
@@ -78,9 +77,11 @@ def display_variables(variables):
     # Move the cursor up to overwrite the previous lines
     print("\033[F" * len(names), end="")
     
-    time.sleep(0.1)
+    #time.sleep(0.1)
     
 if __name__ == '__main__':
+    
+    time.sleep(3)
 
     #initialize camera
     picam2 = Picamera2()
@@ -117,6 +118,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
+    #maximum limit for angles
     maxRight = straightConst - 50
     maxLeft = straightConst + 50
     
@@ -134,31 +136,34 @@ if __name__ == '__main__':
     lDetected = False
     
     debug = False
+    
+    #set up button 
     key2_pin = 16
     
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(key2_pin, GPIO.IN, pull_up_down = GPIO.PUD_UP)
     
-    
     LED1(0, 255, 0)
     
+    #change debugging mode based on program arguments
     if len(sys.argv) > 1 and sys.argv[1] == "Debug":
         debug = True
     else:
         buzz()
+        #wait until button press
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
-        time.sleep(2)
+        time.sleep(3)
         
     LED1(0, 0, 0)
-        
-    
     LED2(0, 0, 255)
     
     #write initial values to car
     write("servo", angle)
     time.sleep(0.5)
-    write("dc", speed) 
+    write("dc", 1670)
+    time.sleep(0.1)
+    write("dc",speed) 
 
     
     
