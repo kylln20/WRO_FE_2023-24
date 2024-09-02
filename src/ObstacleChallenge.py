@@ -290,7 +290,7 @@ if __name__ == '__main__':
             speed = 1500
         
         
-    #if no mode is specified, assume the regular program and wait for button put
+    #if no mode is specified, assume the regular program and wait for button input
     else:
         buzz()
         while GPIO.input(key2_pin) == GPIO.HIGH:
@@ -299,10 +299,10 @@ if __name__ == '__main__':
         time.sleep(3)
         
     LED1(0, 0, 0)
-
-    #write initial values to car
-    write(speed)
-    write(angle)
+    
+    #write initial valuess
+    time.sleep(0.5)
+    multi_write([angle, 0.5, 1670, 0.1, speed])
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
@@ -312,7 +312,7 @@ if __name__ == '__main__':
         #stop the car after the third lap
         if sTime != 0 and not lapsComplete:
             if time.time() - sTime > s:
-                multi_write([1500, 5, 1680, 0.1, 1650])
+                multi_write([1500, 2.5, 1680, 0.1, 1650])
                 lapsComplete = True
                 
         #reset rightArea, and leftArea variables
@@ -426,6 +426,9 @@ if __name__ == '__main__':
 
                     #draw rectangle around signal pillar
                     if debug: cv2.rectangle(img,(x - w // 2, y - h),(x+ w // 2,y),(0,0,255),2)
+                    
+                    #cv2.line(img, (x, 0), (x, 480), (0, 0, 255), 4)
+                    #cv2.line(img, (targets[i], 0), (targets[i], 480), (0, 255, 0), 4)
 
                     #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
                     if temp_dist < pDist:
@@ -436,10 +439,12 @@ if __name__ == '__main__':
                         pDist = temp_dist
 
             #draw contours of pillars for debugging
+                        
             if i == 0: 
                 if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 238, 144), 3)
             else:
                 if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 144, 238), 3)
+                
                 
 # -----------------{ control variable manipulation based on number of pillars }--------------
 
@@ -633,7 +638,7 @@ if __name__ == '__main__':
         if cTarget == 0 and not parkingL and not parkingR:
 
             #change pillar targets so all are passed on the outside 
-            if t == 12 and not tempParking and all(target == False for target in tList[:5]):
+            if t == 12 and not tempParking and all(target == False for target in tList[:2]):
                 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
 
@@ -678,24 +683,38 @@ if __name__ == '__main__':
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
                         
-                        print(contX, pDist, pArea, lastTarget, cTarget)
+                        #print(contX, pDist, pArea, lastTarget, cTarget)
                         
                         if turnDir == "left":
-
+                            
+                            #means we are taking a wider turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
                                 if cTarget == redTarget:
                                     reverse = True
-                                
+                            
+                            #means weare taking a tighter turn into the corne 
                             elif lastTarget == greenTarget or lastTarget == 0:
                                 if cTarget == redTarget and pArea > 400:
-                                    reverse = True  
+                                    
+                                    #if pillar is far away turn right away, else wait to pass the current pillar
+                                    if pArea < 400: 
+                                        reverse = "turning"
+                                    else:
+                                        reverse = True
                                     
                         else:
-                                    
+                            
+                            #means we are taking a tighter turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
                                 if not (cTarget == greenTarget and (pArea > 600 or contX > 550)):
-                                    reverse = True
-                                
+                                    
+                                    #if pillar is far away turn right away, else wait to pass the current pillar
+                                    if pArea < 400 and contX < 550:
+                                        reverse = "turning"
+                                    else: 
+                                        reverse = True
+                            
+                            #means we are taking a wider turn into the corner
                             elif lastTarget == greenTarget or lastTarget == 0:
                                 if cTarget == redTarget:
                                     reverse = True
@@ -804,7 +823,7 @@ if __name__ == '__main__':
                   if t == 8:
                       if lastTarget == redTarget:
                           multi_write([straightConst, 0.25])    
-                          reverse = True
+                          reverse = "turning"
                           
                       #reset ROI3
                       if reverse == False:
@@ -898,6 +917,7 @@ if __name__ == '__main__':
         
         #just in case the car doesn't stop on turn 12, set tempParking to true so the car can park
         if t == 13 and not tempParking:
+            redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
             tempParking = True
         
         time.sleep(0.1)
