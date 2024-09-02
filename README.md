@@ -202,13 +202,13 @@ The car stops once the area of the wall detected in the middle is large enough.
 #### Three-Point Turn
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
 
-The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars. This is variation is caused by the placement/color of a pillar in the previous section. 
+The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars. This is variation is caused by the placement/colour of a pillar in the previous section. 
 
 Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume
 
 After the initial three-point turn, if the car detects a large black area in front again, the initial three-point turn isn't sharp enough, so another three-point turn is performed.
 
-If the car doesn't the wall in front and instead comes too close to a pillar instead, it means the car has already turned around, so we count an extra turn and change turn direction.
+If the car doesn't detect the wall in front and instead comes too close to a pillar, it means the car has already turned around, so we count an extra turn.
 <br/><br/>
 <!---
 Since each colour pillar would cause the angle of our approach to differ when reaching the corner, we have different cases for the following: 
