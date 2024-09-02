@@ -38,10 +38,7 @@
     
 * ### Software
   * [`Initialization and Connection Process`](#initialization_and_connection_process)
-  * [`Object Management`](#object_management)
-    
-* ### Design Process
-
+  * [`Object Management`](#object_management)  
 &nbsp;
 
 ---
