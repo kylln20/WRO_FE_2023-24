@@ -183,37 +183,45 @@ A function called boundingRect() approximates a rectangle around the selected co
 
 We avoid the signal pillars by using a PD (Proportional and Derivative) calculation based on the difference between the x-coordinate of the signal pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
 
-After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the right of the red and green pillars.
+Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, this is done so the car can successfully navigate tight corner cases. 
+
+While we detect a pillar, if the area of the left or right walls becomes too large, we deselect the current pillar so the angle can be determined by the wall areas. This allows the car to turn towards the middle and avoid hitting the wall
+
+After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the outside of the red and green pillars.
 &nbsp;
 
 #### Parking Lot Detection/Management
 The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
 
-Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking, if the left region of interest is found to have a greater area of magenta contour than the right region of interest, the car will turn slightly to the right. The opposite is also true. 
+Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left meaning we have to turn right. 
 
 The car stops once the area of the wall detected in the middle is large enough. 
 &nbsp;
 
 #### Three-Point Turn Detection/Management
-When the eighth turn has been counted, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
+After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
 
 Since each colour pillar would cause the angle of our approach to differ when reaching the corner, we have different cases for the following: 
 
-* When the pillar right before the corner is red 
-* When the pillar right before the corner is green 
-* When there is no pillar right before the corner
+* When the last pillar before the corner is red 
+* When the last pillar before the corner is green 
 
 If the pillar before the corner forces us to go wider into the corner, the contour area of the pillar right after the corner would be smaller because of the size of the region of interest. So if the next visible pillar is red, the program will run the three-point turn.
 
 If the pillar before the corner forces us into a tighter turn, the contour areas of the pillars would be larger. The program must check whether the area is large enough to guarantee the pillar detected is the last pillar of the lap. If it is, and the pillar is also red, the program will run the three-point turn.
 
-If there is no pillar right before the corner, the pillar areas will be between the first two cases. So the program checks if the area is above a certain limit. If the contour area is not above the limit, the currently visible pillar is not the last, but the first pillar of the lap. Based on the colour of the previous pillar, the program will decide whether to run the three-point turn. 
+If there is no pillar right before the corner, our car will naturally take a tighter turn meaning the areas of the pillars would be larger. This means the last pillar doesn't matter as the area would exceed the thresholds for both cases. 
 
 If the turn ended by seeing a wall instead of a pillar, if the last pillar seen was red then the car turns as the last pillar seen is the last pillar of the second lap. 
 &nbsp;
 
 ##### Performing Three Point Turn
-Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left for some time. It will then back up while turning to the right for a certain period. Then the program will resume
+Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume
+
+After the initial three-point turn, if the car detects a large black area in front again, the initial three-point turn isn't sharp enough, so another three-point turn is performed.
+
+If the car doesn't the wall in front and instead comes too close to a pillar instead, it means the car has already turned around, so we count an extra turn and change turn direction. 
+
 &nbsp;
 
 
