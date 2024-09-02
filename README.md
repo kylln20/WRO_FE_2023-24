@@ -236,7 +236,7 @@ The car stops once the area of the wall detected in the middle is large enough, 
 
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
 
-The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars. This is variation is caused by the placement/colour of a pillar in the previous section. 
+The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars, by changing the area threshold of the pillar needed to trigger a turn. This variation is caused by the placement/colour of the last pillar the car has seen. For example, if the car's direction is clockwise and a red pillar is seen before the corner, the car would have to take a tighter turn. Any pillar seen during the turn will have a larger area initially as the car is physically closer due to its approach. 
 
 Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume
 
