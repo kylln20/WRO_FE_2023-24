@@ -32,9 +32,8 @@ Team Members
 ## 📖 Content of README 📖
 * ### Hardware
   * [`Components`](#components)
-  * [`Mobility`](#mobility)
-  * [`Sensors`](#sensors)
-  * [`Electricity & Power`](#electricity&power)
+  * [`Mobility Management`](#mobility)
+  * [`Power and Sense Management`](#power_and_sense_management)
     
 * ### Software
   * [`Initialization and Connection Process`](#initialization_and_connection_process)
@@ -72,7 +71,7 @@ Team Members
 
 &nbsp;
 
-🚗 Mobility 🚗
+🚗 Mobility Management 🚗
 ---
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accommodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, which is a more efficient procedure compared to parallel parking. 
@@ -110,15 +109,15 @@ To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a metal ge
 The `Furitek Micro Komodo Brushless Motor` receives power and signal from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`, which comes with the brushless motor. Similarly to the servo, the signals used are PWM (pulse-width modulation) signals from the Pi HAT's motor ports. 
 &nbsp;
 
-👀 Camera Vision 👀
+⚡ Sense and Power Management ⚡
 ---
+#### Sensors
 We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Based on said pixel data, we can identify those objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 &nbsp;
 
 Our camera is sensitive to different lighting conditions meaning colors may look different in different scenarios. This could have been improved by changing camera settings or attaching a lamp to the car to make sure the lighting conditions are always consistent. 
 
-⚡ Electricity & Power ⚡
----
+#### Power and Wiring
 Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. 
 
 Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
@@ -133,7 +132,7 @@ One area that could be improved about our wiring is the switch.
 
 Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimeters. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
 
-🔌 Schematic and Wiring 🔌
+🔌 Schematic 🔌
 ---
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
@@ -149,7 +148,7 @@ The program running on the Raspberry Pi is written in Python.
 ---
 We used the Raspberry Pi imager to write a custom Raspberry Pi operating system onto an SD card that allowed us to use our Pi hat. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
 
-Program Logic 
+Object Management
 ---
 
 ### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
@@ -230,7 +229,6 @@ The parking walls are found with magenta colour masks and by searching in three 
 Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
 
 The car stops once the area of the wall detected in the middle is large enough, using the same ROI that detects the orange/blue lines.
-
 <br/><br/>
 ### Three-Point Turn <sub> (Obstacle Challenge) </sub>
 
@@ -244,19 +242,3 @@ After the initial three-point turn, if the car detects a large black area in fro
 
 If the car doesn't detect the wall in front and instead comes too close to a pillar, it means the car has already turned around, so we count an extra turn.
 <br/><br/>
-<!---
-Since each colour pillar would cause the angle of our approach to differ when reaching the corner, we have different cases for the following: 
-
-* When the last pillar before the corner is red 
-* When the last pillar before the corner is green
-  
-If the pillar before the corner forces us to go wider into the corner, the contour area of the pillar right after the corner would be smaller because of the size of the region of interest. So if the next visible pillar is red, the program will run the three-point turn.
-
-If the pillar before the corner forces us into a tighter turn, the contour areas of the pillars would be larger. The program must check whether the area is large enough to guarantee the pillar detected is the last pillar of the lap. If it is, and the pillar is also red, the program will run the three-point turn.
-
-If there is no pillar right before the corner, our car will naturally take a tighter turn meaning the areas of the pillars would be larger. This means the last pillar doesn't matter as the area would exceed the thresholds for both cases. 
-
-If the turn ended by seeing a wall instead of a pillar, if the last pillar seen was red then the car turns as the last pillar seen is the last pillar of the second lap
-
--->
-
