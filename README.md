@@ -95,7 +95,7 @@ Our car consists of the chassis of the `Carisma GT24` with 3D-printed components
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration.
 
-The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. The motor is mounted on a sturdy `aluminum mount` instead of the standard plastic mount, increasing durability and passive cooling. 
+The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. The motor is mounted on a sturdy aluminum mount instead of the standard plastic mount, increasing durability and passive cooling. 
 
 To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo with a three-wire connection (signal, voltage, ground), which we can control and power directly from a motor port on the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo. However, it is to be noted that the 3D printed piece is not perfectly secured to the axis and will, on the rare occasion, pop out.
 
@@ -109,7 +109,7 @@ We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via 
 ### ⚡ Electricity & Power ⚡
 Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. 
 
-Although the Raspberry Pi 4B runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
+Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
 
 The wires of the battery are connected to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
@@ -122,7 +122,7 @@ The wiring is placed underneath the car base. The switch is secured near the bac
 
 ---
 ## 💻 Software 💻
-We use a Raspberry Pi 4 Board as our single board computer (SBC). It is connected to the HAT, from which it takes and processes sensor input to return turning-angle and speed values back to the HAT, which then get sent to the servo and DC motors respectively. 
+We use a `Raspberry Pi 4 Board` as our single board computer (SBC). It is connected to the HAT, from which it takes and processes sensor input to return turning-angle and speed values back to the HAT, which then get sent to the servo and DC motors respectively. 
 
 The program running on the Raspberry Pi is written in Python.     
 &nbsp;
