@@ -20,9 +20,9 @@
 
 ---
 ### Team Members:
-* Kayla Lin, 17: kylln2027@gmail.com
-* Eric Rao, : ericrao08@gmail.com
-* Brian Yin, : brianyin256@gmail.com
+* Kayla Lin, 17, kylln2027@gmail.com
+* Eric Rao, 16, ericrao08@gmail.com
+* Brian Yin, 16, brianyin256@gmail.com
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/t-photos/Team_Official.jpg" width="40%" height="40%"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/t-photos/Team_Funny.jpg" width="40%" height="40%">
 
