@@ -1,4 +1,7 @@
-# (Obstacle Challenge) Code Logic
+# Source Code
+This directory contains all the code and other files used in the process of programming our vehicle. 
+
+## (Obstacle Challenge) Code Logic
 The open challenge code is similar to the obstacle challenge code but simplified. To avoid repetition, here is the breakdown of the obstacle challenge code.
 
 ### Import Libraries
