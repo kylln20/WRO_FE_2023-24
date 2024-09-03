@@ -31,26 +31,26 @@ Team Members
 
 ## 📖 Content of README 📖
 * ### Hardware
-  * [`Components`](#components)
-  * [`Mobility Management`](#mobility-management)
-    *  [`Chassis`](#chassis)
-    *  [`Design`](#design)
-    *  [`Motors`](#motors)
-  * [`Power and Sense Management`](#power-and-sense-management)
-    *  [`Sensors`](#sensors)
-    *  [`Power and Wiring`](#power-and-wiring)
-  * [`Schematic`](#schematic)
+  * `Components`
+  * `Mobility Management`
+    *  `Chassis`
+    *  `Design`
+    *  `Motors`
+  * `Power and Sense Management`
+    *  `Sensors`
+    *  `Power and Wiring`
+  * `Schematic`
     
 * ### Software
-  * [`Initialization and Connection Process`](#initialization-and-connection-process)
-  * [`Object Management`](#object-management)
-    *  [`Object Detection`](#object-detection)
-    *  [`Wall Detection/Management`](#wall-detectionmanagement)
-    *  [`Signal Pillar Detection/Management`](#signal-pillar-detectionmanagement)
-    *  [`Turning`](#turning)
-    *  [`Parking Lot Detection/Management`](#parking-lot-detectionmanagement)
-    *  [`Three-Point Turn`](#three-point-turn)
-    *  [`Possible Improvements`](#possible-improvements)
+  * `Initialization and Connection Process`
+  * `Object Management`
+    *  `Object Detection`
+    *  `Wall Detection/Management`
+    *  `Signal Pillar Detection/Management`
+    *  `Turning`
+    *  `Parking Lot Detection/Management`
+    *  `Three-Point Turn`
+    *  `Possible Improvements`
 &nbsp;
 
 ---
