@@ -159,7 +159,7 @@ The program running on the Raspberry Pi is written in Python.
 
 🛜 Initialization and Connection Process 🛜
 ---
-We used the Raspberry Pi imager to write a custom Raspberry Pi operating system onto an SD card that allowed us to use our Pi hat. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
+We used the Raspberry Pi imager to write the Raspberry Pi operating system onto an SD card that allowed us to use our Pi HAT. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
 
 Object Management
 ---
