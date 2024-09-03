@@ -683,13 +683,13 @@ if __name__ == '__main__':
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
                         
-                        #print(contX, pDist, pArea, lastTarget, cTarget)
+                        print(contX, pDist, pArea, lastTarget, cTarget)
                         
                         if turnDir == "left":
                             
                             #means we are taking a wider turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
-                                if cTarget == redTarget:
+                                if not (cTarget == greenTarget and area > 250):
                                     reverse = True
                             
                             #means weare taking a tighter turn into the corne 
