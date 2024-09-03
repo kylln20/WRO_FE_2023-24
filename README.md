@@ -31,13 +31,26 @@ Team Members
 
 ## 📖 Content of README 📖
 * ### Hardware
-  * [`Components`](#components)
+  * [`Components`](#Components)
   * [`Mobility Management`](#mobility)
+    *  [`Chassis`](#chassis)
+    *  [`Design`](#design)
+    *  [`Motors`](#motors)
   * [`Power and Sense Management`](#power_and_sense_management)
+    *  [`Sensors`](#sensors)
+    *  [`Power and Wiring`](#power_and_wiring)
+  * [`Schematic`](#schematic)
     
 * ### Software
   * [`Initialization and Connection Process`](#initialization_and_connection_process)
-  * [`Object Management`](#object_management)  
+  * [`Object Management`](#object_management)
+    *  [`Object Detection`](#object-detection)
+    *  [`Wall Detection/Management`](#wall_detection/management)
+    *  [`Signal Pillar Detection/Management`](#signal-pillar-detection/management)
+    *  [`Turning`](#turning)
+    *  [`Parking Lot Detection/Management`](#parking-lot-detection/management)
+    *  [`Three-Point Turn`](#three-point-turn)
+    *  [`Possible Improvements`](#possible-improvements)
 &nbsp;
 
 ---
@@ -213,13 +226,6 @@ The car is automatically set to the maximum 50-degree turning angle to make sure
 
 If it does detect a signal pillar, the turn ends immediately and the angle calculation is then based on the signal pillar. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold and the angle calculation will be based on the wall area difference.
 <br/><br/>
-
-### Possible Improvement <sub> (Open Challenge / Obstacle Challenge) </sub>
-
-One possible improvement that could be made is the placement of our regions of interest. Our regions of interest on the screen are placed perfectly symmetrically on both sides of the screen. This means we didn’t account for the fact that our camera is not perfectly aligned. 
-
-This causes the car to control slightly differently when the car is running clockwise or counter-clockwise. The car could be made a lot more consistent in the open challenge and obstacle challenge with better adjustment of our regions of interest tailored to the view of the camera. 
-
 ### Parking Lot Detection/Management <sub> (Obstacle Challenge) </sub>
 
 The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
@@ -236,7 +242,14 @@ After the eighth turn has been counted by seeing a wall or a pillar, we check wh
 
 The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars, by changing the area threshold of the pillar needed to trigger a turn. This variation is caused by the placement/colour of the last pillar the car has seen. For example, if the car's direction is clockwise and a red pillar is seen before the corner, the car would have to take a tighter turn. Any pillar seen during the turn will have a larger area initially as the car is physically closer due to its approach. 
 
-Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume
+Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume.
+
+### Possible Improvements <sub> (Open Challenge / Obstacle Challenge) </sub>
+
+One possible improvement that could be made is the placement of our regions of interest. Our regions of interest on the screen are placed perfectly symmetrically on both sides of the screen. This means we didn’t account for the fact that our camera is not perfectly aligned. 
+
+This causes the car to control slightly differently when the car is running clockwise or counter-clockwise. The car could be made a lot more consistent in the open challenge and obstacle challenge with better adjustment of our regions of interest tailored to the view of the camera. 
+
 
 After the initial three-point turn, if the car detects a large black area in front again, the initial three-point turn isn't sharp enough, so another three-point turn is performed.
 
