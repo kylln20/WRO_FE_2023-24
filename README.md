@@ -45,10 +45,10 @@ Team Members
   * [`Initialization and Connection Process`](#initialization-and-connection-process)
   * [`Object Management`](#object-management)
     *  [`Object Detection`](#object-detection)
-    *  [`Wall Detection/Management`](#wall-detection/management)
-    *  [`Signal Pillar Detection/Management`](#signal-pillar-detection/management)
+    *  [`Wall Detection/Management`](#wall-detectionmanagement)
+    *  [`Signal Pillar Detection/Management`](#signal-pillar-detectionmanagement)
     *  [`Turning`](#turning)
-    *  [`Parking Lot Detection/Management`](#parking-lot-detection/management)
+    *  [`Parking Lot Detection/Management`](#parking-lot-detectionmanagement)
     *  [`Three-Point Turn`](#three-point-turn)
     *  [`Possible Improvements`](#possible-improvements)
 &nbsp;
