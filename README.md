@@ -200,9 +200,9 @@ A function called boundingRect() approximates a rectangle around the selected co
 
 Then, a PD calculation is applied based on the difference between the x-coordinate of the pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
 
-In the event there are 2 or more pillars seen, we determine the one to focus on by calculating the distance between the bottom middle of the screen, to the bottom middle of the pillar. We use the closest pillar to calculate the servo angle. 
-
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcoord.png" height="300px">
+
+In the event there are 2 or more pillars seen, we determine the one to focus on by calculating the distance between the bottom middle of the screen, to the bottom middle of the pillar. We use the closest pillar to calculate the servo angle. 
 
 Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, this is done so the car can successfully navigate tight corner cases. 
 
