@@ -579,24 +579,25 @@ if __name__ == '__main__':
                     if maxAreaL > 4500:
                         buzz() if debug else time.sleep(0.5)
                 
-                #readjust region of interest for parking
-                ROI4 = [230, 250, 370, 300]
-                ROIs = [ROI1, ROI2, ROI3, ROI4]
+                    #readjust region of interest for parking
+                    ROI4 = [230, 250, 370, 300]
+                    ROIs = [ROI1, ROI2, ROI3, ROI4]
                     
             #conditions for initiating parking on the right side
             if rightY >= 240 and maxAreaR > 100 and t2 >= 12:
                 if not parkingL and not parkingR:
-                    
-                    parkingR = True
                     write(1640)
+                    parkingR = True
                     
                     #delay the turn if the area of the parking wall is too large
-                    if maxAreaR > 6500:
+                    if debug: print("area at start:", maxAreaR)
+                        
+                    if maxAreaR > 7500:
                         buzz() if debug else time.sleep(0.5)
                 
-                #readjust region of interest for parking
-                ROI4 = [250, 250, 390, 300]
-                ROIs = [ROI1, ROI2, ROI3, ROI4]
+                    #readjust region of interest for parking
+                    ROI4 = [250, 250, 390, 300]
+                    ROIs = [ROI1, ROI2, ROI3, ROI4]
                 
             if parkingR:
                 
@@ -683,24 +684,19 @@ if __name__ == '__main__':
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
                         
-                        print(contX, pDist, pArea, lastTarget, cTarget)
+                        if debug: print(contX, pDist, pArea, lastTarget, cTarget)
                         
                         if turnDir == "left":
                             
                             #means we are taking a wider turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
-                                if not (cTarget == greenTarget and area > 250):
+                                if not (cTarget == greenTarget and pArea > 240):
                                     reverse = True
                             
                             #means weare taking a tighter turn into the corne 
                             elif lastTarget == greenTarget or lastTarget == 0:
                                 if cTarget == redTarget and pArea > 400:
-                                    
-                                    #if pillar is far away turn right away, else wait to pass the current pillar
-                                    if pArea < 400: 
-                                        reverse = "turning"
-                                    else:
-                                        reverse = True
+                                    reverse = True
                                     
                         else:
                             
@@ -709,9 +705,10 @@ if __name__ == '__main__':
                                 if not (cTarget == greenTarget and (pArea > 600 or contX > 550)):
                                     
                                     #if pillar is far away turn right away, else wait to pass the current pillar
-                                    if pArea < 400 and contX < 550:
+                                    
+                                    if pArea < 300 and cTarget == redTarget:
                                         reverse = "turning"
-                                    else: 
+                                    else:
                                         reverse = True
                             
                             #means we are taking a wider turn into the corner
