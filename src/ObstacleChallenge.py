@@ -288,6 +288,8 @@ if __name__ == '__main__':
             t = 7
         elif sys.argv[1].lower() == "steer": #for stationary testing
             speed = 1500
+        elif sys.argv[1].lower() == "fast": #for stationary testing
+            speed = 1660
         
         
     #if no mode is specified, assume the regular program and wait for button input
@@ -575,8 +577,10 @@ if __name__ == '__main__':
                     write(1640)
                     parkingL = True
                     
+                    if debug: print("area at start:", maxAreaL)
+                    
                     #delay the turn if the area of the parking wall is too large
-                    if maxAreaL > 4500:
+                    if maxAreaL > 4500: #4500
                         buzz() if debug else time.sleep(0.5)
                 
                     #readjust region of interest for parking
@@ -684,33 +688,35 @@ if __name__ == '__main__':
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
                         
-                        if debug: print(contX, pDist, pArea, lastTarget, cTarget)
+                        if debug: print(f"pillar area: {pArea}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cTarget}")
                         
                         if turnDir == "left":
                             
                             #means we are taking a wider turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
-                                if not (cTarget == greenTarget and pArea > 240):
+                                if not (cTarget == greenTarget and (leftArea + rightArea < 5500 or pArea > 800)):#if not (cTarget == greenTarget and pArea > 240)
                                     reverse = True
                             
                             #means weare taking a tighter turn into the corne 
                             elif lastTarget == greenTarget or lastTarget == 0:
-                                if cTarget == redTarget and pArea > 400:
+                                if cTarget == redTarget and (leftArea + rightArea < 3000 or pArea > 800): #if cTarget == redTarget and (pArea > 400 or (pArea > 300 and (leftArea < 1200 or rightArea < 1200))):
                                     reverse = True
                                     
                         else:
                             
                             #means we are taking a tighter turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
-                                if not (cTarget == greenTarget and (pArea > 600 or contX > 550)):
+                                if not (cTarget == greenTarget and (leftArea + rightArea < 2000 or pArea > 800)): #pArea > 600 before, adjusted for low lighting #if not (cTarget == greenTarget and (pArea > 580 or contX > 550))
                                     
                                     #if pillar is far away turn right away, else wait to pass the current pillar
-                                    
+                                    '''
                                     if pArea < 300 and cTarget == redTarget:
                                         reverse = "turning"
                                     else:
                                         reverse = True
-                            
+                                    '''
+                                    reverse = True
+                                    
                             #means we are taking a wider turn into the corner
                             elif lastTarget == greenTarget or lastTarget == 0:
                                 if cTarget == redTarget:
@@ -723,7 +729,7 @@ if __name__ == '__main__':
                     
                     #after three laps set a timer for 3.75 in order to stop in middle of starting section
                     if t == 12:
-                        s = 3.75
+                        s = 3.75 if speed == 1650 else 2.5
                         sTime = time.time()
                 
                 #set turns to false as the turn ended
@@ -788,7 +794,7 @@ if __name__ == '__main__':
                 
                 #reverse car
                 delay = 1.5 if areaFront > 2000 else 2
-                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, delay, 1500, 0.1, 1680, 0.1, 1650])
+                multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, delay, 1500, 0.1, 1680, 0.1, speed])
                 
                 #change direction and end turn
                 turnDir = "right" if turnDir == "left" else "left"
@@ -813,7 +819,7 @@ if __name__ == '__main__':
                       
                       #set 2.5 second timer to stop at the end of third lap
                       if t == 12: 
-                          s = 2.5
+                          s = 2.5 if speed == 1650 else 1.5
                           sTime = time.time()
                   
                   #if 2 laps have been completed and the last pillar is red initiate a regular three point turn
