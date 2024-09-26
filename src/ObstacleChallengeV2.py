@@ -528,7 +528,10 @@ if __name__ == '__main__':
         maxB = max_contour(contours_blue, ROI3)[0]
 
         if turnDir == "none":
-            turnDir = "right" if maxO > 100 else turnDir == "left"
+            if maxO > 100: 
+                turnDir = "right"
+            elif maxB > 100: 
+                turnDir = "left"
         
         if (turnDir == "right" and maxO > 100) or (turnDir == "left" and maxB > 100): 
 
