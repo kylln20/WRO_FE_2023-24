@@ -83,14 +83,22 @@ def contours(hsvRange, ROI):
 
     return contours
 
+class Pillar:
+    def __init__(self, area, dist, x, y, target, w, h): 
+        self.area = area
+        self.dist = dist
+        self.x = x
+        self.y = y
+        self.target = target
+        self.w = w
+        self.h = h
+
 #returns the area of the largest contour in a group of contours
 def max_contour(contours, ROI): 
     maxArea = 0
     maxY = 0
     maxX = 0
     
-    
-
     for cnt in contours:
         
         area = cv2.contourArea(cnt)
@@ -101,7 +109,7 @@ def max_contour(contours, ROI):
             x,y,w,h=cv2.boundingRect(approx)
 
             #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-            x += ROI[0]
+            x += ROI[0] + w // 2
             y += ROI[1] + h
             
             if area > maxArea:
@@ -110,6 +118,49 @@ def max_contour(contours, ROI):
                 maxX = x
 
     return [maxArea, maxX, maxY]
+
+def find_pillar(contours, target, p): 
+
+    num_p = 0
+    #iterate through both lists of contours
+    for i in range(contours): 
+        #process each contour in each list
+        for x in range(contours[i]):
+            cnt = contours[i][x]
+            area = cv2.contourArea(cnt)
+
+            if area > 100:
+                
+                #get width, height, and x and y coordinates by bounding rect
+                approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
+                x,y,w,h=cv2.boundingRect(approx)
+
+                #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
+                x += ROI3[0] + w // 2 
+                y += ROI3[1] + h
+                
+                #calculates the distance between the pillar and the bottom middle of the screen
+                temp_dist = round(math.dist([x, y], [320, 480]), 0)
+
+                #if the pillar is close enough add it to the number of pillars
+                if 160 < temp_dist < 380: #395
+                    num_p += 1
+                
+                #deselects current pillar if it comes too close to bottom of the screen
+                if y > ROI3[3] - endConst or temp_dist > 380 or leftArea > 12500 or rightArea > 12500: #370
+                    continue
+
+                #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
+                if temp_dist < p.dist:
+                    p.area = area
+                    p.dist = temp_dist
+                    p.y = y
+                    p.x = x
+                    p.target = target
+                    p.w = w
+                    p.h = h
+    
+    return p, num_p
 
 #takes in an array of commands (dc, servo, sleep) and executes each
 def multi_write(sequence):
@@ -362,8 +413,6 @@ if __name__ == '__main__':
         contours_left = contours(rBlack, ROI1)
         contours_right = contours(rBlack, ROI2)
         
-        
-
         #threshold image
         ret, imgThresh = cv2.threshold(imgGray, 55, 255, cv2.THRESH_BINARY_INV)
         
@@ -383,8 +432,6 @@ if __name__ == '__main__':
         
         areaFront = max_contour(contours_parking, ROI4)[0]
         
-        
-            
         #find contours 
         contours_red = contours(rRed, ROI3)
         contours_green = contours(rGreen, ROI3)
@@ -416,97 +463,40 @@ if __name__ == '__main__':
         #count number of red and green pillars
         num_pillars_g = 0
         num_pillars_r = 0
-        
-        #distance of the pillar from the bottom middle of the screen
-        pDist = 100000
-        pArea = 0
 
 # -----------------{ green / red signal pillar contour processing }--------------
 
-        arr1 = [contours_green, contours_red]
-        targets = [greenTarget, redTarget]
+        temp = Pillar(0, 1000000, 0, 0, greenTarget)
+
+        cPillar, num_pillars_g = find_pillar(contours_green, greenTarget, temp)
+        cPillar, num_pillars_r = find_pillar(contours_red, redTarget, cPillar)
+
+        #if the pillar is too close, stop the car and reverse to give it enough space
+        if cPillar.area > 6500 and ((cPillar.x <= 420 and cPillar.target == greenTarget) or (cPillar.x >= 220 and cPillar.target == redTarget)) and t < 13:
+            LED2(255, 255, 0)
+            
+            #move back 
+            multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
+            
+            #if car is supposed to stop increase the timer as we moved back
+            if s != 0:
+                s += 1.5
+            
+            #indicate that a turn should be ignored if an extra turn is counted
+            ignore = True
+            
+            #in the case of the car turning for a three point turn and seeing a pillar first instead of the wall, complete it as we have already switched directions
+            if reverse == "turning" and turnDir == "right":
+                reverse = "done"
+                turnDir = "left"
+                t += 1
+            
+        else:
+            LED2(0, 0, 0)
         
-        ignore = False
-
-        #iterate through both lists of contours
-        for i in range(len(arr1)): 
-            #process each contour in each list
-            for x in range(len(arr1[i])):
-                cnt = arr1[i][x]
-                area = cv2.contourArea(cnt)
-
-                if area > 100:
-                    
-                    #get width, height, and x and y coordinates by bounding rect
-                    approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
-                    x,y,w,h=cv2.boundingRect(approx)
-
-                    #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-                    x += ROI3[0] + w // 2 
-                    y += ROI3[1] + h
-                    
-                    #calculates the distance between the pillar and the bottom middle of the screen
-                    temp_dist = round(math.dist([x, y], [320, 480]), 0)
-
-                    #if the pillar is close enough add it to the number of pillars
-                    if 160 < temp_dist < 380: #395
-                        if i == 0: 
-                            num_pillars_g += 1
-                        else: 
-                            num_pillars_r += 1
-                    
-                    #if the pillar is too close, stop the car and reverse to give it enough space
-                    if ((area > 6500 and ((x <= 420 and i == 0) or (x >= 220 and i == 1)))) and t < 13:
-                        LED2(255, 255, 0)
-                        
-                        #move back 
-                        multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
-                        
-                        #if car is supposed to stop increase the timer as we moved back
-                        if s != 0:
-                            s += 1.5
-                        
-                        #indicate that a turn should be ignored if an extra turn is counted
-                        ignore = True
-                        
-                        #in the case of the car turning for a three point turn and seeing a pillar first instead of the wall, complete it as we have already switched directions
-                        if reverse == "turning" and turnDir == "right":
-                            reverse = "done"
-                            turnDir = "left"
-                            t += 1
-                    
-                    else:
-                        LED2(0, 0, 0)
-                    
-                    #deselects current pillar if it comes too close to bottom of the screen
-                    if y > ROI3[3] - endConst or (temp_dist > 380 and t2 != 7) or (temp_dist > 380 and speed >= 1660) or (t2 == 7 and temp_dist > 380): #370
-                        continue
-                    
-                    #means we are to close to the wall so we need to move back to the middle
-                    if leftArea > 12500 or rightArea > 12500:
-                        continue
-
-                    #draw rectangle around signal pillar
-                    if debug: cv2.rectangle(img,(x - w // 2, y - h),(x+ w // 2,y),(0,0,255),2)
-                    
-                    #cv2.line(img, (x, 0), (x, 480), (0, 0, 255), 4)
-                    #cv2.line(img, (targets[i], 0), (targets[i], 480), (0, 255, 0), 4)
-
-                    #if the y value is bigger than the previous contY value or within a range and has a bigger area update the data as this pillar is now the closest one
-                    if temp_dist < pDist:
-                        pArea = area
-                        contY = y
-                        contX = x
-                        cTarget = targets[i]
-                        pDist = temp_dist
-
-            #draw contours of pillars for debugging
-                        
-            if i == 0: 
-                if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 238, 144), 3)
-            else:
-                if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], arr1[i], -1, (144, 144, 238), 3)
-                
+        #draw contours of pillars for debugging
+        if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], contours_green, -1, (144, 238, 144), 3)
+        if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], contours_red, -1, (144, 144, 238), 3)
                 
 # -----------------{ control variable manipulation based on number of pillars }--------------
 
@@ -534,54 +524,34 @@ if __name__ == '__main__':
 
 # -----------------{ orange / blue line contour processing }---------------
 
-        arr2 = [contours_orange, contours_blue]
-        directions = ["right", "left"]
+        maxO = max_contour(contours_orange, ROI3)[0]
+        maxB = max_contour(contours_blue, ROI3)[0]
+
+        if turnDir == "none":
+            turnDir = "right" if maxO > 100 else turnDir == "left"
         
-        #iterate through both lists of contours
-        for i in range(len(arr2)): 
-            for x in range(len(arr2[i])):
-                    
-                cnt = arr2[i][x]
-                area = cv2.contourArea(cnt)
-                
-                if area > 100:
+        if (turnDir == "right" and maxO > 100) or (turnDir == "left" and maxB > 100): 
 
-                    #set the turn direction
-                    if turnDir == "none":
-                        turnDir = directions[i]
+            #if the car just backed up, remove a turn because we already counted a turn
+            if ignore == False and prevIgnore == True:
+                t -= 1
+                ignore = False
+            
+            #update t2
+            t2 = t
+            
+            #for three-point turn, update region of interest to see farther
+            if t2 == 7:
+                ROI3 = [redTarget - 40, 90, greenTarget + 40, 335]
+                ROIs = [ROI1, ROI2, ROI3, ROI4]
 
-                    #if the turn direction corresponds to the correct line colour (orange line means right turn, blue means left)
-                    if turnDir == directions[i] and not parkingR and not parkingL:
-                        
-                        #if the car just backed up, remove a turn because we already counted a turn
-                        if ignore == False and prevIgnore == True:
-                            t -= 1
-                            ignore = False
-                        
-                        #update t2
-                        t2 = t
-                        
-                        #for three-point turn, update region of interest to see farther
-                        if t2 == 7:
-                            ROI3 = [redTarget - 40, 90, greenTarget + 40, 335]
-                            ROIs = [ROI1, ROI2, ROI3, ROI4]
-
-                        #set either the right or left turn to true based on turn direction
-                        if i == 0:
-                            rTurn = True
-                        else:
-                            lTurn = True
-                        
-                        #indicate that the coloured line is seen
-                        tSignal = True
+            #set either the right or left turn to true based on turn direction
+            rTurn = True if turnDir == "right" else lTurn = True
+            
+            #indicate that the coloured line is seen
+            tSignal = True
                                    
 # ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------      
-            
-        maxAreaL = 0 #area of left parking wall
-        leftY = 0 #y-coordinate of left parking wall
-        maxAreaR = 0 #area of right parking wall
-        rightY = 0 #y-coordinate of right parking wall
-        centerY = 0 #y-coordinate of any magenta contour in front of car
         
         # detect magenta contours directly in front of car
         if t == 8 or tempParking:
@@ -599,37 +569,16 @@ if __name__ == '__main__':
             #find magenta contours in left and right regions of interest
             contours_magenta_l = contours(rMagenta, ROI1)
             contours_magenta_r = contours(rMagenta, ROI2)
-                                    
-            #for each array representing a set of contours: area, y-coordinate, Region of Interest
-            info = [[0, 0, ROI1], [0, 0, ROI2], [0, 0, ROI4]]
-            conts = [contours_magenta_l, contours_magenta_r, contours_magenta_c]
 
-            #finds the largest magenta contour in the left and right and center regions of interest and the y-coordinates
-            for i in range(len(conts)): 
-                for x in range(len(conts[i])):
-                    cnt = conts[i][x]
-                    area = cv2.contourArea(cnt)
-                    
-                    if area > 100:
-                    
-                        #get width, height, and x and y coordinates by bounding rect
-                        approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
-                        x,y,w,h=cv2.boundingRect(approx)
-
-                        #since the x and y coordinates are the coordinates just in the ROI, add to the x and y values to make it the proper coordinates on the overall image
-                        x += info[i][2][0]
-                        y += info[i][2][1] + h
-                        
-                        #replace largest contour 
-                        if area > info[i][0]:
-                            info[i][0] = area
-                            info[i][1] = y
+            leftLot = max_contour(contours_magenta_l, ROI1)
+            rightLot = max_contour(contours_magenta_r, ROI2)
+            centerLot = max_contour(contours_magenta_c, ROI4)
             
-            maxAreaL = info[0][0] 
-            leftY = info[0][1]
-            maxAreaR = info[1][0]
-            rightY = info[1][1]
-            centerY = info[2][1]
+            maxAreaL = leftLot[0]
+            leftY = leftLot[2]
+            maxAreaR = rightLot[0]
+            rightY = rightLot[2]
+            centerY = centerLot[2]
                 
             #conditions for initiating parking on the left side
             if leftY >= 220 and maxAreaL > 100 and t2 >= 12:
@@ -700,7 +649,7 @@ if __name__ == '__main__':
             reverse = True
             
 # -----------------{ no pillar detected }--------------
-        if cTarget == 0 and not parkingL and not parkingR:
+        if cPillar.target == 0 and not parkingL and not parkingR:
 
             #change pillar targets so all are passed on the outside 
             if t == 12 and not tempParking and all(target == False for target in tList[:2]):
@@ -724,12 +673,6 @@ if __name__ == '__main__':
             if lWallY < 200 and rWallY < 200 and not lTurn and not rTurn:
                 
                 angle = sharpRight if turnDir == "right" else sharpLeft
-            '''
-            if leftArea < 2000 and rightArea < 2000 and abs(leftArea - rightArea) < 500 and not lTurn and not rTurn and speed < 1660:
-                angle = sharpRight if lastTarget == greenTarget else sharpLeft
-            '''
-            #if leftArea > 4000 and rightArea > 4000: 
-                #angle = sharpRight if lastTarget == greenTarget else sharpLeft
             
 # -----------------{ pillar detected }--------------
 
@@ -754,33 +697,25 @@ if __name__ == '__main__':
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
                         
-                        if debug: print(f"pillar area: {pArea}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cTarget}")
+                        if debug: print(f"pillar area: {cPillar.area}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cTarget}")
                         
                         if turnDir == "left":
                             
                             #means we are taking a wider turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
-                                if not (cTarget == greenTarget and (leftArea + rightArea < 5500 or pArea > 800)):#if not (cTarget == greenTarget and pArea > 240)
+                                if not (cTarget == greenTarget and (leftArea + rightArea < 5500 or cPillar.area > 800)):#if not (cTarget == greenTarget and pArea > 240)
                                     reverse = True
                             
                             #means weare taking a tighter turn into the corne 
                             elif lastTarget == greenTarget or lastTarget == 0:
-                                if cTarget == redTarget and (leftArea + rightArea < 3000 or pArea > 800): #if cTarget == redTarget and (pArea > 400 or (pArea > 300 and (leftArea < 1200 or rightArea < 1200))):
+                                if cTarget == redTarget and (leftArea + rightArea < 3000 or cPillar.area > 800): #if cTarget == redTarget and (pArea > 400 or (pArea > 300 and (leftArea < 1200 or rightArea < 1200))):
                                     reverse = True
                                     
                         else:
                             
                             #means we are taking a tighter turn into the corner
                             if lastTarget == redTarget or lastTarget == 0:
-                                if not (cTarget == greenTarget and (leftArea + rightArea < 2000 or pArea > 800)): #pArea > 600 before, adjusted for low lighting #if not (cTarget == greenTarget and (pArea > 580 or contX > 550))
-                                    
-                                    #if pillar is far away turn right away, else wait to pass the current pillar
-                                    '''
-                                    if pArea < 300 and cTarget == redTarget:
-                                        reverse = "turning"
-                                    else:
-                                        reverse = True
-                                    '''
+                                if not (cTarget == greenTarget and (leftArea + rightArea < 2000 or cPillar.area > 800)): #pArea > 600 before, adjusted for low lighting #if not (cTarget == greenTarget and (pArea > 580 or contX > 550))
                                     reverse = True
                                     
                             #means we are taking a wider turn into the corner
@@ -803,7 +738,7 @@ if __name__ == '__main__':
                 rTurn = False
             
             #calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
-            error = cTarget - contX
+            error = cPillar.target - contX
 
             #calculate new angle using PD steering
             angle = int(straightConst + error * cKp + (error - prevError) * cKd)
@@ -812,10 +747,10 @@ if __name__ == '__main__':
             angle -= int(cy * (contY - ROI3[1])) if error <= 0 else -int(cy * (contY - ROI3[1]))
 
             #if the pillar is large enough and the x-coordinate is close enough to its target set lastTarget to the current pillars target 
-            if cTarget == greenTarget and contX > 320 and area > 1000:
+            if cTarget == greenTarget and cPillar.x > 320 and cPillar.area > 1000:
                 lastTarget = greenTarget
 
-            elif cTarget == redTarget and contX < 320 and area > 1000:
+            elif cTarget == redTarget and cPillar.x < 320 and cPillar.area > 1000:
                 lastTarget = redTarget
 
             #make sure angle value is over 2000 
@@ -845,7 +780,7 @@ if __name__ == '__main__':
             ROIs = [ROI1, ROI2, ROI3, ROI4]
             
             #if anything but a red pillar is seen turn left
-            if cTarget == 0 or cTarget == greenTarget:
+            if cPillar.target == 0 or cTarget == greenTarget:
                 angle = sharpLeft
             
             #if a pillar wasn't seen for the last 10 frames keep the car turning left until it sees the parking lot or wall in front
@@ -903,10 +838,10 @@ if __name__ == '__main__':
             if not parkingR and not parkingL:
 
                 #change angles for a right and left turn 
-                if rTurn and cTarget == 0 and rightArea < 5000:
+                if rTurn and cPillar.target == 0 and rightArea < 5000:
                     angle = straightConst - 25 if tempParking else sharpRight
 
-                elif lTurn and cTarget == 0 and leftArea < 5000:
+                elif lTurn and cPillar.target == 0 and leftArea < 5000:
                     angle = sharpLeft
                 
                 #keep angle within bounds
@@ -962,9 +897,9 @@ if __name__ == '__main__':
                 "three-point turn status": reverse,
                 "last pillar": pColour,
                 "current pillar": cpColour,
-                "pillar area": pArea, 
+                "pillar area": cPillar.area, 
                 "turn direction": turnDir[0],
-                "pillar distance": pDist, 
+                "pillar distance": cPillar.dist, 
                 "# turns": t,
                 "t2": t2,
                 "turn status": turn_status,
