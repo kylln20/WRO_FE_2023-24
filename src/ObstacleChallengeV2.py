@@ -63,7 +63,7 @@ def contours(hsvRange, ROI):
     img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
     #img_blur = cv2.medianBlur(img_, 5)
     
-    cv2.imshow("cam", img_blur)
+    #cv2.imshow("cam", img_blur)
     
     lower_mask = np.array(hsvRange[0])
     upper_mask = np.array(hsvRange[1])
@@ -75,9 +75,11 @@ def contours(hsvRange, ROI):
     eMask = cv2.erode(mask, kernel, iterations=1)
     dMask = cv2.dilate(eMask, kernel, iterations=1)
     
-    #if hsvRange == rRed: 
-        #cv2.imshow(str(hsvRange[0][0]), dMask)
-
+    '''
+    if hsvRange == rBlack: 
+        cv2.imshow(str(hsvRange[0][0]), dMask)
+    '''
+    
     contours = cv2.findContours(dMask[ROI[1]:ROI[3], ROI[0]:ROI[2]], cv2.RETR_EXTERNAL,
     cv2.CHAIN_APPROX_SIMPLE)[-2]
 
@@ -119,7 +121,7 @@ def max_contour(contours, ROI):
 
 def find_pillar(contours, target, p): 
     
-    global t, s, reverse
+    global t, s, reverse, leftArea, rightArea
     num_p = 0
     
     for cnt in contours: 
@@ -142,15 +144,15 @@ def find_pillar(contours, target, p):
             temp_dist = round(math.dist([x, y], [320, 480]), 0)
 
             #if the pillar is close enough add it to the number of pillars
-            if 160 < temp_dist < 380: #395
+            if 160 < temp_dist < 380: #160, 395
                 num_p += 1
                 
                 #if the pillar is too close, stop the car and reverse to give it enough space
-            if area > 6500 and ((x <= 420 and target == greenTarget) or (x >= 220 and target == redTarget)) and t < 13:
+            if area > 6500 and ((x <= 370 and target == greenTarget) or (x >= 270 and target == redTarget)) and t < 13: #420, 220
                 LED2(255, 255, 0)
                 
                 #move back 
-                multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
+                multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 1, speed])
                 
                 #if car is supposed to stop increase the timer as we moved back
                 if s != 0:
@@ -166,7 +168,7 @@ def find_pillar(contours, target, p):
                 LED2(0, 0, 0)
             
             #deselects current pillar if it comes too close to bottom of the screen
-            if y > ROI3[3] - endConst or temp_dist > 380 or leftArea > 12500 or rightArea > 12500: #370
+            if y > ROI3[3] - endConst or temp_dist > 370 or leftArea > 12500 or rightArea > 12500: #370
                 continue
 
             
@@ -279,12 +281,13 @@ if __name__ == '__main__':
     #ROI3: for finding signal pillars
     #ROI4: for detecting blue and orange lines on mat
     # order: x1, y1, x2, y2
-    ROI1 = [0, 165, 330, 255]
-    ROI2 = [330, 165, 640, 255]
-    ROI3 = [redTarget - 40, 110, greenTarget + 40, 335] #+- 40 [redTarget - 40, 110, greenTarget + 40, 335]
-    ROI4 = [200, 250, 440, 300]
+    ROI1 = [0, 175, 330, 265] # 165, 255
+    ROI2 = [330, 175, 640, 265]
+    ROI3 = [redTarget - 50, 120, greenTarget + 50, 345] #+- 40 [redTarget - 40, 110, greenTarget + 40, 335]
+    ROI4 = [200, 260, 440, 310] #250, 300
+    ROI5 = [270, 120, 370, 140]
     
-    ROIs = [ROI1, ROI2, ROI3, ROI4]
+    ROIs = [ROI1, ROI2, ROI3, ROI4, ROI5]
     
     #use in yellow lighting
     '''
@@ -312,18 +315,18 @@ if __name__ == '__main__':
     #LAB colour masks
     
     rMagenta = [[0, 171, 106], [255, 195, 135]]
-    rRed = [[0, 176, 148], [255, 213, 168]]
-    rGreen = [[82, 95, 117], [136, 121, 152]]
+    rRed = [[0, 149, 135], [107, 211, 172]]
+    rGreen = [[0, 45, 0], [255, 117, 153]]
     rBlue = [[0, 125, 66], [174, 160, 112]]
     rOrange = [[0, 163, 163], [255, 191, 204]]
-    rBlack = [[0, 0, 0], [52, 255, 255]]
+    rBlack = [[0, 0, 0], [72, 255, 255]]
     
     #booleans for tracking whether car is in a left or right turn
     lTurn = False
     rTurn = False
   
-    kp = 0.015 #proportional value for PD steering 0.2
-    kd = 0.01 #derivative value for PD steering 0.1
+    kp = 0.015 #proportional value for PD steering 0.015
+    kd = 0.01 #derivative value for PD steering 0.01
 
     cKp = 0.2 #value of proportional for proportional steering for avoiding signal pillars
     cKd = 0.2 #value of derivative for proportional and derivative sterring for avoiding signal pillars
@@ -394,7 +397,7 @@ if __name__ == '__main__':
         elif sys.argv[1].lower() == "steer": #for stationary testing
             speed = 1500
         elif sys.argv[1].lower() == "fast": #for stationary testing
-            speed = 1665
+            speed = 1660
         
         
     #if no mode is specified, assume the regular program and wait for button input
@@ -440,6 +443,9 @@ if __name__ == '__main__':
         #get contours of left and right walls
         contours_left = contours(rBlack, ROI1)
         contours_right = contours(rBlack, ROI2)
+        
+        contours_turn = contours(rBlack, ROI5)
+        tArea = max_contour(contours_turn, ROI5)[0]
         
         #threshold image
         ret, imgThresh = cv2.threshold(imgGray, 55, 255, cv2.THRESH_BINARY_INV)
@@ -513,7 +519,7 @@ if __name__ == '__main__':
             
             LED2(255, 255, 255)
         
-            endConst = 60
+            endConst = 60 #60
             
             cKp = 0.2 
             cKd = 0.2 
@@ -524,11 +530,11 @@ if __name__ == '__main__':
             
             LED2(0, 0, 0)     
             
-            endConst = 30
+            endConst = 30 #30
             
-            cKp = 0.25
-            cKd = 0.25 
-            cy = 0.08 
+            cKp = 0.25 #0.25
+            cKd = 0.25 #0.25
+            cy = 0.08 #0.08
 
 # -----------------{ orange / blue line contour processing }---------------
 
@@ -541,16 +547,15 @@ if __name__ == '__main__':
             elif maxB > 100: 
                 turnDir = "left"
         
-        print("turns", turnDir, maxO, maxB)
         if (turnDir == "right" and maxO > 100) or (turnDir == "left" and maxB > 100): 
             
             #update t2
             t2 = t
             
             #for three-point turn, update region of interest to see farther
-            if t2 == 7:
-                ROI3 = [redTarget - 40, 90, greenTarget + 40, 335]
-                ROIs = [ROI1, ROI2, ROI3, ROI4]
+            #if t2 == 7:
+                #ROI3 = [redTarget - 40, 90, greenTarget + 40, 335]
+                #ROIs = [ROI1, ROI2, ROI3, ROI4]
 
             #set either the right or left turn to true based on turn direction
             if turnDir == "right":
@@ -672,11 +677,18 @@ if __name__ == '__main__':
             if t == 12 and not tempParking and all(target == False for target in tList[:2]):
                 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
+                
+                ROI5 = [0, 0, 0, 0]
 
                 #used as an indication of when it is ok to park 
                 tempParking = True
-
-            LED1(0, 0, 0)
+                
+            if all(target == False for target in tList[:2]): 
+                ROI5 = [0, 0, 0, 0]
+                
+            
+            
+            LED2(0, 0, 0)
 
             #calculate the difference in the left and right lane areas
             aDiff = rightArea - leftArea
@@ -687,15 +699,22 @@ if __name__ == '__main__':
             
             #if both areas are small enough change angle based on last pillar to help make it easier to pass pillars
             #print(lWallY, rWallY, lTurn, rTurn, speed)
-            if lWallY < 200 and rWallY < 200 and not tempParking and not lTurn and not rTurn:
+            '''
+            if 0 < lWallY < 215 and 0 < rWallY < 215 and not tempParking and not lTurn and not rTurn:
                 
                 angle = sharpRight if turnDir == "right" else sharpLeft
+            '''
+            '''
+            if leftArea < 2000 and rightArea < 2000 and abs(leftArea - rightArea) < 500 and not lTurn and not rTurn:
+                angle = sharpRight if lastTarget == greenTarget else sharpLeft
+            '''
+            
             
 # -----------------{ pillar detected }--------------
 
-        elif not parkingR and not parkingL:     
+        elif not parkingR and not parkingL:
             
-            LED1(255, 0, 0) if cPillar.target == redTarget else LED1(0, 255, 0)
+            LED2(255, 0, 0) if cPillar.target == redTarget else LED2(0, 255, 0)
           
             #if car is in a turn and tSignal is false meaning no orange or blue line is detected currently, end the turn
             #in this case the turn is finished while still seeing a pillar
@@ -708,13 +727,14 @@ if __name__ == '__main__':
                 #add a turn
                 if reverse == False or reverse == "done":
                     eTurnMethod = "pillar"
-                     
+                    
+                    ROI5 = [270, 120, 370, 140]
                     t += 1
                     
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
                         
-                        if debug: print(f"pillar area: {cPillar.area}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cTarget}")
+                        if debug: print(f"pillar area: {cPillar.area}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cPillar.target}")
                         
                         if turnDir == "left":
                             
@@ -773,6 +793,9 @@ if __name__ == '__main__':
             #make sure angle value is over 2000 
             angle = max(0, angle)
             
+            if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right"))and not lTurn and not rTurn and not tempParking:
+                angle = sharpRight if lastTarget == greenTarget else sharpLeft
+            
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
             
@@ -794,10 +817,10 @@ if __name__ == '__main__':
             
             #reset ROI3
             ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-            ROIs = [ROI1, ROI2, ROI3, ROI4]
+            
             
             #if anything but a red pillar is seen turn left
-            if cPillar.target == 0 or cTarget == greenTarget:
+            if cPillar.target == 0 or cPillar.target == greenTarget:
                 angle = sharpLeft
             
             #if a pillar wasn't seen for the last 10 frames keep the car turning left until it sees the parking lot or wall in front
@@ -875,6 +898,8 @@ if __name__ == '__main__':
                 stop_car() 
                 break
             
+            ROIs = [ROI1, ROI2, ROI3, ROI4, ROI5]
+            
             #display regions of interest
             display_roi((255, 204, 0))
             
@@ -920,10 +945,11 @@ if __name__ == '__main__':
                 "# turns": t,
                 "t2": t2,
                 "turn status": turn_status,
-                "end turn method": eTurnMethod if eTurnMethod == "pillar" or eTurnMethod == "wall" else " ",  
+                "end turn method": eTurnMethod if eTurnMethod == "pillar" or eTurnMethod == "wall" else " ",
+                "tArea": tArea
             }
             
-            #display_variables(variables)
+            display_variables(variables)
 
 # ------------------------------------------------------------{ reset variables }------------------------------------------------------------------------
 
