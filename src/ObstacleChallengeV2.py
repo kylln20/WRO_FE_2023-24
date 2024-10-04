@@ -130,8 +130,6 @@ def find_pillar(contours, target, p):
         
         if area > 100:
             
-            
-            
             #get width, height, and x and y coordinates by bounding rect
             approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
             x,y,w,h=cv2.boundingRect(approx)
@@ -258,6 +256,8 @@ if __name__ == '__main__':
     
     #determines how many number of seconds after sTime are needed to stop
     s = 0
+    
+    pillarAtStart = -1
 
     #makes sure the car begins to park when no pillar is detected
     tempParking = False
@@ -392,8 +392,14 @@ if __name__ == '__main__':
             turnDir = "left"
         elif sys.argv[1].lower() == "stop": #for testing parking on the left side
             t = 11
-        elif sys.argv[1].lower() == "turn": #for testing three-point turns
+        elif sys.argv[1].lower() == "turnt": #for testing three-point turns
             t = 7
+            speed = 1660
+            pillarAtStart = True
+        elif sys.argv[1].lower() == "turnf":
+            t = 7
+            speed = 1660
+            pillarAtStart = False
         elif sys.argv[1].lower() == "steer": #for stationary testing
             speed = 1500
         elif sys.argv[1].lower() == "fast": #for stationary testing
@@ -410,12 +416,16 @@ if __name__ == '__main__':
         
     LED1(0, 0, 0)
     
+    frames = 0
+    
     #write initial valuess
     time.sleep(0.5)
     multi_write([angle, 0.5, speed, 0.1, speed])
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
+        
+        frames += 1
 
 # ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
         
@@ -505,6 +515,12 @@ if __name__ == '__main__':
         cPillar, num_pillars_g = find_pillar(contours_green, greenTarget, temp)
         cPillar, num_pillars_r = find_pillar(contours_red, redTarget, cPillar)
         
+        if frames == 10 and t != 7:
+            if cPillar.area != 0:
+                pillarAtStart = True
+            else:
+                pillarAtStart = False
+                
         if cPillar.area == 0:
             cPillar.target = 0
         
@@ -562,6 +578,11 @@ if __name__ == '__main__':
                 rTurn = True
             else:
                 lTurn = True
+                
+            print("frames:", frames)
+            
+            if frames < 15 and t != 7:
+                pillarAtStart = False
             
             #indicate that the coloured line is seen
             tSignal = True
@@ -600,7 +621,7 @@ if __name__ == '__main__':
             rightY = rightLot[2]
             centerY = centerLot[2]
             
-            print(maxAreaL, leftY, t2)
+            #print(maxAreaL, leftY, t2)
                 
             #conditions for initiating parking on the left side
             if leftY >= 220 and maxAreaL > 100 and t2 >= 12:
@@ -678,15 +699,9 @@ if __name__ == '__main__':
                 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
                 
-                ROI5 = [0, 0, 0, 0]
-
                 #used as an indication of when it is ok to park 
                 tempParking = True
-                
-            if all(target == False for target in tList[:2]): 
-                ROI5 = [0, 0, 0, 0]
-                
-            
+
             
             LED2(0, 0, 0)
 
@@ -736,34 +751,18 @@ if __name__ == '__main__':
                         
                         if debug: print(f"pillar area: {cPillar.area}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cPillar.target}")
                         
-                        if turnDir == "left":
+                        if pillarAtStart:
                             
-                            #means we are taking a wider turn into the corner
-                            if lastTarget == redTarget or lastTarget == 0:
-                                if not (cPillar.target == greenTarget and (leftArea + rightArea < 5500 or cPillar.area > 800)):#if not (cTarget == greenTarget and pArea > 240)
-                                    reverse = True
-                            
-                            #means weare taking a tighter turn into the corne 
-                            elif lastTarget == greenTarget or lastTarget == 0:
-                                if cPillar.target == redTarget and (leftArea + rightArea < 3000 or cPillar.area > 800): #if cTarget == redTarget and (pArea > 400 or (pArea > 300 and (leftArea < 1200 or rightArea < 1200))):
-                                    reverse = True
-                                    
-                        else:
-                            
-                            #means we are taking a tighter turn into the corner
-                            if lastTarget == redTarget or lastTarget == 0:
-                                if not (cPillar.target == greenTarget and (leftArea + rightArea < 2000 or cPillar.area > 800)): #pArea > 600 before, adjusted for low lighting #if not (cTarget == greenTarget and (pArea > 580 or contX > 550))
-                                    reverse = True
-                                    
-                            #means we are taking a wider turn into the corner
-                            elif lastTarget == greenTarget or lastTarget == 0:
-                                if cPillar.target == redTarget:
-                                    reverse = True
+                           if cPillar.area > 700 and cPillar.target == redTarget:
+                                reverse = True
+                           elif cPillar.area < 700 and lastTarget == redTarget:
+                                reverse = True 
                         
-                        #reset ROI3
-                        if reverse == False:
-                            ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                            ROIs = [ROI1, ROI2, ROI3, ROI4]
+                        else:
+                           if cPillar.target == redTarget:
+                                reverse = True
+                            
+                                
                     
                     #after three laps set a timer for 3.75 in order to stop in middle of starting section
                     if t == 12:
@@ -793,11 +792,20 @@ if __name__ == '__main__':
             #make sure angle value is over 2000 
             angle = max(0, angle)
             
-            if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right"))and not lTurn and not rTurn and not tempParking:
-                angle = sharpRight if lastTarget == greenTarget else sharpLeft
-            
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
+            
+        if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right"))and not lTurn and not rTurn and not tempParking:
+            if cPillar.area > 5000:
+                angle = straightConst
+            else:
+                angle = sharpRight if lastTarget == greenTarget else sharpLeft
+        
+        if cPillar.target != 0 and cPillar.area < 500 and cPillar.y < 200:
+            ROI5 = [0, 0, 0, 0]
+            
+        if cPillar.target == 0 and leftArea > 2000 and rightArea > 2000 and tArea < 100:
+            ROI5 = [0, 0, 0, 0]
             
         #keep track of whether a pillar is seen for the last 10 frames
         if len(tList) == 10:
@@ -946,7 +954,10 @@ if __name__ == '__main__':
                 "t2": t2,
                 "turn status": turn_status,
                 "end turn method": eTurnMethod if eTurnMethod == "pillar" or eTurnMethod == "wall" else " ",
-                "tArea": tArea
+                "tArea": tArea,
+                "pillar y": cPillar.y,
+                "pillar at start": pillarAtStart,
+                "frames": frames
             }
             
             display_variables(variables)
