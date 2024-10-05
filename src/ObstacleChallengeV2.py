@@ -60,28 +60,41 @@ def stop_car():
 #returns contours of a specific hsv range of a specific region of interest
 def contours(hsvRange, ROI):
     
-    img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
-    #img_blur = cv2.medianBlur(img_, 5)
-    
-    #cv2.imshow("cam", img_blur)
-    
-    lower_mask = np.array(hsvRange[0])
-    upper_mask = np.array(hsvRange[1])
+    if ROI == ROI3 or ROI == ROI4:
+        img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
+        
+        img_blur = cv2.GaussianBlur(img_segmented, (7, 7), 0)
+        #img_blur = cv2.bilateralFilter(img_lab, d=9, sigmaColor=75, sigmaSpace=75)
+        
+        #cv2.imshow("cam", img_lab)
+        
+        lower_mask = np.array(hsvRange[0])
+        upper_mask = np.array(hsvRange[1])
 
-    mask = cv2.inRange(img_lab, lower_mask, upper_mask)
-    
-    kernel = np.ones((7, 7), np.uint8)
-    
-    eMask = cv2.erode(mask, kernel, iterations=1)
-    dMask = cv2.dilate(eMask, kernel, iterations=1)
-    
-    '''
-    if hsvRange == rBlack: 
-        cv2.imshow(str(hsvRange[0][0]), dMask)
-    '''
-    
-    contours = cv2.findContours(dMask[ROI[1]:ROI[3], ROI[0]:ROI[2]], cv2.RETR_EXTERNAL,
-    cv2.CHAIN_APPROX_SIMPLE)[-2]
+        mask = cv2.inRange(img_blur, lower_mask, upper_mask)
+        
+        kernel = np.ones((5, 5), np.uint8)
+        
+        eMask = cv2.erode(mask, kernel, iterations=1)
+        dMask = cv2.dilate(eMask, kernel, iterations=1)
+        
+        '''
+        if hsvRange == rBlack: 
+            cv2.imshow(str(hsvRange[0][0]), dMask)
+        '''
+        
+        contours = cv2.findContours(dMask, cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
+    else:
+        lower_mask = np.array(hsvRange[0])
+        upper_mask = np.array(hsvRange[1])
+        
+        mask = cv2.inRange(img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]], lower_mask, upper_mask)
+        
+        contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
 
     return contours
 
@@ -121,7 +134,7 @@ def max_contour(contours, ROI):
 
 def find_pillar(contours, target, p): 
     
-    global t, s, reverse, leftArea, rightArea
+    global t, s, reverse, leftArea, rightArea, turnDir
     num_p = 0
     
     for cnt in contours: 
@@ -146,7 +159,7 @@ def find_pillar(contours, target, p):
                 num_p += 1
                 
                 #if the pillar is too close, stop the car and reverse to give it enough space
-            if area > 6500 and ((x <= 370 and target == greenTarget) or (x >= 270 and target == redTarget)) and t < 13: #420, 220
+            if area > 6500 and ((x <= 370 and target == greenTarget) or (x >= 270 and target == redTarget)) and not tempParking: #420, 220
                 LED2(255, 255, 0)
                 
                 #move back 
@@ -315,7 +328,7 @@ if __name__ == '__main__':
     #LAB colour masks
     
     rMagenta = [[0, 171, 106], [255, 195, 135]]
-    rRed = [[0, 149, 135], [107, 211, 172]]
+    rRed = [[0, 149, 135], [134, 211, 172]]
     rGreen = [[0, 45, 0], [255, 117, 153]]
     rBlue = [[0, 125, 66], [174, 160, 112]]
     rOrange = [[0, 163, 163], [255, 191, 204]]
@@ -418,14 +431,19 @@ if __name__ == '__main__':
     
     frames = 0
     
+    pTimer = time.time()
+    
     #write initial valuess
     time.sleep(0.5)
     multi_write([angle, 0.5, speed, 0.1, speed])
+    
+    startArea = 0 
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
         
         frames += 1
+        fps_start = time.time()
 
 # ------------------------------------------------------------{ contour detection of walls, pillars, and orange and blue lines }-------------------------------------------------------------------------
         
@@ -442,27 +460,20 @@ if __name__ == '__main__':
         img = picam2.capture_array()
         
         # convert from BGR to HSV
-        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        #img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
         # convert from BGR to HSV
         img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
-        
-        #convert to grayscale
-        imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         #get contours of left and right walls
         contours_left = contours(rBlack, ROI1)
         contours_right = contours(rBlack, ROI2)
         
-        contours_turn = contours(rBlack, ROI5)
-        tArea = max_contour(contours_turn, ROI5)[0]
+        if ROI5[0] != 0: 
+            contours_turn = contours(rBlack, ROI5)
+            tArea = max_contour(contours_turn, ROI5)[0]
         
-        #threshold image
-        ret, imgThresh = cv2.threshold(imgGray, 55, 255, cv2.THRESH_BINARY_INV)
-        
-        #find black contours in the parking region of interest to determine when to stop during parking
-        contours_parking, hierarchy = cv2.findContours(imgThresh[ROI4[1]:ROI4[3], ROI4[0]:ROI4[2]], 
-        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        contours_parking = contours(rBlack, ROI4)
 
         #iterate through every contour in both the left and right region of interest and take the largest one in each
         left_region = max_contour(contours_left, ROI1)
@@ -482,26 +493,6 @@ if __name__ == '__main__':
         contours_blue = contours(rBlue, ROI4)
         contours_orange = contours(rOrange, ROI4)
         
-        '''
-        # orange mask
-        lower_orange = np.array([0, 100, 175])
-        upper_orange = np.array([10, 255, 255])
-        
-        # second orange mask
-        lo2 = np.array([175, 100, 175])
-        ho2 = np.array([180, 255, 255])
-        
-        #rOrange = [[0, 100, 175], [25, 255, 255]]
-
-        o_mask = cv2.inRange(img_hsv, lower_orange, upper_orange)
-        o_mask_2 = cv2.inRange(img_hsv, lo2, ho2)
-        
-        o_mask = cv2.bitwise_or(o_mask, o_mask_2)
-        
-        contours_orange = cv2.findContours(o_mask[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE)[-2]
-        '''
-        
 # ------------------------------------------------------------{ processing contours }-------------------------------------------------------------------------
         
         #count number of red and green pillars
@@ -514,19 +505,24 @@ if __name__ == '__main__':
 
         cPillar, num_pillars_g = find_pillar(contours_green, greenTarget, temp)
         cPillar, num_pillars_r = find_pillar(contours_red, redTarget, cPillar)
-        
-        if frames == 10 and t != 7:
+            
+        if t == 0:
+            startArea = max(startArea, cPillar.area)
+        '''
+        if time.time() - pTimer > 2 and pillarAtStart == -1 and t != 7:
             if cPillar.area != 0:
                 pillarAtStart = True
             else:
                 pillarAtStart = False
+        '''   
+        
                 
         if cPillar.area == 0:
             cPillar.target = 0
         
         #draw contours of pillars for debugging
-        if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], contours_green, -1, (144, 238, 144), 3)
-        if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], contours_red, -1, (144, 144, 238), 3)
+        if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], contours_green, -1, (144, 238, 144), 2)
+        if debug: cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], contours_red, -1, (144, 144, 238), 2)
                 
 # -----------------{ control variable manipulation based on number of pillars }--------------
 
@@ -578,12 +574,17 @@ if __name__ == '__main__':
                 rTurn = True
             else:
                 lTurn = True
-                
-            print("frames:", frames)
             
-            if frames < 15 and t != 7:
+            '''
+            if time.time() - pTimer < 3 and t != 7:
                 pillarAtStart = False
+            '''
             
+            if t == 0 and pillarAtStart == -1:
+                if startArea > 3000:
+                    pillarAtStart = True
+                else:
+                    pillarAtStart = False
             #indicate that the coloured line is seen
             tSignal = True
                                    
@@ -637,7 +638,6 @@ if __name__ == '__main__':
                 
                     #readjust region of interest for parking
                     ROI4 = [230, 250, 370, 300]
-                    ROIs = [ROI1, ROI2, ROI3, ROI4]
                     
             #conditions for initiating parking on the right side
             if rightY >= 240 and maxAreaR > 100 and t2 >= 12:
@@ -653,7 +653,6 @@ if __name__ == '__main__':
                 
                     #readjust region of interest for parking
                     ROI4 = [250, 250, 390, 300]
-                    ROIs = [ROI1, ROI2, ROI3, ROI4]
                 
             if parkingR:
                 
@@ -759,7 +758,7 @@ if __name__ == '__main__':
                                 reverse = True 
                         
                         else:
-                           if cPillar.target == redTarget:
+                           if cPillar.target == redTarget and cPillar.area > 200:
                                 reverse = True
                             
                                 
@@ -795,18 +794,20 @@ if __name__ == '__main__':
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
             
-        if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right"))and not lTurn and not rTurn and not tempParking:
-            if cPillar.area > 5000:
+        if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right")) and not lTurn and not rTurn and not tempParking:
+            if cPillar.area > 4000:
                 angle = straightConst
             else:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
+        '''
+        if cPillar.target != 0 and cPillar.area < 500 and cPillar.y < 200 and not rTurn and not lTurn:
+            ROI5 = [0, 0, 0, 0]
+        '''
         
-        if cPillar.target != 0 and cPillar.area < 500 and cPillar.y < 200:
+        if cPillar.target == 0 and tArea < 100:
             ROI5 = [0, 0, 0, 0]
-            
-        if cPillar.target == 0 and leftArea > 2000 and rightArea > 2000 and tArea < 100:
-            ROI5 = [0, 0, 0, 0]
-            
+        
+        
         #keep track of whether a pillar is seen for the last 10 frames
         if len(tList) == 10:
             tList.append(True if cPillar.target != 0 else False)
@@ -905,12 +906,18 @@ if __name__ == '__main__':
             if cv2.waitKey(1)==ord('q'):
                 stop_car() 
                 break
+        
+            fps = str(int(1 / (time.time() - fps_start))) + " fps"
+            elapsed = str(int(time.time() - pTimer)) + "s"
             
             ROIs = [ROI1, ROI2, ROI3, ROI4, ROI5]
             
             #display regions of interest
             display_roi((255, 204, 0))
             
+            cv2.putText(img, fps, (10, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(img, elapsed, (500, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
+             
             #display image
             cv2.imshow("finalColor", img)
             
