@@ -10,6 +10,7 @@ import RPi.GPIO as GPIO
 import numpy as np
 import HiwonderSDK.Board as Board
 import math
+from shapely.geometry import Polygon
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
@@ -78,11 +79,6 @@ def contours(hsvRange, ROI):
         eMask = cv2.erode(mask, kernel, iterations=1)
         dMask = cv2.dilate(eMask, kernel, iterations=1)
         
-        '''
-        if hsvRange == rBlack: 
-            cv2.imshow(str(hsvRange[0][0]), dMask)
-        '''
-        
         contours = cv2.findContours(dMask, cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
@@ -92,11 +88,37 @@ def contours(hsvRange, ROI):
         
         mask = cv2.inRange(img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]], lower_mask, upper_mask)
         
+        #if hsvRange == rBlack and ROI == ROI2: 
+            #cv2.imshow(str(hsvRange[0][0]), mask)
+        
         contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
 
     return contours
+
+def pOverlap(ROI):
+        lower_mask = np.array(rBlack[0])
+        upper_mask = np.array(rBlack[1])
+        
+        mask = cv2.inRange(img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]], lower_mask, upper_mask)
+        #cv2.imshow("o", mask)
+        lower_mask2 = np.array(rMagenta[0])
+        upper_mask2 = np.array(rMagenta[1])
+        
+        mask2 = cv2.inRange(img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]], lower_mask2, upper_mask2)
+        
+        mask = cv2.subtract(mask, cv2.bitwise_and(mask, mask2))
+        
+       
+        #cv2.imshow("ko", mask)
+        
+        #cv2.imshow("k", mask2)
+        
+        contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
+        return contours
 
 class Pillar:
     def __init__(self, area, dist, x, y, target): 
@@ -104,13 +126,20 @@ class Pillar:
         self.dist = dist
         self.x = x
         self.y = y
+        self.w = 0
+        self.h = 0
         self.target = target
+    
+    def setDimensions(self, w, h):
+        self.w = w
+        self.h = h
 
 #returns the area of the largest contour in a group of contours
 def max_contour(contours, ROI): 
     maxArea = 0
     maxY = 0
     maxX = 0
+    mCnt = 0
     
     for cnt in contours:
         
@@ -129,8 +158,9 @@ def max_contour(contours, ROI):
                 maxArea = area
                 maxY = y
                 maxX = x
+                mCnt = cnt
 
-    return [maxArea, maxX, maxY]
+    return [maxArea, maxX, maxY, mCnt]
 
 def find_pillar(contours, target, p): 
     
@@ -159,7 +189,7 @@ def find_pillar(contours, target, p):
                 num_p += 1
                 
                 #if the pillar is too close, stop the car and reverse to give it enough space
-            if area > 6500 and ((x <= 370 and target == greenTarget) or (x >= 270 and target == redTarget)) and not tempParking: #420, 220
+            if area > 6500 and ((x <= 370 and target == greenTarget) or (x >= 270 and target == redTarget)) and not tempParking and speed != 1500: #420, 220
                 LED2(255, 255, 0)
                 
                 #move back 
@@ -190,6 +220,7 @@ def find_pillar(contours, target, p):
                 p.y = y
                 p.x = x
                 p.target = target
+                p.setDimensions(w, h)
 
     return p, num_p
 
@@ -232,7 +263,7 @@ if __name__ == '__main__':
     picam2.preview_configuration.main.size = (640,480)
     picam2.set_controls({"AeEnable": True})
     picam2.preview_configuration.main.format = "RGB888"
-    picam2.preview_configuration.controls.FrameRate = 30
+    picam2.preview_configuration.controls.FrameRate = 60
     picam2.preview_configuration.align()
     picam2.configure("preview")
     
@@ -403,6 +434,11 @@ if __name__ == '__main__':
         elif sys.argv[1].lower() == "parkingr": #for testing parking on the left side
             t = 12
             turnDir = "left"
+        elif sys.argv[1].lower() == "psteer": #for testing parking on the left side
+            tempParking = True
+            t = 12
+            t2 = 12
+            speed = 1500
         elif sys.argv[1].lower() == "stop": #for testing parking on the left side
             t = 11
         elif sys.argv[1].lower() == "turnt": #for testing three-point turns
@@ -466,8 +502,8 @@ if __name__ == '__main__':
         img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 
         #get contours of left and right walls
-        contours_left = contours(rBlack, ROI1)
-        contours_right = contours(rBlack, ROI2)
+        contours_left = pOverlap(ROI1)
+        contours_right = pOverlap(ROI2)
         
         if ROI5[0] != 0: 
             contours_turn = contours(rBlack, ROI5)
@@ -484,6 +520,8 @@ if __name__ == '__main__':
         
         rightArea = right_region[0]
         rWallY = right_region[2]
+        
+        
         
         areaFront = max_contour(contours_parking, ROI4)[0]
         
@@ -621,8 +659,7 @@ if __name__ == '__main__':
             maxAreaR = rightLot[0]
             rightY = rightLot[2]
             centerY = centerLot[2]
-            
-            #print(maxAreaL, leftY, t2)
+
                 
             #conditions for initiating parking on the left side
             if leftY >= 220 and maxAreaL > 100 and t2 >= 12:
@@ -667,14 +704,16 @@ if __name__ == '__main__':
             elif parkingL:
                 
                 #if car is too for left turn back to the right
-                if rightArea > 10000 and maxAreaR > 2000:
+                if rightArea > 15000 and maxAreaR > 2000:
+                    pass
                     multi_write([1640, sharpRight, 1])
                 #readjust by backing up if the parking lot is in front
-                elif centerY > 290 and areaFront < 3000:
+                if centerY > 290 and areaFront < 3000:
                     LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
                 #turn left into parking lot
                 else:
+                    pass
                     multi_write([1640, sharpLeft])
                     
             #if the area of the wall in front is above a limit stop as we are very close to the wall
@@ -907,17 +946,44 @@ if __name__ == '__main__':
                 stop_car() 
                 break
         
-            fps = str(int(1 / (time.time() - fps_start))) + " fps"
-            elapsed = str(int(time.time() - pTimer)) + "s"
+            fps = "fps: " + str(int(1 / (time.time() - fps_start)))
+            elapsed = "time elapsed: " + str(int(time.time() - pTimer)) + "s"
             
             ROIs = [ROI1, ROI2, ROI3, ROI4, ROI5]
             
             #display regions of interest
             display_roi((255, 204, 0))
+            '''
+            back = np.zeros((1080, 1920, 3), dtype=np.uint8)
+            back[:] = 0
             
-            cv2.putText(img, fps, (10, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
-            cv2.putText(img, elapsed, (500, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
-             
+            
+            
+            img = cv2.resize(img, (960, 720))
+
+            back[0:720, 0:960] = img
+            
+            cv2.putText(back, fps, (410, 800), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
+            cv2.putText(back, elapsed, (10, 800), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
+            '''
+            if cPillar.area > 0:
+                
+                
+                color = (0, 0, 0)
+                
+                cv2.putText(img, str(round(cPillar.area)), (int(cPillar.x + cPillar.w//2 + 5), int(cPillar.y - cPillar.h//2)), cv2.FONT_HERSHEY_DUPLEX, 1, color, 2)
+                
+                color = (144, 238, 144) if cPillar.target == greenTarget else (144, 144, 238)
+                
+                cv2.putText(img, str(round(cPillar.area)), (int(cPillar.x + cPillar.w//2 + 5), int(cPillar.y - cPillar.h//2)), cv2.FONT_HERSHEY_DUPLEX, 1, color, 1)
+                
+            cv2.putText(img, fps, (500, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 4)
+            cv2.putText(img, elapsed, (10, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 4)
+            cv2.putText(img, fps, (500, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1)
+            cv2.putText(img, elapsed, (10, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 1)
+            
+
+            
             #display image
             cv2.imshow("finalColor", img)
             
