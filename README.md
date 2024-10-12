@@ -222,9 +222,13 @@ Additionally, to count the number of corners the car has passed, the program cou
 ### Turning <sub> (Obstacle Challenge) </sub>
 Unlike the open challenge, in the obstacle challenge, we can't detect turns by the areas of walls due to the need to avoid pillars. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area to ensure we are at a corner. 
 
-The car is automatically set to the maximum 50-degree turning angle to make sure it can see pillars as quickly as possible after a turn. 
+The car is automatically set to the maximum 50-degree turning angle to ensure it can see pillars as quickly as possible after a turn. 
 
-If it does detect a signal pillar, the turn ends immediately and the angle calculation is then based on the signal pillar. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold and the angle calculation will be based on the wall area difference.
+If it detects a signal pillar, the turn ends immediately, and the angle calculation is based on the signal pillar. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold, and the angle calculation will be based on the wall area difference.
+
+If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle based on the color of the pillar (left if red, right if green) even if we still detect the pillar. If the pillar's area becomes too large while turning, the car turned too early and is on course to hit. In this case, we straighten the car's turning angle until the area is lower than a certain threshold to avoid collision. As we don't want this region of interest to interfere with our regular driving algorithms, the region of interest is only present when a turn is ended by seeing a pillar and is hidden once it passes the pillar and the region of interest no longer detects the wall in front. This approach makes the car turn earlier making the turns around pillars much more consistent, allowing our car to control better at faster speeds. 
+
+
 <br/><br/>
 ### Parking Lot Detection/Management <sub> (Obstacle Challenge) </sub>
 
@@ -238,9 +242,28 @@ The car stops once the area of the wall detected in the middle is large enough, 
 <br/><br/>
 ### Three-Point Turn <sub> (Obstacle Challenge) </sub>
 
-After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done when checking the colour and area of the current pillar along with the colour of the last passed pillar. 
+After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done by checking whether there was a pillar directly in front of the car and the area of the pillar detected during the 8th turn. 
 
-The program also accounts for different approach angles at the end of the second lap, which affects the contour areas of the signal pillars, by changing the area threshold of the pillar needed to trigger a turn. This variation is caused by the placement/colour of the last pillar the car has seen. For example, if the car's direction is clockwise and a red pillar is seen before the corner, the car would have to take a tighter turn. Any pillar seen during the turn will have a larger area initially as the car is physically closer due to its approach. 
+We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we have detected before the first turn, is larger than a certain threshold. 
+
+If we know there was a pillar directly in front of the car in the starting section. We can assume that any pillar seen during the 8th turn is the last pillar of the second lap. 
+
+If we know there was no pillar directly in front of the car. We know that if there is another pillar in the starting section it would be close to the edge as it's impossible to have a pillar in the middle. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
+
+If no pillar is detected during the 8th turn, we just use the last pillar we had detected to determine whether to do a three-point turn. 
+
+if turn is ended by seeing the wall: 
+     if last pillar seen is red: 
+          perform three point turn
+          
+if turn is ended by seeing the pillar: 
+     if there was a pillar directly in front: 
+          if area of current pillar is larger than a threshold and is red: 
+                 perform turn
+     if there was no pillar directly in front and current pillar is red: 
+          perform turn
+
+This approach to determining the need to perform a three-point turn proved much more consistent than our last approach, which relied heavily on specific wall area and pillar area thresholds vulnerable to lighting and color. 
 
 Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume.
 
