@@ -93,7 +93,8 @@ def contours(hsvRange, ROI):
         
         contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
-        
+    
+    
 
     return contours
 
@@ -385,7 +386,7 @@ if __name__ == '__main__':
     sharpRight = straightConst - tDeviation #the default angle sent to the car during a right turn
     sharpLeft = straightConst + tDeviation #the default angle sent to the car during a left turn
     
-    speed = 1650 #variable for initial speed of the car
+    speed = 1660 #variable for initial speed of the car
     reverseSpeed = 1340 #variable for speed of the car going backwards
     
     aDiff = 0 #value storing the difference of area between contours
@@ -658,8 +659,9 @@ if __name__ == '__main__':
             leftY = leftLot[2]
             maxAreaR = rightLot[0]
             rightY = rightLot[2]
+            rightX = rightLot[1]
             centerY = centerLot[2]
-
+            
                 
             #conditions for initiating parking on the left side
             if leftY >= 220 and maxAreaL > 100 and t2 >= 12:
@@ -670,8 +672,14 @@ if __name__ == '__main__':
                     if debug: print("area at start:", maxAreaL)
                     
                     #delay the turn if the area of the parking wall is too large
-                    if maxAreaL > 4500: #4500
-                        buzz() if debug else time.sleep(0.5)
+                    
+                    
+                    if maxAreaL > 2500: #4500
+                        
+                        if debug: buzz()
+                        #write(straightConst)
+                        time.sleep(max(maxAreaL / 2500 - 0.5, 0))
+                        
                 
                     #readjust region of interest for parking
                     ROI4 = [230, 250, 370, 300]
@@ -683,11 +691,15 @@ if __name__ == '__main__':
                     parkingR = True
                     
                     #delay the turn if the area of the parking wall is too large
-                    if debug: print("area at start:", maxAreaR)
-                        
-                    if maxAreaR > 7500:
-                        buzz() if debug else time.sleep(0.5)
-                
+                    if debug: print("area at start:", maxAreaR, "x:", rightX)
+                    print("pillar area:", cPillar.area)
+                    
+                    if maxAreaR > 3000 and maxAreaR < 6000:
+                        write(straightConst)
+                        if debug: buzz()
+                        #write(straightConst)
+                        time.sleep(max(maxAreaR / 4000 - 0.5, 0))
+                    
                     #readjust region of interest for parking
                     ROI4 = [250, 250, 390, 300]
                 
@@ -708,7 +720,7 @@ if __name__ == '__main__':
                     pass
                     multi_write([1640, sharpRight, 1])
                 #readjust by backing up if the parking lot is in front
-                if centerY > 290 and areaFront < 3000:
+                if centerY > 290 and areaFront < 7000:
                     LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
                 #turn left into parking lot
@@ -737,7 +749,10 @@ if __name__ == '__main__':
                 
                 redTarget, greenTarget = (greenTarget, greenTarget) if turnDir == "right" else (redTarget, redTarget)
                 
-                #used as an indication of when it is ok to park 
+                #used as an indication of when it is ok to park
+                if turnDir == "left":
+                    ROI3[1] = 130
+                
                 tempParking = True
 
             
@@ -799,12 +814,10 @@ if __name__ == '__main__':
                         else:
                            if cPillar.target == redTarget and cPillar.area > 200:
                                 reverse = True
-                            
-                                
                     
                     #after three laps set a timer for 3.75 in order to stop in middle of starting section
                     if t == 12:
-                        s = 3.75 if speed == 1650 else 2.5
+                        s = 3.75 if speed == 1650 else 3
                         sTime = time.time()
                 
                 #set turns to false as the turn ended
@@ -838,6 +851,12 @@ if __name__ == '__main__':
                 angle = straightConst
             else:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
+        
+        
+    
+        if leftArea < 2000 and rightArea < 2000 and cPillar.area == 0 and turnDir == "left" and tempParking:
+            angle = sharpRight if lastTarget == greenTarget else sharpLeft
+            
         '''
         if cPillar.target != 0 and cPillar.area < 500 and cPillar.y < 200 and not rTurn and not lTurn:
             ROI5 = [0, 0, 0, 0]
@@ -862,9 +881,6 @@ if __name__ == '__main__':
             #make sure turns are false
             rTurn = False
             lTurn = False
-            
-            #reset ROI3
-            ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
             
             
             #if anything but a red pillar is seen turn left
@@ -916,11 +932,6 @@ if __name__ == '__main__':
                       if lastTarget == redTarget:
                           multi_write([straightConst, 0.25])    
                           reverse = "turning"
-                          
-                      #reset ROI3
-                      if reverse == False:
-                          ROI3 = [redTarget - 40, 110, greenTarget + 40, 335]
-                          ROIs = [ROI1, ROI2, ROI3, ROI4]
                   
             # if a car is parking or performing a three-point turn
             if not parkingR and not parkingL:
@@ -937,6 +948,9 @@ if __name__ == '__main__':
                 #print(angle)
                 write(angle)
         
+        while int(1 / (time.time() - fps_start)) > 30:
+                pass
+        
 # ------------------------------------------------------------{ debugging information }-------------------------------------------------------------------------
 
         if debug: 
@@ -947,6 +961,7 @@ if __name__ == '__main__':
                 break
         
             fps = "fps: " + str(int(1 / (time.time() - fps_start)))
+            
             elapsed = "time elapsed: " + str(int(time.time() - pTimer)) + "s"
             
             ROIs = [ROI1, ROI2, ROI3, ROI4, ROI5]
@@ -959,6 +974,8 @@ if __name__ == '__main__':
             
             
             
+            
+            
             img = cv2.resize(img, (960, 720))
 
             back[0:720, 0:960] = img
@@ -966,6 +983,8 @@ if __name__ == '__main__':
             cv2.putText(back, fps, (410, 800), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
             cv2.putText(back, elapsed, (10, 800), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 255, 255), 2)
             '''
+            
+            
             if cPillar.area > 0:
                 
                 
