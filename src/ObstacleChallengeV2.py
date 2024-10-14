@@ -11,6 +11,7 @@ import numpy as np
 import HiwonderSDK.Board as Board
 import math
 from shapely.geometry import Polygon
+from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
@@ -188,9 +189,10 @@ def find_pillar(contours, target, p):
             #if the pillar is close enough add it to the number of pillars
             if 160 < temp_dist < 380: #160, 395
                 num_p += 1
-                
+            
+            #print(x, area)
                 #if the pillar is too close, stop the car and reverse to give it enough space
-            if area > 6500 and ((x <= 370 and target == greenTarget) or (x >= 270 and target == redTarget)) and not tempParking and speed != 1500: #420, 220
+            if area > 6500 and ((x <= 420 and target == greenTarget) or (x >= 220 and target == redTarget)) and not tempParking and speed != 1500: #420, 220, 370, 270, 6500
                 LED2(255, 255, 0)
                 
                 #move back 
@@ -210,7 +212,7 @@ def find_pillar(contours, target, p):
                 LED2(0, 0, 0)
             
             #deselects current pillar if it comes too close to bottom of the screen
-            if y > ROI3[3] - endConst or temp_dist > 370 or leftArea > 12500 or rightArea > 12500: #370
+            if y > ROI3[3] - endConst or temp_dist > 370 or leftArea > 13000 or rightArea > 13000: #370, 12500
                 continue
 
             
@@ -334,38 +336,6 @@ if __name__ == '__main__':
     
     ROIs = [ROI1, ROI2, ROI3, ROI4, ROI5]
     
-    #use in yellow lighting
-    '''
-    rBlack = [[0, 0, 0], [180, 255, 75]]
-    rBlue = [[100, 100, 100], [135, 255, 255]]
-    #rRed = [[164, 147, 50], [175, 255, 255]]
-    rRed = [[166, 158, 95], [175, 255, 255]]
-    rGreen = [[58, 62, 55], [96, 255, 255]]
-    rMagenta = [[148, 146, 50], [165, 255, 255]]
-    '''
-    #rOrange = [[0, 100, 175], [25, 255, 255]]
-    #rWhite = [[0, 0, 150], [180, 28, 255]]
-    
-    
-    #define colour masks
-    '''
-    rBlack = [[0, 0, 0], [180, 255, 75]]
-    rBlue = [[100, 100, 100], [135, 255, 255]]
-    rRed = [[168, 175, 50], [180, 255, 255]]
-    rGreen = [[58, 62, 70], [96, 255, 255]]
-    rMagenta = [[150, 140, 50], [166, 255, 255]]
-    rOrange = [[0, 100, 175], [25, 255, 255]]
-    rWhite = [[0, 0, 150], [180, 28, 255]]
-    '''
-    #LAB colour masks
-    
-    rMagenta = [[0, 171, 106], [255, 195, 135]]
-    rRed = [[0, 149, 135], [134, 211, 172]]
-    rGreen = [[0, 45, 0], [255, 117, 153]]
-    rBlue = [[0, 125, 66], [174, 160, 112]]
-    rOrange = [[0, 163, 163], [255, 191, 204]]
-    rBlack = [[0, 0, 0], [72, 255, 255]]
-    
     #booleans for tracking whether car is in a left or right turn
     lTurn = False
     rTurn = False
@@ -432,9 +402,11 @@ if __name__ == '__main__':
         if sys.argv[1].lower() == "parkingl": #for testing parking on the left side
             t = 12
             turnDir = "right"
+            speed = 1650
         elif sys.argv[1].lower() == "parkingr": #for testing parking on the left side
             t = 12
             turnDir = "left"
+            speed = 1650
         elif sys.argv[1].lower() == "psteer": #for testing parking on the left side
             tempParking = True
             t = 12
@@ -664,7 +636,7 @@ if __name__ == '__main__':
             
                 
             #conditions for initiating parking on the left side
-            if leftY >= 220 and maxAreaL > 100 and t2 >= 12:
+            if leftY >= 220 and maxAreaL > 600 and t2 >= 12:
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingL = True
@@ -685,7 +657,7 @@ if __name__ == '__main__':
                     ROI4 = [230, 250, 370, 300]
                     
             #conditions for initiating parking on the right side
-            if rightY >= 240 and maxAreaR > 100 and t2 >= 12:
+            if rightY >= 240 and maxAreaR > 600 and t2 >= 12:
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingR = True
@@ -847,7 +819,7 @@ if __name__ == '__main__':
             LED1(0, 0, 0)
             
         if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right")) and not lTurn and not rTurn and not tempParking:
-            if cPillar.area > 4000:
+            if cPillar.area > 5000: #4000
                 angle = straightConst
             else:
                 angle = sharpRight if lastTarget == greenTarget else sharpLeft
@@ -862,7 +834,8 @@ if __name__ == '__main__':
             ROI5 = [0, 0, 0, 0]
         '''
         
-        if cPillar.target == 0 and tArea < 100:
+        if cPillar.area == 0 and tArea < 100 or abs(leftArea - rightArea) > 3000 and tArea > 1000:
+            tArea = 0
             ROI5 = [0, 0, 0, 0]
         
         
