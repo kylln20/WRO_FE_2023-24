@@ -11,7 +11,7 @@ import numpy as np
 import HiwonderSDK.Board as Board
 import math
 from shapely.geometry import Polygon
-from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack
+from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack, lotType
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
 
@@ -112,12 +112,14 @@ def pOverlap(ROI):
         
         mask = cv2.subtract(mask, cv2.bitwise_and(mask, mask2))
         
-       
+        kernel = np.ones((5, 5), np.uint8)
+        
+        eMask = cv2.erode(mask, kernel, iterations=1)
         #cv2.imshow("ko", mask)
         
         #cv2.imshow("k", mask2)
         
-        contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+        contours = cv2.findContours(eMask, cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
         return contours
@@ -646,11 +648,16 @@ if __name__ == '__main__':
                     #delay the turn if the area of the parking wall is too large
                     
                     
-                    if maxAreaL > 2500: #4500
+                    if(maxAreaL > 1000 and lotType == "dark") or (maxAreaL > 2500 and lotType == "light"): #4500
                         
-                        if debug: buzz()
-                        #write(straightConst)
-                        time.sleep(max(maxAreaL / 2500 - 0.5, 0))
+                        buzz()
+                        
+                        if lotType == "light":
+                            delay = maxAreaL / 2500 - 0.5
+                        else:
+                            delay = maxAreaL / 2500 - 0.25
+                            
+                        time.sleep(max(delay, 0))
                         
                 
                     #readjust region of interest for parking
@@ -668,9 +675,14 @@ if __name__ == '__main__':
                     
                     if maxAreaR > 3000 and maxAreaR < 6000:
                         write(straightConst)
-                        if debug: buzz()
+                        buzz()
                         #write(straightConst)
                         time.sleep(max(maxAreaR / 4000 - 0.5, 0))
+                    elif maxAreaR > 6000:
+                        write(straightConst)
+                        buzz()
+                        #write(straightConst)
+                        time.sleep(1)
                     
                     #readjust region of interest for parking
                     ROI4 = [250, 250, 390, 300]
@@ -692,7 +704,7 @@ if __name__ == '__main__':
                     pass
                     multi_write([1640, sharpRight, 1])
                 #readjust by backing up if the parking lot is in front
-                if centerY > 290 and areaFront < 7000:
+                if centerY > 290 and areaFront < 3500:
                     LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
                 #turn left into parking lot
@@ -784,7 +796,7 @@ if __name__ == '__main__':
                                 reverse = True 
                         
                         else:
-                           if cPillar.target == redTarget and cPillar.area > 200:
+                           if cPillar.target == redTarget and cPillar.area > 100:
                                 reverse = True
                     
                     #after three laps set a timer for 3.75 in order to stop in middle of starting section
@@ -818,21 +830,22 @@ if __name__ == '__main__':
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
             
-        if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right")) and not lTurn and not rTurn and not tempParking:
+        if ((tArea > 1000 and turnDir == "left") or (tArea > 1750 and turnDir == "right")) and not lTurn and not rTurn:
             if cPillar.area > 5000: #4000
                 angle = straightConst
             else:
-                angle = sharpRight if lastTarget == greenTarget else sharpLeft
-        
-        
-    
-        if leftArea < 2000 and rightArea < 2000 and cPillar.area == 0 and turnDir == "left" and tempParking:
-            angle = sharpRight if lastTarget == greenTarget else sharpLeft
-            
+                angle = sharpRight if turnDir == "right" else sharpLeft
+
+        '''
+        if tArea > 1500 and turnDir == "left" and tempParking:
+            if cPillar.area > 5000: #4000
+                angle = straightConst
+            else:
+                angle = sharpLeft
         '''
         if cPillar.target != 0 and cPillar.area < 500 and cPillar.y < 200 and not rTurn and not lTurn:
             ROI5 = [0, 0, 0, 0]
-        '''
+        
         
         if cPillar.area == 0 and tArea < 100 or abs(leftArea - rightArea) > 3000 and tArea > 1000:
             tArea = 0
