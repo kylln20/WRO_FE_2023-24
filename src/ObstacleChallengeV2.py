@@ -65,8 +65,9 @@ def contours(hsvRange, ROI):
     if ROI == ROI3 or ROI == ROI4:
         img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
         
+
         img_blur = cv2.GaussianBlur(img_segmented, (7, 7), 0)
-        #img_blur = cv2.bilateralFilter(img_lab, d=9, sigmaColor=75, sigmaSpace=75)
+
         
         #cv2.imshow("cam", img_lab)
         
@@ -194,7 +195,7 @@ def find_pillar(contours, target, p):
             
             #print(x, area)
                 #if the pillar is too close, stop the car and reverse to give it enough space
-            if area > 6500 and ((x <= 420 and target == greenTarget) or (x >= 220 and target == redTarget)) and not tempParking and speed != 1500: #420, 220, 370, 270, 6500
+            if ((area > 6500 and target == redTarget) or (area > 9000 and target == greenTarget)) and ((x <= 420 and target == greenTarget) or (x >= 220 and target == redTarget)) and not tempParking and speed != 1500: #420, 220, 370, 270, 6500
                 LED2(255, 255, 0)
                 
                 #move back 
@@ -214,7 +215,10 @@ def find_pillar(contours, target, p):
                 LED2(0, 0, 0)
             
             #deselects current pillar if it comes too close to bottom of the screen
-            if y > ROI3[3] - endConst or temp_dist > 370 or leftArea > 13000 or rightArea > 13000: #370, 12500
+            if y > ROI3[3] - endConst or temp_dist > 390 or leftArea > 12500 or rightArea > 12500: #370, 12500
+                continue
+            
+            if (tempParking or reverse == True or t2 == 7 and reverse != "done") and temp_dist > 370:
                 continue
 
             
@@ -268,7 +272,7 @@ if __name__ == '__main__':
     picam2.preview_configuration.main.size = (640,480)
     picam2.set_controls({"AeEnable": True})
     picam2.preview_configuration.main.format = "RGB888"
-    picam2.preview_configuration.controls.FrameRate = 60
+    picam2.preview_configuration.controls.FrameRate = 30
     picam2.preview_configuration.align()
     picam2.configure("preview")
     
@@ -600,7 +604,7 @@ if __name__ == '__main__':
                     pillarAtStart = False
             #indicate that the coloured line is seen
             tSignal = True
-                                   
+                                           
 # ------------------------------------------------------------{ final parking algorithm }------------------------------------------------------------------------      
         maxAreaL = 0
         leftY = 0
@@ -638,7 +642,7 @@ if __name__ == '__main__':
             
                 
             #conditions for initiating parking on the left side
-            if leftY >= 220 and maxAreaL > 600 and t2 >= 12:
+            if leftY >= 220 and maxAreaL > 650 and t2 >= 12:
                 if not parkingL and not parkingR:
                     write(1640)
                     parkingL = True
@@ -653,7 +657,7 @@ if __name__ == '__main__':
                         buzz()
                         
                         if lotType == "light":
-                            delay = maxAreaL / 2500 - 0.5
+                            delay = maxAreaL / 2500 - 0.75
                         else:
                             delay = maxAreaL / 2500 - 0.25
                             
@@ -671,7 +675,6 @@ if __name__ == '__main__':
                     
                     #delay the turn if the area of the parking wall is too large
                     if debug: print("area at start:", maxAreaR, "x:", rightX)
-                    print("pillar area:", cPillar.area)
                     
                     if maxAreaR > 3000 and maxAreaR < 6000:
                         write(straightConst)
@@ -830,7 +833,7 @@ if __name__ == '__main__':
         elif not parkingR and not parkingL:
             LED1(0, 0, 0)
             
-        if ((tArea > 1000 and turnDir == "left") or (tArea > 1750 and turnDir == "right")) and not lTurn and not rTurn:
+        if ((tArea > 1000 and turnDir == "left") or (tArea > 1250 and turnDir == "right")) and not lTurn and not rTurn:
             if cPillar.area > 5000: #4000
                 angle = straightConst
             else:
