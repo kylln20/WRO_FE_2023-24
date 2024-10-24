@@ -2,6 +2,7 @@ import cv2 as cv
 from picamera2 import Picamera2
 import sys
 from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack
+import numpy as np
 
 # Max value for LAB components
 max_value = 255
@@ -116,15 +117,31 @@ while True:
     # Convert from BGR to LAB
     frame_LAB = cv.cvtColor(frame, cv.COLOR_BGR2Lab)
     
-    #frame_LAB = cv.GaussianBlur(frame_LAB, (7, 7), 0)
+    #frame_LAB = cv.bilateralFilter(frame_LAB, d=3, sigmaColor=50, sigmaSpace=50)
+    frame_LAB = cv.GaussianBlur(frame_LAB, (7, 7), 0)
 
     # Apply threshold using the LAB range (A and B are shifted)
     frame_threshold = cv.inRange(frame_LAB, (low_L, low_A, low_B), (high_L, high_A, high_B))
+    
+    
 
+    kernel = np.ones((5, 5), np.uint8)
+        
+    e_frame = cv.erode(frame_threshold, kernel, iterations=1)
+    d_frame = cv.dilate(e_frame, kernel, iterations=1)
+    
+    contours = cv.findContours(d_frame, cv.RETR_EXTERNAL,
+        cv.CHAIN_APPROX_SIMPLE)[-2]
+    
+    cv.drawContours(frame, contours, -1, (238, 144, 144), 2)
+    
     ## [show]
     cv.imshow(window_capture_name, frame)
-    cv.imshow(window_detection_name, frame_threshold)
+    cv.imshow(window_detection_name, d_frame)
     ## [show]
+    
+    
+    
 
     # Exit on 'q' or ESC
     key = cv.waitKey(30)
