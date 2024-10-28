@@ -1,5 +1,6 @@
 import pygame
 import random
+import sys
 pygame.init()
 pygame.font.init()
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
@@ -176,8 +177,8 @@ class Section():
             self.pRects[4].center = t, x
             self.pRects[5].center = b, x
 
-rect2.center = width/2, width/2
-rect3.center = width/2, width/2
+rect2.center = width//2, width//2
+rect3.center = width//2, width//2
 # Main loop
 sections = [Section(1), Section(2), Section(3), Section(4)]
 
@@ -186,6 +187,10 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                running = False
+                break
 
     screen.fill((0, 0, 0))  # Fill the screen with white
 
@@ -217,3 +222,4 @@ while running:
     pygame.display.flip()
 
 pygame.quit()
+sys.exit()
