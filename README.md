@@ -87,7 +87,7 @@ Team Members
 🚗 Mobility Management 🚗
 ---
 #### Chassis
-We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length), as opposed to the 1/18 scale car (26.5 cm in length) from the previous year. This is to accommodate the addition of the magenta parking lot in the obstacle challenge, and it allows us to simply park head-on, which is a more efficient procedure compared to parallel parking. 
+We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on.
 
 #### Design 
 Our car consists of the chassis of the `Carisma GT24` with 3D-printed components placed on top to hold extra electronic components
@@ -107,19 +107,14 @@ Our car consists of the chassis of the `Carisma GT24` with 3D-printed components
     - Cable ladder organizer on the right side
     - Hook on the left to hold the power cable in place
 7. **Servo Attachment**: attaches to the servo motor and controls steering
-
-Although we have support to stabilize the camera structure, we found that the camera still shakes slightly during test runs. 
-
-Although this does not greatly impede the camera's performance, a more stable one-piece mount for the camera may be beneficial to increase the durability and simplicity of the car. 
-
+   
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration.
 
-The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. The motor is mounted on a sturdy aluminum mount instead of the standard plastic mount, increasing durability and passive cooling. 
+The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. It receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`.
 
-To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a metal gear servo motor. The servo motor that originally came with the RC chassis had a weaker plastic gear and a five-wire connection. We replaced it with a new servo with a three-wire connection (signal, voltage, ground), which we can control and power directly from a motor port on the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo. However, it is to be noted that the 3D printed piece is not perfectly secured to the axis and will, on the rare occasion, pop out.
+To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
 
-The `Furitek Micro Komodo Brushless Motor` receives power and signal from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`, which comes with the brushless motor. Similarly to the servo, the signals used are PWM (pulse-width modulation) signals from the Pi HAT's motor ports. 
 &nbsp;
 
 ⚡ Sense and Power Management ⚡
