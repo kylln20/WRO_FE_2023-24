@@ -37,8 +37,8 @@ Team Members
     *  `Design`
     *  `Motors`
   * `Power and Sense Management`
-    *  `Sensors`
     *  `Power and Wiring`
+    *  `Sensors`
   * `Schematic`
     
 * ### Software
@@ -86,12 +86,29 @@ Team Members
 
 🚗 Mobility Management 🚗
 ---
+### Key Considerations
+- Servo motor for steering
+- DC motor for driving
+- Head-in parking
+- Compatibility with original chassis
+
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on.
 
-#### Design 
-Our car consists of the chassis of the `Carisma GT24` with 3D-printed components placed on top to hold extra electronic components
+It also enables a four wheel drive system, with pre-integrated gearboxes.
 
+#### Motors
+Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
+
+The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. Regardless, it is still very powerful and allows us to reach high speeds without maxing out the motor. It fits convinently in the place of the original motor, with a metal gear head that connects to the rest of the drive system.
+
+It receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. A constant regulation ensures we are able to maintain a constant pace, along with smooth acceleration and decceleration.
+
+To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
+
+These components all replace the original parts that came with the chassis. They fufill the same tasks, but are much higher quality and are compatible with our software.
+
+#### Design 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled2.jpg" height="300px">
 
 1. **Base Nut Front / Back**: used to secure the 3D-printed base onto the chassis
@@ -107,42 +124,28 @@ Our car consists of the chassis of the `Carisma GT24` with 3D-printed components
     - Cable ladder organizer on the right side
     - Hook on the left to hold the power cable in place
 7. **Servo Attachment**: attaches to the servo motor and controls steering
-   
-#### Motors
-Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration.
-
-The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. It receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`.
-
-To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
 
 &nbsp;
 
 ⚡ Sense and Power Management ⚡
 ---
-#### Sensors
-We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Based on said pixel data, we can identify those objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
-&nbsp;
-
-Our camera is sensitive to different lighting conditions meaning colors may look different in different scenarios. This could have been improved by changing camera settings or attaching a lamp to the car to make sure the lighting conditions are always consistent. 
 
 #### Power and Wiring
-Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. 
+Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
 
-Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
+The wires of the battery are connected via sautering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
-The wires of the battery are connected to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
-The battery wires, Raspberry Pi, ESC, and switch are all soldered together, making the wiring very durable. 
+#### Sensors
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. The wide field of vision helps us detect more of the game field, especially near the front of the car.
 
-The wiring is placed underneath the car base. The switch is secured near the back of the car with a zip tie, the battery cable comes out of the right, the Raspberry Pi Power Adapter comes out from the left, and the ESC is placed in the center. 
+Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 
-One area that could be improved about our wiring is the switch. 
+#### Improvements
+Our camera is sensitive to different lighting conditions meaning colors may look different in different scenarios. This could have been improved by changing camera settings or attaching a lamp to the car to make sure the lighting conditions are always consistent. 
 
 Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimeters. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
-
-🔌 Schematic 🔌
----
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
 &nbsp;
 
@@ -182,7 +185,9 @@ To stay centered when driving straight, we use a proportional derivitave (PD) al
 
 The resulting calculation is:
 > angle = int(straightConst + error * cKp + (error - prevError) * cKd)
-<br/><br/>
+
+&nbsp;
+
 ### Signal Pillar Detection/Management <sub> (Obstacle Challenge) </sub>
 
 In the Obstacle Challenge, if a signal pillar is detected, the program will switch from calculating the angle based on the walls to the signal pillar instead. 
@@ -204,7 +209,8 @@ Additionally, we change the control variables to be weaker when 2 or more pillar
 While we detect a pillar, if the area of the left or right walls becomes too large, we deselect the current pillar so the wall areas determine the angle instead. This allows the car to turn towards the middle and avoid hitting the wall
 
 After twelve turns, once the car has completed three laps and is searching for the parking lot, the target x-coordinate is such that the car drives toward the outside of the red and green pillars.
-<br/><br/>
+
+&nbsp;
 
 ### Turning <sub> (Open Challenge) </sub>
 The car turns when one side of the camera shows a wall, and the other doesn't. In the camera feed, the area of one wall contour will be significantly less than the area of the other wall contour. The turning programs ends once both contours become similar again.
@@ -212,7 +218,8 @@ The car turns when one side of the camera shows a wall, and the other doesn't. I
 During a turn, we set the servo to a default turning angle of 25 degrees. However, if the angle calculated through the difference of wall areas is greater than 25 degrees, the car will use this angle instead of the default 25 degrees. This ensures we don’t hit the wall during tighter turns. 
 
 Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using binary thresholding, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
-<br/><br/>
+
+&nbsp;
 
 ### Turning <sub> (Obstacle Challenge) </sub>
 Unlike the open challenge, in the obstacle challenge, we can't detect turns by the areas of walls due to the need to avoid pillars. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area to ensure we are at a corner. 
@@ -223,8 +230,8 @@ If it detects a signal pillar, the turn ends immediately, and the angle calculat
 
 If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle based on the color of the pillar (left if red, right if green) even if we still detect the pillar. If the pillar's area becomes too large while turning, the car turned too early and is on course to hit. In this case, we straighten the car's turning angle until the area is lower than a certain threshold to avoid collision. As we don't want this region of interest to interfere with our regular driving algorithms, the region of interest is only present when a turn is ended by seeing a pillar and is hidden once it passes the pillar and the region of interest no longer detects the wall in front. This approach makes the car turn earlier making the turns around pillars much more consistent, allowing our car to control better at faster speeds. 
 
+&nbsp;
 
-<br/><br/>
 ### Parking Lot Detection/Management <sub> (Obstacle Challenge) </sub>
 
 The parking walls are found with magenta colour masks and by searching in three regions of interest that when combined cover the vertical middle of the captured image, again with binary thresholding. This starts after twelve turns. If it is the case that after thirteen turns, the magenta parking lot isn’t detected, then parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate.
@@ -234,7 +241,9 @@ The parking walls are found with magenta colour masks and by searching in three 
 Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
 
 The car stops once the area of the wall detected in the middle is large enough, using the same ROI that detects the orange/blue lines.
-<br/><br/>
+
+&nbsp;
+
 ### Three-Point Turn <sub> (Obstacle Challenge) </sub>
 
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done by checking whether there was a pillar directly in front of the car and the area of the pillar detected during the 8th turn. 
@@ -247,6 +256,7 @@ If we know there was no pillar directly in front of the car. We know that if the
 
 If no pillar is detected during the 8th turn, we just use the last pillar we had detected to determine whether to do a three-point turn. 
 
+```py
 if turn is ended by seeing the wall: 
      if last pillar seen is red: 
           perform three point turn
@@ -257,6 +267,7 @@ if turn is ended by seeing the pillar:
                  perform turn
      if there was no pillar directly in front and current pillar is red: 
           perform turn
+```
 
 This approach to determining the need to perform a three-point turn proved much more consistent than our last approach, which relied heavily on specific wall area and pillar area thresholds vulnerable to lighting and color. 
 
@@ -272,4 +283,62 @@ One possible improvement that could be made is the placement of our regions of i
 
 This causes the car to control slightly differently when the car is running clockwise or counter-clockwise. The car could be made a lot more consistent in the open challenge and obstacle challenge with better adjustment of our regions of interest tailored to the view of the camera. 
 
-<br/><br/>
+&nbsp;
+
+🔨 Complete Assembly Instructions 🔨
+===
+
+1. Strip the `Carisma GT24` chassis.
+   - The car itself comes with a realistic car cover. This is purely cosmetic, and can be removed, as well as the mounts supporting it.
+   - The electrical components are housed within the center of the chassis. They can be accessed by unscrewing another plastic cover
+     
+2. Removing unnecessary parts
+   - Take out the DC motor, servo motor, ESC and RC module. The first three will be replaced by better components.
+   - This will require unscrewing as well as ripping parts off of the adhesive
+   - Note that some rear portions of the car will need to the disassembled temporarily to access some screws
+
+3. Install the new parts
+   - The `Furitek Micro Komodo Brushless Motor` fits in the original compartment
+   - The gear head may need to be replaced. Judge this based on how well it meshes with the drive system gears
+   - The `Hitec HS-5055MG Servo Motor` needs it's wings clipped before installing
+   - More space for the ESC and other wires can be created by removing the battery compartment. This will require some knife skills
+
+4. Wiring
+   - Ensure everything is wired properly, according the the schematic above.
+   - Here, you can also splice your switch into your battery wires
+   - Although they haven't been installed yet, you can test the connection to the Raspberry Pi and the battery
+
+5. 3D Printed Parts
+   - Print a base and a camera holder. Our designs can be found in this repository.
+   - Note that our base was designed to fit smoothly ontop of the chassis
+   - These new parts provide housing for the camera, Raspberry Pi, Raspberry Pi Fan, and battery.
+   - The Raspberry Pi HAT fits nicely on top of the Raspberry Pi, secured and connected through the GPI0 pins
+
+6. Wiring
+   - Double check your wiring
+
+7. Power on
+   - Switches can be found on the Raspberry PI and in your self-added switch
+   - For the purposes of this competition, we rely on our own switch to control the whole system
+
+8. Configuration
+   - Download the (Raspberry Pi Imager)[https://www.raspberrypi.com/software/]
+   - With the imager, prepare your MicroSD card and copy the TurboPi OS. Then, insert the card back into the Pi
+   - Find the IP address of your Pi. We use the (Advanced IP Scanner)[https://www.advanced-ip-scanner.com]
+   - Remotely configure your Pi from here. This step can be pretty complicated. We reccomend finding a tutorial
+
+   - We use Thonny, a pre-installed compiler on the Raspberry Pi
+  
+   - For the purposes of this competition, you also need to auto-run your program
+   - Open command prompt and run `sudo nano /etc/rc.local`
+   - Add the line `sudo bash -c 'sudo python3 /home/pi/<<directory>>/<<filename.py>>' &`, before the line `exit 0`
+   - Save and reboot
+     
+9. Congraulations! You've built our robot!
+    - You can try using our `src` files directly to run our program
+    - Any other information can be found on this repository
+    - Thanks for reading!
+
+&nbsp;
+   
+     
