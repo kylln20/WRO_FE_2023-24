@@ -93,20 +93,20 @@ Team Members
 - Compatibility with original chassis
 
 #### Chassis
-We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on.
+We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
 
-It also enables a four wheel drive system, with pre-integrated gearboxes.
+The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. **add stuff here**
 
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
 
-The `Furitek Micro Komodo` is also very small compared to other RC car motors, making it fit well with our small chassis. Regardless, it is still very powerful and allows us to reach high speeds without maxing out the motor. It fits convinently in the place of the original motor, with a metal gear head that connects to the rest of the drive system.
+The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, it is still very powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
 
-It receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. A constant regulation ensures we are able to maintain a constant pace, along with smooth acceleration and decceleration.
+The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. A constant regulation ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
 
 To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
 
-These components all replace the original parts that came with the chassis. They fufill the same tasks, but are much higher quality and are compatible with our software.
+These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
 
 #### Design 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled2.jpg" height="300px">
@@ -138,20 +138,20 @@ The wires of the battery are connected via sautering to the circuits of the Rasp
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
 #### Sensors
-We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. The wide field of vision helps us detect more of the game field, especially near the front of the car.
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. Overall, the greater amount of information allows the program to more accurately plan the car's movements.
 
 Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 
-#### Improvements
-Our camera is sensitive to different lighting conditions meaning colors may look different in different scenarios. This could have been improved by changing camera settings or attaching a lamp to the car to make sure the lighting conditions are always consistent. 
+For the Canadian National WRO Future Engineers competition, the sensitivity of the camera to different lighting conditions made it difficult to have consistently running code that was unaffected by the environment and the direction the car was travelling. Improvements we considered were changing the camera settings, or attaching a lamp to the car so that we could ensure consistent lighting. However, a solution was instead found by processing the colours using a different system (detailed in the Software section).
 
-Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimeters. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
+#### Improvements
+Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimetres. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
 
 &nbsp;
 
 💻 Software 💻
 ===
-We use a `Raspberry Pi 4 Board` as our single board computer (SBC). It is connected to the HAT, from which it takes and processes sensor input to return turning-angle and speed values back to the HAT, which then get sent to the servo and DC motors respectively. 
+We use a `Raspberry Pi 4 Board` as our single board computer (SBC). It is connected to the HAT, from which it takes and processes sensor input to return turning-angle and speed values back to the HAT, which then gets sent to the servo and DC motors respectively. 
 
 The program running on the Raspberry Pi is written in Python.     
 
