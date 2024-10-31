@@ -95,6 +95,8 @@ Team Members
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
 
+Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that allows a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. 
+
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. **add stuff here**
 
 #### Motors
