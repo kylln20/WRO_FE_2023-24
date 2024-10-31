@@ -164,9 +164,22 @@ Object Management
 
 ### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
-The camera captures an image which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to HSV (hue, saturation, value). Then, binary thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of HSV values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
+The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to LAB (Lightness, green-red, blue-yellow). We started with the data format of HSV (hue, saturation, value), but later decided to switch to the LAB color space as the two separate values for color allowed for finer control, making it easier to find the correct values for each color. 
 
-The bounded white areas can then be extracted as a list of contours within a specified region of interest. By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. The target objects may be the signal pillars, the coloured lines on the game mat, the magenta parking lot, or even the black walls around the track.
+Then, we perform a Gaussian blur on the image using the OpenCV library GaussianBlur() function. This smooths any edges in the image and removes small noise, making the overall shape of the pillar easier to detect. 
+
+Then, LAB thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of LAB values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
+
+Following the creation of a mask, we perform two other operations on it: 
+
+- Erosion (.erode()): this morphological operation finds and removes areas of noise in the binary image
+- Dilation (.dilate()): this morphological operation fills in any gaps in bright areas in the binary image
+
+These operations ensure only pillars are detected and their shape is accurate. 
+
+The bounded white areas can then be extracted as a list of contours within a specified region of interest.
+
+By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. The target objects may be the signal pillars, the coloured lines on the game mat, the magenta parking lot, or even the black walls around the track.
 
 [^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTester.py code.
 
