@@ -95,7 +95,7 @@ Team Members
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
 
-Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that allows a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. 
+Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that allows a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. 
 
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. **add stuff here**
 
@@ -135,7 +135,7 @@ These components all replace the original parts that came with the chassis. They
 #### Power and Wiring
 Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
 
-The wires of the battery are connected via sautering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
+The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
@@ -145,6 +145,8 @@ We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via 
 Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 
 For the Canadian National WRO Future Engineers competition, the sensitivity of the camera to different lighting conditions made it difficult to have consistently running code that was unaffected by the environment and the direction the car was travelling. Improvements we considered were changing the camera settings, or attaching a lamp to the car so that we could ensure consistent lighting. However, a solution was instead found by processing the colours using a different system (detailed in the Software section).
+
+Although this system is sufficient for our needs, object detection can be further improved by using a higher-quality camera that can more easily distinguish between colors.
 
 #### Improvements
 Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimetres. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
@@ -168,14 +170,22 @@ Object Management
 
 The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to LAB (Lightness, green-red, blue-yellow). We started with the data format of HSV (hue, saturation, value), but later decided to switch to the LAB color space as the two separate values for color allowed for finer control, making it easier to find the correct values for each color. 
 
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/base.PNG" height="300px">
+
 Then, we perform a Gaussian blur on the image using the OpenCV library GaussianBlur() function. This smooths any edges in the image and removes small noise, making the overall shape of the pillar easier to detect. 
 
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Gaussian_Blur.PNG" height="300px">
+
 Then, LAB thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of LAB values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Threshold.PNG" height="300px">
 
 Following the creation of a mask, we perform two other operations on it: 
 
 - Erosion (.erode()): this morphological operation finds and removes areas of noise in the binary image
 - Dilation (.dilate()): this morphological operation fills in any gaps in bright areas in the binary image
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Dilation.PNG" height="300px">
 
 These operations ensure only pillars are detected and their shape is accurate. 
 
