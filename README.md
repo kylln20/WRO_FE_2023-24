@@ -110,15 +110,14 @@ To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wi
 
 These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
 
-#### Design 
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled.jpg" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled2.jpg" height="300px">
+#### Overview of Design 
+
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled3.jpg" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled4.jpg" height="300px">
 
 1. **Base Nut Front / Back**: used to secure the 3D-printed base onto the chassis
 2. **Cable Barrier**: is attached to the chassis to prevent cables from interfering with tires
-3. **Camera Extension**: a piece attaching to the car’s base to give the camera extra height and tilt
 4. **Camera Mount**: the piece the camera is attached to, adds height and tilt
-5. **Camera Support**: used to help stabilize the overall camera structure
-6. **Car Base**: the main platform of the car, is attached to the chassis through 4 posts, components of the base includes:
+6. **Car Base**: the main platform of the car, is attached to the chassis through 4 posts, components of the base include:
     - Holder for Raspberry Pi
     - Holder for cooling fan 
     - Holder for battery
@@ -126,6 +125,12 @@ These components all replace the original parts that came with the chassis. They
     - Cable ladder organizer on the right side
     - Hook on the left to hold the power cable in place
 7. **Servo Attachment**: attaches to the servo motor and controls steering
+
+The design of the camera mount changed from our national competition with it becoming one singular piece mounted directly on the printed car base. 
+
+It used to consist of 3 pieces, mounted to thin plastic posts on the chassis. 
+
+This redesign allowed for a much more sturdy camera mount ensuring the camera is stable during object detection. 
 
 &nbsp;
 
