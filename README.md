@@ -104,8 +104,6 @@ This is a video example of a modification done to a similar chassis:
 
 [K989 Modification](https://www.youtube.com/watch?v=JmsCxSgEJnU)
 
-
-
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
 
@@ -114,6 +112,8 @@ The `Furitek Micro Komodo Brushless Motor` is also very small compared to other 
 The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. A constant regulation ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
 
 To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
+
+**add more detail about servo considerations** 
 
 These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
 
@@ -155,6 +155,9 @@ Our switch is large and along with the fact that the wires connecting to the swi
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
 #### Sensors
+
+For our sensors, we only use one camera to navigate both challenges, this helps to keep our power consumption as low as possible, keep our car and software design as simple as possible, and avoid more possible failure points. 
+
 We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. Overall, the greater amount of information allows the program to more accurately plan the car's movements.
 
 Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
@@ -207,6 +210,10 @@ These operations ensure only pillars are detected and their shape is accurate.
 The bounded white areas can then be extracted as a list of contours within a specified region of interest.
 
 By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track.
+
+#### Improvements
+
+This algorithm is not perfect and the contour will not be perfectly aligned with the shape of the pillar, but it is sufficient for our needs. The accuracy of the object detection algorithm could hypothetically be improved with the use of even more morphological operations performed over more iterations. We tried to implement a bilateral filtering algorithm (.bilateralFilter()) to better retain the edges of the pillars, but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance, or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
 
 [^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTesterLAB.py code.
 
