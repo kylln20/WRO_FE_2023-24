@@ -95,9 +95,16 @@ Team Members
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
 
-Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that allows a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. 
-
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. **add stuff here**
+
+##### Possible Chassis Improvement
+Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that will enable a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that it is possible to modify the original chassis to have a much greater turning angle, but we decided against modifying it any further due to time constraints. 
+
+This is a video example of a modification done to a similar chassis: 
+
+[K989 Modification](https://www.youtube.com/watch?v=JmsCxSgEJnU)
+
+
 
 #### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
