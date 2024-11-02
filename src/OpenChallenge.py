@@ -9,75 +9,8 @@ import numpy as np
 import threading
 import HiwonderSDK.Board as Board
 import time
-
-#function used to send signals to arduino to control speeds of the dc motor and the angle of the servo motor
-def write(motor, value):
-    
-    if(motor == "servo"):
-        pulseWidth = int(11.1*value+500)
-        Board.setPWMServoPulse(1, pulseWidth, 1)
-    
-    elif(motor == "dc"):
-        Board.setPWMServoPulse(5, value, 100)
-        #print("no motor")
-        
-#for activating buzzer
-def buzz():
-    Board.setBuzzer(1)
-    time.sleep(0.5)
-    Board.setBuzzer(0)
-
-#controls LED1
-def LED1(r, g, b):
-    Board.RGB.setPixelColor(0, Board.PixelColor(r, g, b))
-    Board.RGB.show()
-
-#controls LED2
-def LED2(r, g, b):
-    Board.RGB.setPixelColor(1, Board.PixelColor(r, g, b))
-    Board.RGB.show()
-        
-        
-#function to bring the car to a stop
-def stopCar():
-    write("servo", 87)
-    write("dc", 1500)
-    
-    LED1(0, 0, 0)
-    LED2(0, 0, 0)
-
-#function which displays the regions of interest on the image
-def displayROI(color):
-    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[2], ROI1[1]), color, 4)
-    image = cv2.line(img, (ROI1[0], ROI1[1]), (ROI1[0], ROI1[3]), color, 4)
-    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[2], ROI1[1]), color, 4)
-    image = cv2.line(img, (ROI1[2], ROI1[3]), (ROI1[0], ROI1[3]), color, 4)
-    
-    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[2], ROI2[1]), color, 4)
-    image = cv2.line(img, (ROI2[0], ROI2[1]), (ROI2[0], ROI2[3]), color, 4)
-    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[2], ROI2[1]), color, 4)
-    image = cv2.line(img, (ROI2[2], ROI2[3]), (ROI2[0], ROI2[3]), color, 4)
-
-    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[2], ROI3[1]), color, 4)
-    image = cv2.line(img, (ROI3[0], ROI3[1]), (ROI3[0], ROI3[3]), color, 4)
-    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[2], ROI3[1]), color, 4)
-    image = cv2.line(img, (ROI3[2], ROI3[3]), (ROI3[0], ROI3[3]), color, 4)
-
-#takes in a dictionary of values to print for debugging
-def display_variables(variables): 
-
-    names = list(variables.keys())
-
-    for i in range(len(names)):
-        name = names[i]
-        value = variables[name]
-        # Print each item on a new line
-        print(f"{name}: {value}", end="\r\n")
-    
-    # Move the cursor up to overwrite the previous lines
-    print("\033[F" * len(names), end="")
-    
-    #time.sleep(0.1)
+from functions import *
+from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack, lotType
     
 if __name__ == '__main__':
     
@@ -95,7 +28,7 @@ if __name__ == '__main__':
     #lists storing coordinates for the regions of interest to find contours of the lanes and the orange line 
     # order: x1, y1, x2, y2
     ROI1 = [20, 170, 240, 220]
-    ROI2 = [400, 170, 620, 220] # 380, 600
+    ROI2 = [400, 170, 620, 220] # 380, 600 | 400, 620
     ROI3 = [200, 300, 440, 350]
 
     #booleans for tracking whether car is in a left or right turn
@@ -122,12 +55,12 @@ if __name__ == '__main__':
     maxRight = straightConst - 50
     maxLeft = straightConst + 50
     
-    speed = 1650 #variable for the speed of the car, 1660
+    speed = 1665 #variable for the speed of the car, 1660
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
     
-    write("dc", 1500)
+    write(1500)
     LED1(255, 0, 0)
 
     sleep(8) #delay 8 seconds for the servo to be ready
@@ -158,15 +91,8 @@ if __name__ == '__main__':
     LED1(0, 0, 0)
     LED2(0, 0, 255)
     
-    #write initial values to car
-    write("servo", angle)
-    time.sleep(0.5)
-    write("dc", 1670)
-    time.sleep(0.1)
-    write("dc",speed) 
-
-    
-    
+    #write intial values to car
+    multi_write([angle, 0.5, 1670, 0.1, speed])
 
     #main loop
     while True:
@@ -179,75 +105,19 @@ if __name__ == '__main__':
         #get an image from pi camera
         img = picam2.capture_array()
         
-        # convert from BGR to HSV
-        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        cListLeft = find_contours(img, rBlack, ROI1)
+        cListRight = find_contours(img, rBlack, ROI2)
+        cListOrange = find_contours(img, rOrange, ROI3)
         
-        # black mask
-        lower_black = np.array([0, 0, 0])
-        upper_black = np.array([180, 255, 75])
+        leftArea = max_contour(cListLeft, ROI1)[0]
+        rightArea = max_contour(cListRight, ROI2)[0]
         
-        imgThresh = cv2.inRange(img_hsv, lower_black, upper_black)
+        if max_contour(cListOrange, ROI3)[0] > 100: 
+            lDetected = True
         
-        # orange mask
-        lower_orange = np.array([0, 100, 175])
-        upper_orange = np.array([25, 255, 255])
-        
-        # second orange mask
-        lo2 = np.array([170, 100, 175])
-        ho2 = np.array([180, 255, 255])
-        
-        #rOrange = [[0, 100, 175], [25, 255, 255]]
-
-        o_mask = cv2.inRange(img_hsv, lower_orange, upper_orange)
-        o_mask_2 = cv2.inRange(img_hsv, lo2, ho2)
-        
-        o_mask = cv2.bitwise_or(o_mask, o_mask_2)
-
-        #find contours to detect orange line
-        contours_orange = cv2.findContours(o_mask[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE)[-2]
-        
-        #find left and right contours of the lanes
-        contours_left, hierarchy = cv2.findContours(imgThresh[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], 
-        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    
-        contours_right, hierarchy = cv2.findContours(imgThresh[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], 
-        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-      
-        #find all contours in image for debugging
-        contours, hierarchy = cv2.findContours(imgThresh, 
-        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        
-        #iterate through every contour in both the left and right region of interest and take the largest one in each
-        for cnt in contours_left:
-            area = cv2.contourArea(cnt)
-            
-            leftArea = max(area, leftArea) 
-
-        for cnt in contours_right:
-            area = cv2.contourArea(cnt)
-
-            rightArea = max(area, rightArea)
-            
-        #print(leftArea, rightArea)
-
-        #iterate through the contours in the centre region of interest to find the orange line
-        for i in range(len(contours_orange)):
-            cnt = contours_orange[i]
-            area = cv2.contourArea(cnt)
-            
-            #if contour is detected set lDetected to true
-            if area > 100:
-                lDetected = True
-                
         #draw all contours in full image
-        for i in range(len(contours)):
-            cnt = contours[i]
-            area = cv2.contourArea(cnt)
             
-            cv2.drawContours(img, contours, i, (0, 255, 0), 2)
-            approx=cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt,True),True)
-            x,y,w,h=cv2.boundingRect(approx)
+        cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cListOrange, -1, (0, 255, 0), 2)
         
         #calculate difference of areas between the areas of the lanes
         aDiff = rightArea - leftArea
@@ -266,8 +136,6 @@ if __name__ == '__main__':
             rTurn = True
             LED1(255, 0, 0)
 
-        
-
         #if angle is different from previous angle
         if angle != prevAngle:
             #if car is in a left or right turn
@@ -279,24 +147,20 @@ if __name__ == '__main__':
                   lTurn = False 
                   rTurn = False
                   
-
                   LED1(0, 255, 0)
 
                   #reset prevDiff
                   prevDiff = 0 
                   
-                  
                   #increase number of turns by 1 only if the orange line has been detected 
                   if lDetected: 
                       t += 1
-                      
 
                       if t == 4:
                           LED2(255, 255, 0)
                       elif t == 8:
                           LED2(255, 255, 255)
                         
-                      
                       lDetected = False
 
               #if car is still in a left turn set the angle to the maximum of angle and sharpLeft
@@ -308,11 +172,11 @@ if __name__ == '__main__':
 
               #write angle to arduino to change servo
               
-              write("servo", angle)
+              write(angle)
               time.sleep(0.01)
             #if not in a turn write the angle and if the angle is over sharpLeft or sharpRight values it will be rounded down to those values
             else:
-                write("servo", max(min(angle, sharpLeft), sharpRight))
+                write(max(min(angle, sharpLeft), sharpRight))
                 time.sleep(0.01)
           
         #update previous area difference
@@ -321,19 +185,19 @@ if __name__ == '__main__':
         prevAngle = angle #update previous angle
         
         if t == 12 and abs(angle - straightConst) <= 10:
-            sleep(1.5)
-            stopCar() 
+            sleep(1)
+            stop_car() 
             break
     
         if debug: 
             
             #stop the car and end the program if either q is pressed or the car has done 3 laps (12 turns) and is mostly straight (within 15 degrees)
             if cv2.waitKey(1)==ord('q'):
-                stopCar() 
+                stop_car() 
                 break
           
             #display regions of interest
-            displayROI((255, 204, 0))
+            img = display_roi(img, [ROI1, ROI2, ROI3], (255, 204, 0))
 
             #show image
             cv2.imshow("finalColor", img)
@@ -345,7 +209,8 @@ if __name__ == '__main__':
                 "right wall area": rightArea,
                 "left turn": lTurn,
                 "right turn": rTurn,
-                "# turns": t
+                "# turns": t,
+                "lDetected": lDetected
 
             }
 
