@@ -58,7 +58,7 @@ def find_pillar(contours, target, p):
             
             #print(x, area)
                 #if the pillar is too close, stop the car and reverse to give it enough space
-            if ((area > 6500 and target == redTarget) or (area > 9000 and target == greenTarget)) and ((x <= 440 and target == greenTarget) or (x >= 200 and target == redTarget)) and not tempParking and speed != 1500: #420, 220, 370, 270, 6500
+            if ((area > 6500 and target == redTarget) or (area > 8000 and target == greenTarget)) and ((x <= 460 and target == greenTarget) or (x >= 180 and target == redTarget)) and not tempParking and speed != 1500: #420, 220, 370, 270, 6500
                 LED2(255, 255, 0)
                 
                 #move back 
@@ -290,7 +290,8 @@ if __name__ == '__main__':
     time.sleep(0.5)
     multi_write([angle, 0.5, speed, 0.1, speed])
     
-    startArea = 0 
+    startArea = 0
+    startTarget = 0
 
 # ------------------------------------------------------------{ main loop }-------------------------------------------------------------------------
     while True:
@@ -311,40 +312,49 @@ if __name__ == '__main__':
 
         #get an image from pi camera
         img = picam2.capture_array()
+        
+        # convert from BGR to HSV
+        img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+        
+        img_lab = cv2.GaussianBlur(img_lab, (7, 7), 0)
 
         #get contours of left and right walls
         if tempParking:
-            contours_left = pOverlap(img, ROI1)
-            contours_right = pOverlap(img, ROI2)
+            contours_left = pOverlap(img_lab, ROI1)
+            contours_right = pOverlap(img_lab, ROI2)
         else:
-            contours_left = pOverlap(img, ROI1, True)
-            contours_right = pOverlap(img, ROI2, True)
-
+            contours_left = pOverlap(img_lab, ROI1, True)
+            contours_right = pOverlap(img_lab, ROI2, True)
         
+        if not tempParking:
+            pRight = find_contours(img_lab, rMagenta, ROI2)
+            rPArea = max_contour(pRight, ROI2)[0]
         if ROI5[0] != 0: 
-            contours_turn = find_contours(img, rBlack, ROI5)
-            contours_turn_m = find_contours(img, rMagenta, ROI5)
+            contours_turn = find_contours(img_lab, rBlack, ROI5)
+            contours_turn_m = find_contours(img_lab, rMagenta, ROI5)
             tArea = max_contour(contours_turn, ROI5)[0] + max_contour(contours_turn_m, ROI5)[0]
         
-        contours_parking = find_contours(img, rBlack, ROI4)
+        contours_parking = find_contours(img_lab, rBlack, ROI4)
 
         #iterate through every contour in both the left and right region of interest and take the largest one in each
         left_region = max_contour(contours_left, ROI1)
         right_region = max_contour(contours_right, ROI2)
         
         leftArea = left_region[0]
+        lWallX = left_region[1]
         lWallY = left_region[2]
         
         rightArea = right_region[0]
+        rWallX = right_region[1]
         rWallY = right_region[2]
         
         areaFront = max_contour(contours_parking, ROI4)[0]
         
         #find contours 
-        contours_red = find_contours(img, rRed, ROI3)
-        contours_green = find_contours(img, rGreen, ROI3)
-        contours_blue = find_contours(img, rBlue, ROI4)
-        contours_orange = find_contours(img, rOrange, ROI4)
+        contours_red = find_contours(img_lab, rRed, ROI3)
+        contours_green = find_contours(img_lab, rGreen, ROI3)
+        contours_blue = find_contours(img_lab, rBlue, ROI4)
+        contours_orange = find_contours(img_lab, rOrange, ROI4)
         
 # ------------------------------------------------------------{ processing contours }-------------------------------------------------------------------------
         
@@ -360,7 +370,9 @@ if __name__ == '__main__':
         cPillar, num_pillars_r = find_pillar(contours_red, redTarget, cPillar)
             
         if t == 0:
-            startArea = max(startArea, cPillar.area)
+            if cPillar.area > startArea:
+                startArea = cPillar.area
+                startTarget = cPillar.target
         '''
         if time.time() - pTimer > 2 and pillarAtStart == -1 and t != 7:
             if cPillar.area != 0:
@@ -428,6 +440,10 @@ if __name__ == '__main__':
             if tempParking:
                 ROI5 = [270, 120, 370, 140]
                 
+            if cPillar.area != 0 and ((leftArea > 5000 and turnDir == "left") or (rightArea > 5000 and turnDir == "right")):
+                if ROI5[0] == 0:
+                    print("ROI5", cPillar.area, leftArea, rightArea)
+                ROI5 = [270, 120, 370, 140]
 
             #set either the right or left turn to true based on turn direction
             if turnDir == "right":
@@ -441,7 +457,8 @@ if __name__ == '__main__':
             '''
             
             if t == 0 and pillarAtStart == -1:
-                if startArea > 3000:
+                print("start area:", startArea)
+                if (startArea > 5000 and startTarget == greenTarget) or (startArea > 2500 and startTarget == redTarget):
                     pillarAtStart = True
                 else:
                     pillarAtStart = False
@@ -459,7 +476,7 @@ if __name__ == '__main__':
         if t == 8 or tempParking:
             
             #find largest magenta contour
-            contours_magenta_c = find_contours(img, rMagenta, ROI4)
+            contours_magenta_c = find_contours(img_lab, rMagenta, ROI4)
             areaFrontMagenta = max_contour(contours_magenta_c, ROI4)[0]
             
             #if area of magenta in front is too large right after the three-point turn, avoid it by turning left
@@ -469,8 +486,8 @@ if __name__ == '__main__':
         if tempParking:
             
             #find magenta contours in left and right regions of interest
-            contours_magenta_l = find_contours(img, rMagenta, ROI1)
-            contours_magenta_r = find_contours(img, rMagenta, ROI2)
+            contours_magenta_l = find_contours(img_lab, rMagenta, ROI1)
+            contours_magenta_r = find_contours(img_lab, rMagenta, ROI2)
 
             leftLot = max_contour(contours_magenta_l, ROI1)
             rightLot = max_contour(contours_magenta_r, ROI2)
@@ -547,8 +564,7 @@ if __name__ == '__main__':
             elif parkingL:
                 
                 #if car is too for left turn back to the right
-                if rightArea > 13000 and maxAreaR > 2000: #15000
-                    pass
+                if rightArea > 12000 and maxAreaR > 2000: #15000
                     multi_write([1640, sharpRight, 1])
                 #readjust by backing up if the parking lot is in front
                 if centerY > 280 and areaFront < 3500:
@@ -639,9 +655,13 @@ if __name__ == '__main__':
                 #add a turn
                 if reverse == False or reverse == "done":
                     eTurnMethod = "pillar"
-                    
-                    ROI5 = [270, 120, 370, 140]
+                    '''
+                    print("ROI5:", cPillar.area, leftArea, rightArea)
+                    if cPillar.area > 1250 and cPillar.target == greenTarget: 
+                        ROI5 = [270, 120, 370, 140]
+                    '''
                     t += 1
+                    
                     
                     #check for three-point turn by checking the last pillar, turn direction, and area 
                     if t == 8:
@@ -717,9 +737,14 @@ if __name__ == '__main__':
             ROI5 = [0, 0, 0, 0]
         '''
         
-        if (cPillar.area == 0 and tArea < 100) or abs(leftArea - rightArea) > 5000 and tArea > 1000 and not tempParking:
+        if ((cPillar.area == 0 and tArea < 100) or (abs(leftArea - rightArea) > 5000 and tArea > 1000)) and not tempParking:
             tArea = 0
             ROI5 = [0, 0, 0, 0]
+            
+        if rPArea > 5000:
+            angle = sharpLeft
+            
+            
         '''    
         if leftArea < 6000 or rightArea < 6000 and tArea < 100 and not tempParking:
             tArea = 0
@@ -760,7 +785,7 @@ if __name__ == '__main__':
             if areaFront > 2000 or areaFrontMagenta > 750:
                 
                 #reverse car
-                delay = 1.5 if areaFront > 2000 else 2
+                delay = 1.25 if areaFront > 2000 else 2
                 multi_write([1500, 0.1, sharpRight, 0.1, reverseSpeed, delay, 1500, 0.1, 1680, 0.1, speed])
                 
                 #change direction and end turn
