@@ -55,7 +55,7 @@ if __name__ == '__main__':
     maxRight = straightConst - 50
     maxLeft = straightConst + 50
     
-    speed = 1665 #variable for the speed of the car, 1660
+    speed = 1665 #variable for the speed of the car, 1665
     
     aDiff = 0 #value storing the difference of area between contours
     prevDiff = 0 #value storing the previous difference of contours for derivative steering
@@ -105,9 +105,14 @@ if __name__ == '__main__':
         #get an image from pi camera
         img = picam2.capture_array()
         
-        cListLeft = find_contours(img, rBlack, ROI1)
-        cListRight = find_contours(img, rBlack, ROI2)
-        cListOrange = find_contours(img, rOrange, ROI3)
+        # convert from BGR to HSV
+        img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+        
+        img_lab = cv2.GaussianBlur(img_lab, (7, 7), 0)
+        
+        cListLeft = find_contours(img_lab, rBlack, ROI1)
+        cListRight = find_contours(img_lab, rBlack, ROI2)
+        cListOrange = find_contours(img_lab, rOrange, ROI3)
         
         leftArea = max_contour(cListLeft, ROI1)[0]
         rightArea = max_contour(cListRight, ROI2)[0]
@@ -118,6 +123,8 @@ if __name__ == '__main__':
         #draw all contours in full image
             
         cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cListOrange, -1, (0, 255, 0), 2)
+        cv2.drawContours(img[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], cListLeft, -1, (0, 255, 0), 2)
+        cv2.drawContours(img[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cListRight, -1, (0, 255, 0), 2)
         
         #calculate difference of areas between the areas of the lanes
         aDiff = rightArea - leftArea
