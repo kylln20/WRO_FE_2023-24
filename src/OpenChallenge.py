@@ -10,7 +10,7 @@ import threading
 import HiwonderSDK.Board as Board
 import time
 from functions import *
-from masks import rMagenta, rRed, rGreen, rBlue, rOrange, rBlack, lotType
+from masks import rOrange, rBlack
     
 if __name__ == '__main__':
     
@@ -68,6 +68,7 @@ if __name__ == '__main__':
     #boolean tracking whether the orange line on the mat is detected
     lDetected = False
     
+    #boolean tracking whether we are in debug mode or not 
     debug = False
     
     #set up button 
@@ -96,8 +97,6 @@ if __name__ == '__main__':
 
     #main loop
     while True:
-        
-        #time.sleep(1)
           
         #declare variables for the areas of the left and right contours
         rightArea, leftArea = 0, 0
@@ -105,23 +104,26 @@ if __name__ == '__main__':
         #get an image from pi camera
         img = picam2.capture_array()
         
-        # convert from BGR to HSV
+        # convert from BGR to LAB
         img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
         
+        #blur image
         img_lab = cv2.GaussianBlur(img_lab, (7, 7), 0)
         
+        #find contours of walls and orange line
         cListLeft = find_contours(img_lab, rBlack, ROI1)
         cListRight = find_contours(img_lab, rBlack, ROI2)
         cListOrange = find_contours(img_lab, rOrange, ROI3)
         
+        #find areas of walls
         leftArea = max_contour(cListLeft, ROI1)[0]
         rightArea = max_contour(cListRight, ROI2)[0]
         
+        #indicate if orange line is detected
         if max_contour(cListOrange, ROI3)[0] > 100: 
             lDetected = True
         
-        #draw all contours in full image
-            
+        #draw contours
         cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cListOrange, -1, (0, 255, 0), 2)
         cv2.drawContours(img[ROI1[1]:ROI1[3], ROI1[0]:ROI1[2]], cListLeft, -1, (0, 255, 0), 2)
         cv2.drawContours(img[ROI2[1]:ROI2[3], ROI2[0]:ROI2[2]], cListRight, -1, (0, 255, 0), 2)
@@ -170,15 +172,14 @@ if __name__ == '__main__':
                         
                       lDetected = False
 
-              #if car is still in a left turn set the angle to the maximum of angle and sharpLeft
+              #set the angle to the default angle for turns if in a turn, 
+              #if the calculated angle is sharper than the default angle and is within the limits of maxLeft and maxRight, use that angle instead
               elif lTurn:
                   angle = min(max(angle, sharpLeft), maxLeft)
-              #if car is still in a right turn set the angle to the minimum of angle and sharpRight
               elif rTurn: 
                   angle = max(min(angle, sharpRight), maxRight)
 
-              #write angle to arduino to change servo
-              
+              #write angle to servo motor
               write(angle)
               time.sleep(0.01)
             #if not in a turn write the angle and if the angle is over sharpLeft or sharpRight values it will be rounded down to those values
@@ -191,11 +192,13 @@ if __name__ == '__main__':
         
         prevAngle = angle #update previous angle
         
+        #stop car once car is straight and 12 turns have been performed
         if t == 12 and abs(angle - straightConst) <= 10:
             sleep(1)
             stop_car() 
             break
-    
+        
+        #debug mode
         if debug: 
             
             #stop the car and end the program if either q is pressed or the car has done 3 laps (12 turns) and is mostly straight (within 15 degrees)
@@ -211,6 +214,7 @@ if __name__ == '__main__':
             
             #cv2.imshow("walls", imgThresh)
             
+            #display variables for debugging
             variables = {
                 "left wall area": leftArea,
                 "right wall area": rightArea,
