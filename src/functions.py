@@ -72,21 +72,18 @@ def stop_car():
     cv2.destroyAllWindows()
 
 #returns contours of a specific hsv range of a specific region of interest
-def find_contours(img, lab_range, ROI):
-    
-    # convert from BGR to HSV
-    img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+def find_contours(img_lab, lab_range, ROI):
     
     img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
     
-    img_blur = cv2.GaussianBlur(img_segmented, (7, 7), 0)
+    #img_blur = cv2.GaussianBlur(img_segmented, (7, 7), 0)
 
     #cv2.imshow("cam", img_lab)
     
     lower_mask = np.array(lab_range[0])
     upper_mask = np.array(lab_range[1])
 
-    mask = cv2.inRange(img_blur, lower_mask, upper_mask)
+    mask = cv2.inRange(img_segmented, lower_mask, upper_mask)
     
     kernel = np.ones((5, 5), np.uint8)
     
@@ -126,10 +123,7 @@ def max_contour(contours, ROI):
 
     return [maxArea, maxX, maxY, mCnt]
 
-def pOverlap(img, ROI, add=False):
-        
-        # convert from BGR to HSV
-        img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+def pOverlap(img_lab, ROI, add=False):
     
         lower_mask = np.array(rBlack[0])
         upper_mask = np.array(rBlack[1])
