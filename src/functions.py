@@ -9,7 +9,6 @@ import numpy as np
 import threading
 import HiwonderSDK.Board as Board
 import time
-
 from masks import rMagenta, rBlack, lotType
 
 # ------------------------------------------------------------{ function declarations }-------------------------------------------------------------------------
@@ -71,25 +70,25 @@ def stop_car():
     
     cv2.destroyAllWindows()
 
-#returns contours of a specific hsv range of a specific region of interest
+#returns contours of a specific LAB range of a specific region of interest
 def find_contours(img_lab, lab_range, ROI):
     
+    #segment image to only be the ROI
     img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
-    
-    #img_blur = cv2.GaussianBlur(img_segmented, (7, 7), 0)
-
-    #cv2.imshow("cam", img_lab)
     
     lower_mask = np.array(lab_range[0])
     upper_mask = np.array(lab_range[1])
 
+    #threshold image
     mask = cv2.inRange(img_segmented, lower_mask, upper_mask)
     
     kernel = np.ones((5, 5), np.uint8)
     
+    #perform erosion and dilation
     eMask = cv2.erode(mask, kernel, iterations=1)
     dMask = cv2.dilate(eMask, kernel, iterations=1)
     
+    #find contours
     contours = cv2.findContours(dMask, cv2.RETR_EXTERNAL,
     cv2.CHAIN_APPROX_SIMPLE)[-2]
     
@@ -115,6 +114,7 @@ def max_contour(contours, ROI):
             x += ROI[0] + w // 2
             y += ROI[1] + h
             
+            #if bigger contour found, update information
             if area > maxArea:
                 maxArea = area
                 maxY = y
@@ -123,30 +123,34 @@ def max_contour(contours, ROI):
 
     return [maxArea, maxX, maxY, mCnt]
 
+#function to remove overlap in black and magenta masks or add them together
 def pOverlap(img_lab, ROI, add=False):
     
         lower_mask = np.array(rBlack[0])
         upper_mask = np.array(rBlack[1])
         
+        #black mask
         mask = cv2.inRange(img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]], lower_mask, upper_mask)
-        #cv2.imshow("o", mask)
+
         lower_mask2 = np.array(rMagenta[0])
         upper_mask2 = np.array(rMagenta[1])
         
+        #magenta mask
         mask2 = cv2.inRange(img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]], lower_mask2, upper_mask2)
         
         if not add: 
+            #remove any overlap from the black masks 
             mask = cv2.subtract(mask, cv2.bitwise_and(mask, mask2))
         else:
+            #add black and magenta to make sure car can avoid hitting parking lots
             mask = cv2.add(mask, mask2)
         
         kernel = np.ones((5, 5), np.uint8)
         
+        #perform erosion
         eMask = cv2.erode(mask, kernel, iterations=1)
-        #cv2.imshow("ko", mask)
         
-        #cv2.imshow("k", mask2)
-        
+        #find contours
         contours = cv2.findContours(eMask, cv2.RETR_EXTERNAL,
         cv2.CHAIN_APPROX_SIMPLE)[-2]
         
@@ -165,5 +169,3 @@ def display_variables(variables):
     
     # Move the cursor up to overwrite the previous lines
     print("\033[F" * len(names), end="")
-    
-    #time.sleep(0.1)
