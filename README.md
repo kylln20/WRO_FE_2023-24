@@ -187,33 +187,68 @@ Object Management
 ### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
 The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to LAB (Lightness, green-red, blue-yellow). We started with the data format of HSV (hue, saturation, value), but later decided to switch to the LAB color space as the two separate values for color allowed for finer control, making it easier to find the correct values for each color. 
-
+```py
+img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/base.PNG" height="300px">
 
 Then, we perform a Gaussian blur on the image using the OpenCV library GaussianBlur() function. This smooths any edges in the image and removes small noise, making the overall shape of the pillar easier to detect. 
-
+```py
+img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
+```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Gaussian_Blur.PNG" height="300px">
 
 Then, LAB thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of LAB values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
+
+```py
+img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
+
+mask = cv2.inRange(img_segmented, lower_mask, upper_mask)
+```
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Threshold.PNG" height="300px">
 
 Following the creation of a mask, we perform two other operations on it: 
 
-- Erosion (.erode()): this morphological operation finds and removes areas of noise in the binary image
-- Dilation (.dilate()): this morphological operation fills in any gaps in bright areas in the binary image
-
+- Erosion: this morphological operation finds and removes areas of noise in the binary image
+```py
+cv2.erode(mask, kernel, iterations=1)
+```
+- Dilation: this morphological operation fills in any gaps in bright areas in the binary image
+```py
+cv2.dilate(mask, kernel, iterations=1)
+```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Dilation.PNG" height="300px">
 
 These operations ensure only pillars are detected and their shape is accurate. 
 
 The bounded white areas can then be extracted as a list of contours within a specified region of interest.
 
-By measuring the size of each contour by using the OpenCV library function contourArea(), we can predict which contour(s) is the target object by checking if the contour is within a certain size range. We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track.
+```py
+contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+    cv2.CHAIN_APPROX_SIMPLE)[-2]
+```
+
+We then measure the area of the specific contour using the OpenCV library function contourArea().
+```py
+area = cv2.contourArea(cnt)
+```
+
+We can predict which contour(s) is the target object by checking the largest area. 
+
+We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track.
 
 #### Improvements
 
-This algorithm is not perfect and the contour will not be perfectly aligned with the shape of the pillar, but it is sufficient for our needs. The accuracy of the object detection algorithm could hypothetically be improved with the use of even more morphological operations performed over more iterations. We tried to implement a bilateral filtering algorithm (.bilateralFilter()) to better retain the edges of the pillars, but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance, or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
+This algorithm is not perfect and the contour will not be perfectly aligned with the shape of the pillar, but it is sufficient for our needs. The accuracy of the object detection algorithm could hypothetically be improved with the use of even more morphological operations performed over more iterations. 
+
+One approach we tried was to use a bilateral filtering algorithm to better retain the edges of the pillars,
+
+```py
+ cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
+```
+
+but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance, or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
 
 [^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTesterLAB.py code.
 
