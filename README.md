@@ -235,8 +235,9 @@ To stay centered when driving straight, we use a proportional derivitave (PD) al
 * A derivative constant (cKd) - the constant that gets multiplied by the difference in the error and the previous error (prevError)
 
 The resulting calculation is:
-> angle = int(straightConst + error * cKp + (error - prevError) * cKd)
-
+```py
+ angle = int(straightConst + error * cKp + (error - prevError) * cKd)
+```
 &nbsp;
 
 ### Signal Pillar Detection/Management <sub> (Obstacle Challenge) </sub>
@@ -251,6 +252,17 @@ A function called boundingRect() approximates a rectangle around the selected co
 
 Then, a PD calculation is applied based on the difference between the x-coordinate of the pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
 
+```py
+#calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
+error = target x - current x
+
+#calculate new angle using PD steering
+angle = int(straightConst + error * cKp + (error - prevError) * cKd)
+
+#adjust the angle further based on cy value
+angle -= int(cy * y) if error <= 0 else -int(cy * y)
+```
+
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcoord.png" height="300px">
 
 In the event there are 2 or more pillars seen, we determine the one to focus on by calculating the distance between the bottom middle of the screen, to the bottom middle of the pillar. We use the closest pillar to calculate the servo angle. 
@@ -264,12 +276,32 @@ After twelve turns, once the car has completed three laps and is searching for t
 &nbsp;
 
 ### Turning <sub> (Open Challenge) </sub>
-The car turns when one side of the camera shows a wall, and the other doesn't. In the camera feed, the area of one wall contour will be significantly less than the area of the other wall contour. The turning programs ends once both contours become similar again.
+The car begins a turn when the area of either wall is below a certain threshold, then it turns in that direction.
 
-During a turn, we set the servo to a default turning angle of 25 degrees. However, if the angle calculated through the difference of wall areas is greater than 25 degrees, the car will use this angle instead of the default 25 degrees. This ensures we don’t hit the wall during tighter turns. 
+```py
+if leftArea <= turnThresh and not rTurn:
+    lTurn = True
 
-Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using our object detection algorithm, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
+elif rightArea <= turnThresh and not lTurn:
+    rTurn = True
+```
 
+During a turn, we set the servo to a default turning angle of 25 degrees (sharp left/right). However, if the angle calculated through the difference of wall areas is greater than 25 degrees and is below the absolute angle limit (max left/right), the car will use this angle instead of the default 25 degrees. This ensures we don’t hit the wall during tighter turns. 
+
+```py
+if lTurn:
+    angle = min(max(angle, sharpLeft), maxLeft)
+elif rTurn: 
+    angle = max(min(angle, sharpRight), maxRight)
+```
+
+ The turning ends once the area of the side that was below the threshold regains enough area. Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using our object detection algorithm, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
+ 
+```py
+if (rightArea > exitThresh and rTurn) or (leftArea > exitThresh and lTurn): 
+    end turns
+    increase number of turns if orange line was detected
+```
 &nbsp;
 
 ### Turning <sub> (Obstacle Challenge) </sub>
@@ -289,7 +321,34 @@ The parking walls are found with magenta colour masks and by searching in three 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/parkingdetection.png" height="300px">
 
-Once the magenta parking lot has been found in the left or right region of interest, the car turns in that direction. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
+Once the magenta parking lot has been found in the left or right region of interest, we delay using time.sleep() based on the detected area to ensure the car doesn't turn too early. 
+
+```py
+time.sleep((lot area) / (constant))
+```
+
+After, the car turns to the direction in which the parking lot has been detected. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
+```py
+
+if parking lot is on the right:
+     
+     if parking lot detected in front:
+         back up while turning left
+     else:
+         turn right
+ 
+ elif parking lot is on the left:
+     
+     if right wall area > threshold and right parking lot area > threshold:
+         turn right
+     if parking lot detected in front:
+         back up while turning right
+     else:
+         turn left
+
+if area of wall in front > threshold:
+    turn the wheels straight and stop the car
+```
 
 The car stops once the area of the wall detected in the middle is large enough, using the same ROI that detects the orange/blue lines.
 
@@ -297,9 +356,22 @@ The car stops once the area of the wall detected in the middle is large enough, 
 
 ### Three-Point Turn <sub> (Obstacle Challenge) </sub>
 
-After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done by checking whether there was a pillar directly in front of the car and the area of the pillar detected during the 8th turn. 
+After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done by checking whether there was a pillar directly in front of the car at the start of the program and the area of the pillar detected during the 8th turn. 
 
-We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we have detected before the first turn, is larger than a certain threshold. 
+We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we have detected before the first turn is larger than a certain threshold or if 2 pillars of a single color have been detected before the first turn. 
+
+```py
+if orange line detected and turn direction == right or blue line detected and turn direction == left
+  if turns == 0 and pillarAtStart == not set:
+     if largest pillar area > threshold:
+         pillarAtStart = True
+     else:
+         pillarAtStart = False
+
+if num_pillars_g >= 2 or num_pillars_r >= 2 and pillarAtStart == not set:
+    pillarAtStart = True
+
+```
 
 If we know there was a pillar directly in front of the car in the starting section. We can assume that any pillar seen during the 8th turn is the last pillar of the second lap. 
 
@@ -327,6 +399,15 @@ Once we know a three-point turn must be performed, the car will immediately turn
 After the initial three-point turn, if the car detects a large black area in front again, the initial three-point turn isn't sharp enough, so another three-point turn is performed.
 
 If the car doesn't detect the wall in front and instead comes too close to a pillar, it means the car has already turned around, so we count an extra turn.
+
+### Backing Up ###
+
+In certain cases where the car may not be able to pass a pillar without moving it, the car will move back. We determine when the car will move back by checking the area of the current selected pillar and its distance from its target x-coordinate
+
+```py
+if pillar area > threshold and current x-coordinate is far from its target x-coordinate:
+    move back 
+```
 
 ### Possible Improvements <sub> (Open Challenge / Obstacle Challenge) </sub>
 
