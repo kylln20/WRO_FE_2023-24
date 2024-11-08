@@ -186,19 +186,19 @@ Object Management
 
 ### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
-The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to LAB (Lightness, green-red, blue-yellow). We started with the data format of HSV (hue, saturation, value), but later decided to switch to the LAB color space as the two separate values for color allowed for finer control, making it easier to find the correct values for each color. 
+The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to `LAB (lightness, green-red, blue-yellow)`. We chose to use the LAB colour space due to it being better at accounting for different lighting environments. Previously, we used the data format of `HSV (hue, saturation, value)`. It was easier to select ranges for our colour masks than BGR or RGB. While LAB makes it less intuitive to find the colour ranges, the colour masks themselves are better for detecting the objects, as the two values concerning colour allow for better control than the H variable in HSV does. A significant improvement from the change is that the colour masks defined using LAB values have eliminated instances where the robot mistakens the magenta parking lot for being a red signal pillar.
 ```py
 img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 ```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/base.PNG" height="300px">
 
-Then, we perform a Gaussian blur on the image using the OpenCV library GaussianBlur() function. This smooths any edges in the image and removes small noise, making the overall shape of the pillar easier to detect. 
+Then, we perform a Gaussian blur on the image using the OpenCV library `GaussianBlur()` function. This smooths any edges in the image and removes small noise, making the overall shape of the any obstacles easier to detect. 
 ```py
 img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
 ```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Gaussian_Blur.PNG" height="300px">
 
-Then, LAB thresholding is applied, which changes the pixel data of the inputted image such that areas of interest are white, and everything else is black. This is done with the OpenCV library inRange() function, where we specify the input image and a colour mask (a range of LAB values). The input image can be modified with array splicing so we only search in a specific region of interest. The colour mask[^2] allows us to account for how lighting causes colour variation for the target object.
+Then, `LAB thresholding` is applied, which changes the pixel data of the inputted image so that areas of interest are white, and everything else is black. This is done with the OpenCV library `inRange()` function, where we specify the input image and a colour mask (a range of LAB values).The colour mask[^3] allows us to account for how lighting causes colour variation for the target object. Additionally, the input image can be modified with array splicing so we only search in a specific region of interest. By only searching in the desired region of interest, we also reduce the amount of processing required for the car to produce a speed and angle value to send to the motors. This gives the robot the chance to analyse more images, which means more frequent decisions, which means obstacles can be avoided with more efficiently. This was an improvement made after nationals, and it led to the car avoiding obstacles better. 
 
 ```py
 img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
@@ -210,7 +210,7 @@ mask = cv2.inRange(img_segmented, lower_mask, upper_mask)
 
 Following the creation of a mask, we perform two other operations on it: 
 
-- Erosion: this morphological operation finds and removes areas of noise in the binary image
+- Erosion: this morphological operation finds and removes areas of noise in the binary (black and white) image
 ```py
 cv2.erode(mask, kernel, iterations=1)
 ```
@@ -250,7 +250,7 @@ One approach we tried was to use a bilateral filtering algorithm to better retai
 
 but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance, or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
 
-[^2]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTesterLAB.py code.
+[^3]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs, especially before switching to LAB. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTesterLAB.py code.
 
 ### Wall Detection/Management <sub> (Open Challenge / Obstacle Challenge) </sub>
 
