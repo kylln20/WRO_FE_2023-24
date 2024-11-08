@@ -412,12 +412,6 @@ if __name__ == '__main__':
             
             #update t2
             t2 = t
-
-            #set a timer to stop at the end of the third lap
-            if t2 == 11:
-                s = 3
-
-                sTime = time.time()
             
             #show ROI5 to make sharper turns during the lap where parking is performed
             if tempParking:
@@ -443,6 +437,14 @@ if __name__ == '__main__':
             
             #indicate that the coloured line is seen
             tSignal = True
+        
+        #second line after turning line is detected
+        elif (turnDir == "left" and maxO > 100) or (turnDir == "right" and maxB > 100):
+            #set a timer to stop at the end of the third lap
+            if t2 == 11:
+                s = 2
+
+                sTime = time.time()
         
         #indicate there was a pillar right after start if there have been 2 red or green pillars detected
         if pillarAtStart == -1 and (num_pillars_g >= 2 or num_pillars_r >= 2): 
@@ -538,7 +540,7 @@ if __name__ == '__main__':
                 if centerY > 280 and areaFront < 3500:
 
                     #shrink ROI4 to ensure we don't back up when it isn't necessary
-                    ROI4 = [250, 250, 370, 300]
+                    ROI4 = [270, 250, 370, 300]
                     LED1(255, 0, 0) 
                     multi_write([1500, 0.1, 1352, sharpRight, 0.5, 1500])
 
@@ -549,7 +551,11 @@ if __name__ == '__main__':
                     
             #if the area of the wall in front is above a limit stop as we are very close to the wall
             if areaFront > 3500:
-                multi_write([straightConst, 0.2, 1640, 1.5])
+                #if turning left into parking lot set angle to straight, otherwise if turning right, keep turning right until stopped
+                if parkingL:
+                    multi_write([straightConst, 0.2, 1640, 1.5])
+                else:
+                    multi_write([sharpRight, 0.2, 1640, 1.5])
                 stop_car()
                 break
                     
@@ -665,13 +671,6 @@ if __name__ == '__main__':
         #if parking lot is too large turn away from it to avoid collision
         if rPArea > 5000:
             angle = sharpLeft
-        
-        #keep track of whether a pillar is seen for the last 10 frames
-        if len(tList) == 10:
-            tList.append(True if cPillar.target != 0 else False)
-            tList.pop(0)
-        else:
-            tList.append(True if cPillar.target != 0 else False)
 
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
@@ -683,12 +682,12 @@ if __name__ == '__main__':
             rTurn = False
             lTurn = False
             
-            #if anything but a red pillar is seen turn left
-            if cPillar.area == 0 or cPillar.target == greenTarget:
-                angle = sharpLeft
+            #if green pillar is seen turn left
+            if cPillar.target == greenTarget:
+                reverse = "turning"
             
-            #if a pillar wasn't seen for the last 10 frames or current red pillar is far away keep the car turning left until it sees the parking lot or wall in front
-            if all(target == False for target in tList) or (pillarAtStart and cPillar.area < 400) and reverse != "turning":
+            #if a pillar wasn't seen for the last 10 frames or car sees enough of the wall its turning towards, turn left until it sees the parking lot or wall in front
+            if (cPillar.area == 0 or (turnDir == "right" and rightArea > 1500) or (turnDir == "left" and leftArea > 1500)) and reverse != "turning":
                 reverse = "turning"
                 
             if reverse == "turning":
