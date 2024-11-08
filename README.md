@@ -342,15 +342,43 @@ if (rightArea > exitThresh and rTurn) or (leftArea > exitThresh and lTurn):
 ### Turning <sub> (Obstacle Challenge) </sub>
 Unlike the open challenge, in the obstacle challenge, we can't detect turns by the areas of walls due to the need to avoid pillars at the entrance and exit of the turn. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area. 
 
-The car is automatically set to the maximum 50-degree turning angle to ensure it can see pillars as quickly as possible after a turn. 
+The car is automatically set to the maximum 50-degree turning angle to ensure it can see pillars quickly after a turn. 
 
 If it detects a signal pillar, the turn ends immediately, and the angle calculation is based on the signal pillar. Otherwise, like in the open challenge, the program will exit the turning mode when the difference between the two wall contours has decreased to a certain threshold, and the angle calculation will be based on the wall area difference.
 
-If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle based on the color of the pillar (left if red, right if green) even if we still detect the pillar. 
+If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle in the same direction as the car's turning direction even if we still detect the pillar. 
 
-If the pillar's area becomes too large while turning, that indicates that the car turned too early and is on course to hit. In this case, we straighten the car's turning angle until the area is lower than a certain threshold to avoid collision. 
+If the pillar's area becomes too large while turning, the car turns too early and is on course to hit. In this case, we straightened the car's turning angle until the area was lower than a certain threshold to avoid collision. 
 
-As we don't want this region of interest to interfere with our regular driving algorithms, the region of interest is only present when a turn is ended by seeing a pillar and is hidden once it passes the pillar and the region of interest no longer detects the wall in front. This approach makes the car turn earlier making the turns around pillars much more consistent, allowing our car to control better at faster speeds. 
+```py
+if ((ROI5 area > threshold and turnDir == left) or (ROI5 area > threshold and turnDir == right)):
+
+    if pillar area > threshold:
+        turn angle = straight
+    else: 
+        if turn direction == right:
+            turn angle = sharp right
+        else:
+            turn angle = sharp left
+```
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/ROI5.png" height="300px">
+
+As we don't want this region of interest to interfere with our regular driving algorithms, the region of interest is only present when needed in tight cases where the area of the left wall area is large enough when starting a left turn or the right wall area is large enough when starting a right turn. 
+
+```py
+if (turnDir == right and orange_line_detected) or (turnDir == left and blue_line_detected): 
+    if pillar_area > 0 and ((left_wall_area > threshold and turnDir == left) or (right_wall_area > threshold and turnDir == right)):
+        show ROI5 and use it
+```
+            
+The region of interest is then hidden once the camera no longer detects the wall in front, a pillar in front, or there is a large enough difference in the wall areas. 
+
+```py
+if ((pillar_area == 0 and front_area > threshold) or (difference in wall areas > threshold and front_area > threshold)) and not in_parking:
+     hide ROI5
+```
+
+This approach makes the car turn earlier making the turns around pillars much more consistent, allowing our car to control better at faster speeds. 
 
 &nbsp;
 
