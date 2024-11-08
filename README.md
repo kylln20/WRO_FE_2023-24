@@ -283,7 +283,7 @@ Signal pillars are found with green and red colour masks, and by searching in a 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcontour.png" height="300px">
 
-A function called boundingRect() approximates a rectangle around the selected contour. boundingRect() also returns the x and y coordinates of the rectangle’s top left corner. When applied to the contour of the signal pillar, this can be used to determine its location.
+A function called `boundingRect()` approximates a rectangle around the selected contour. `boundingRect()` also returns the x and y coordinates of the rectangle’s top left corner. When applied to the contour of the signal pillar, this can be used to determine its location.
 
 Then, a PD calculation is applied based on the difference between the x-coordinate of the pillar, and the target x-coordinate. The target x-coordinate for the green pillars is near the right side, as the car needs to pass it on the left side. The opposite is true for the red pillars. The calculation also includes a value changing the angle based on how close the pillar is by using the pillar's y-value. 
 
@@ -302,7 +302,7 @@ angle -= int(cy * y) if error <= 0 else -int(cy * y)
 
 In the event there are 2 or more pillars seen, we determine the one to focus on by calculating the distance between the bottom middle of the screen, to the bottom middle of the pillar. We use the closest pillar to calculate the servo angle. 
 
-Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, this is done so the car can successfully navigate tight corner cases. 
+Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, so the car can successfully navigate tight corner cases. 
 
 While we detect a pillar, if the area of the left or right walls becomes too large, we deselect the current pillar so the wall areas determine the angle instead. This allows the car to turn towards the middle and avoid hitting the wall
 
@@ -311,7 +311,7 @@ After twelve turns, once the car has completed three laps and is searching for t
 &nbsp;
 
 ### Turning <sub> (Open Challenge) </sub>
-The car begins a turn when the area of either wall is below a certain threshold, then it turns in that direction.
+The car begins a turn when the area of either wall is below a certain threshold. It then turns in the direction of the wall with the lesser area.
 
 ```py
 if leftArea <= turnThresh and not rTurn:
@@ -340,13 +340,17 @@ if (rightArea > exitThresh and rTurn) or (leftArea > exitThresh and lTurn):
 &nbsp;
 
 ### Turning <sub> (Obstacle Challenge) </sub>
-Unlike the open challenge, in the obstacle challenge, we can't detect turns by the areas of walls due to the need to avoid pillars. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area to ensure we are at a corner. 
+Unlike the open challenge, in the obstacle challenge, we can't detect turns by the areas of walls due to the need to avoid pillars at the entrance and exit of the turn. To compensate, the obstacle challenge code instead enters a turning mode once the nearest mat line (blue if travelling clockwise, orange if travelling counter-clockwise) has been detected and is of a certain area. 
 
 The car is automatically set to the maximum 50-degree turning angle to ensure it can see pillars as quickly as possible after a turn. 
 
-If it detects a signal pillar, the turn ends immediately, and the angle calculation is based on the signal pillar. Otherwise, like in the open challenge, the program will stop turning when the difference between the two wall contours has decreased to a certain threshold, and the angle calculation will be based on the wall area difference.
+If it detects a signal pillar, the turn ends immediately, and the angle calculation is based on the signal pillar. Otherwise, like in the open challenge, the program will exit the turning mode when the difference between the two wall contours has decreased to a certain threshold, and the angle calculation will be based on the wall area difference.
 
-If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle based on the color of the pillar (left if red, right if green) even if we still detect the pillar. If the pillar's area becomes too large while turning, the car turned too early and is on course to hit. In this case, we straighten the car's turning angle until the area is lower than a certain threshold to avoid collision. As we don't want this region of interest to interfere with our regular driving algorithms, the region of interest is only present when a turn is ended by seeing a pillar and is hidden once it passes the pillar and the region of interest no longer detects the wall in front. This approach makes the car turn earlier making the turns around pillars much more consistent, allowing our car to control better at faster speeds. 
+If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle based on the color of the pillar (left if red, right if green) even if we still detect the pillar. 
+
+If the pillar's area becomes too large while turning, that indicates that the car turned too early and is on course to hit. In this case, we straighten the car's turning angle until the area is lower than a certain threshold to avoid collision. 
+
+As we don't want this region of interest to interfere with our regular driving algorithms, the region of interest is only present when a turn is ended by seeing a pillar and is hidden once it passes the pillar and the region of interest no longer detects the wall in front. This approach makes the car turn earlier making the turns around pillars much more consistent, allowing our car to control better at faster speeds. 
 
 &nbsp;
 
@@ -362,7 +366,7 @@ Once the magenta parking lot has been found in the left or right region of inter
 time.sleep((lot area) / (constant))
 ```
 
-After, the car turns to the direction in which the parking lot has been detected. If the program detects a magenta contour in the central region of interest, it backs up, to allow more distance to adjust and park between the walls without touching them. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
+After, the car turns to the direction in which the parking lot has been detected. If the program detects a magenta contour in the central region of interest, this indicates that the car is not centered between the wall. To avoid hitting the walls, the car backs up to allow more distance to adjust. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
 ```py
 
 if parking lot is on the right:
