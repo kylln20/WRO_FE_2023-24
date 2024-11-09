@@ -30,28 +30,29 @@ Team Members
 ***Kayla Lin (Left), Eric Rao (Middle), Brian Yin (Right)***
 
 ## 📖 Content of README 📖
-* ### Hardware
-  * `Components`
-  * `Mobility Management`
-    *  `Chassis`
-    *  `Design`
-    *  `Motors`
-  * `Power and Sense Management`
-    *  `Power and Wiring`
-    *  `Sensors`
-  * `Schematic`
-* ### Software
-  * `Initialization and Connection Process`
-  * `Object Management`
-    *  `Object Detection`
-    *  `Wall Detection/Management`
-    *  `Signal Pillar Detection/Management`
-    *  `Turning`
-    *  `Parking Lot Detection/Management`
-    *  `Three-Point Turn`
-    *  `Backing Up`
-    *  `Possible Improvement: Stuck Detection`
-* ### Assembly Instructions
+* **[Hardware](#-hardware-)**
+  * [Components](#%EF%B8%8F-components-%EF%B8%8F)
+  * [Mobility Management](#-mobility-management-)
+    * [Chassis](#chassis)
+    * [Design](#design)
+    * [Motors](#motors)
+  * [Power and Sense Management](#-power-and-sense-management-)
+    * [Power and Wiring](#power-and-wiring)
+    * [Sensors](#sensors)
+    * [Schematic](#schematic)
+* **[Software](#-software-)**
+  * [Initialization and Connection Process](#-initialization-and-connection-process-)
+  * [Object Management](#object-management)
+    *  [Object Detection](#object-detection--open-challenge--obstacle-challenge-)
+    *  [Wall Detection/Management](#wall-detectionmanagement--open-challenge--obstacle-challenge-)
+    *  [Signal Pillar Detection/Management](#signal-pillar-detectionmanagement--obstacle-challenge-)
+    *  [Turning (Open Challenge)](#turning--open-challenge-)
+    *  [Turning (Obstacle Challenge)](#turning--obstacle-challenge-)
+    *  [Parking Lot Detection/Management](#parking-lot-detectionmanagement--obstacle-challenge-)
+    *  [Three-Point Turn](#three-point-turn--obstacle-challenge-)
+    *  [Backing Up](#backing-up--obstacle-challenge-)
+    *  [Possible Improvement: Stuck Detection](#possible-improvement-stuck-detection--open-challenge--obstacle-challenge-)
+* **[Assembly Instructions](#-complete-assembly-instructions-)**
   
 &nbsp;
 
@@ -101,7 +102,7 @@ This is a video example of a modification done to a similar chassis:
 
 [K989 Modification](https://www.youtube.com/watch?v=JmsCxSgEJnU)
 
-#### Overview of Design 
+#### Design 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled3.jpg" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled4.jpg" height="300px">
 
@@ -140,7 +141,7 @@ These components all replace the original parts that came with the chassis. They
 
 &nbsp;
 
-⚡ Sense and Power Management ⚡
+⚡ Power and Sense Management ⚡
 ---
 
 #### Power and Wiring
@@ -572,16 +573,16 @@ thread1.start()
 🔨 Complete Assembly Instructions 🔨
 ===
 
-1. Strip the `Carisma GT24` chassis.
+1. **Strip the `Carisma GT24` chassis.**
    - The car itself comes with a realistic car cover. This is purely cosmetic, and can be removed, as well as the mounts supporting it.
    - The electrical components are housed within the center of the chassis. They can be accessed by unscrewing another plastic cover
      
-2. Removing unnecessary parts
+2. **Removing unnecessary parts**
    - Take out the DC motor, servo motor, ESC and RC module. The first three will be replaced by better components.
    - This will require unscrewing as well as ripping parts off of the adhesive
    - Note that some rear portions of the car will need to the disassembled temporarily to access some screws
 
-3. Install the new parts
+3. **Install the new parts**
    DC Motor Installation:
    - Install the `Aluminum DC Motor Mount`
    - Install The `Furitek Micro Komodo Brushless Motor` onto the motor mount
@@ -590,14 +591,14 @@ thread1.start()
    - 3D-print our servo attachment, place it on the head of the servo motor, and secure it with a screw and nut. 
    - The `Hitec HS-5055MG Servo Motor` also needs it's wings clipped before installing
 
-5. Wiring
+5. **Wiring**
    - Ensure everything is wired properly, according the the schematic above.
    - Here, you can also splice your switch into your battery wires
    - Although they haven't been installed yet, you can test the connection to the Raspberry Pi and the battery
    - Although the Raspberry Pi and ESC both contain switches, we only use our self-added switch to turn on the whole system
    - 3D print a `cable barrier` and attach it onto the chassis to prevent cables from interfering with steering
 
-6. 3D Printed Parts
+6. **3D Printed Parts**
    - Print a base and a camera mount. Our designs can be found in this repository.
    - Note that our base was designed to fit smoothly on top of the chassis with the holes matching the 4 posts of the chassis
    - The camera screws onto the camera mount at the top where 4 small holes are present
@@ -605,7 +606,7 @@ thread1.start()
    - These new parts provide housing for the camera, Raspberry Pi, Raspberry Pi Fan, and battery
    - The Raspberry Pi HAT fits nicely on top of the Raspberry Pi, secured and connected through the GPI0 pins
 
-9. Configuration
+9. **Configuration**
    - Download the [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
    - With the imager, prepare your MicroSD card and copy the [TurboPi OS](https://drive.google.com/file/d/1sBCMegKXQaT8nuhjBM0KjXP2YUlaAOju/view). Then, insert the card back into the Pi
    - Power on your Raspberry Pi, by default it is running in Access Point (AP) mode meaning you have to connect to a Wifi Access Point.
@@ -617,15 +618,15 @@ thread1.start()
       - Password: `"raspberry"`
    - Now you can access your Raspberry Pi
 
-10. load source files
+10. **Load source files**
    - Go to the folder: /home/pi/TurboPi/HiwonderSDK and add the files found in `src`
-   - For this competition, you also need to auto-run your program
+   - For this competition, you also need to `auto-run` your program
    - Open the Pi terminal and run `sudo nano /etc/rc.local`
    - Add the program `(ObstacleChallengeV2.py/OpenChallenge.py)` with `sudo bash -c 'sudo python3 /home/pi/<<directory>>/<<filename.py>>' &`, before the line `exit 0`
    - Save and reboot
    - On start-up, the file placed in the rc.local file will run automatically
      
-9. Congraulations! You've built our robot!
+9. **Congraulations! You've built our robot!**
     - You can try running the `src` files directly from the Pi terminal using sudo python3 <<filename.py>> while in the right directory to run our program
     - You can use `Thonny`, a pre-installed compiler on the Raspberry Pi, as a code editor for the programs
     - Any other information can be found on this repository
