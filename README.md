@@ -478,6 +478,74 @@ if pillar area > threshold and current x-coordinate is far from its target x-coo
 
 ### Possible Improvements <sub> (Open Challenge / Obstacle Challenge) </sub>
 
+#### Stuck Detection
+
+In our testing, very rarely our car would get stuck on the wall and not be able to move. Although this happens such a small percentage of the time, having a method to counteract this would be good to have. 
+
+One method we considered was to compare the changes in the camera images. We decided against its implementation due to the rarity of stalling and our time constraints. 
+
+This could be implemented with two methods: 
+
+1. Mean Squared Area (MSE): measures the average squared difference between the pixel values of the two images.
+2. Structural Similarity Index (SSIM): a scikit-image method that offers a more accurate comparison at the cost of speed.
+
+To use SSIM download the scikit-image library through the Raspberry Pi terminal: 
+
+```py
+sudo pip install scikit-image
+```
+
+Here's an implementation of both methods: 
+
+```py
+import cv2
+from skimage.metrics import structural_similarity as ssim
+import numpy as np
+
+def mse(image1, image2):
+    # Compute the Mean Squared Error between the two images
+    err = np.sum((image1.astype("float") - image2.astype("float")) ** 2)
+    err /= float(image1.shape[0] * image1.shape[1])
+    return err
+
+# Load the two input images
+imageA = cv2.imread('path/to/first/image.jpg')
+imageB = cv2.imread('path/to/second/image.jpg')
+
+# Convert the images to grayscale
+grayA = cv2.cvtColor(imageA, cv2.COLOR_BGR2GRAY)
+grayB = cv2.cvtColor(imageB, cv2.COLOR_BGR2GRAY)
+
+# Calculate MSE and SSIM
+m = mse(grayA, grayB)
+s, diff = ssim(grayA, grayB, full=True)
+
+# Print the results
+print(f"MSE: {m}")
+print(f"SSIM: {s}")
+```
+
+To ensure these stuck detection methods don't interfere with the regular Obstacle Challenge algorithm, we can make it run in parallel using multi-threading. 
+
+Implementation with the Python threading library: 
+
+```py
+import threading
+
+def stuck_detect():
+    while True:
+        #implement stuck detection here
+
+# Create a new thread
+thread1 = threading.Thread(target=stuck_detect)
+
+# Start the new thread
+thread1.start()
+
+#continue with obstacle challenge program
+```
+
+#### ROI Adjustments
 One possible improvement that could be made is the placement of our regions of interest. Our regions of interest on the screen are placed perfectly symmetrically on both sides of the screen. This means we didn’t account for the fact that our camera is not perfectly aligned. 
 
 This causes the car to control slightly differently when the car is running clockwise or counter-clockwise. The car could be made a lot more consistent in the open challenge and obstacle challenge with better adjustment of our regions of interest tailored to the view of the camera. 
