@@ -164,10 +164,14 @@ Based on said pixel data, we can identify objects based on their size and colour
 
 The camera uses a 5 MP OV5647 Sensor, which is adequate to detect basic colours for our needs, but has its limitations in different lighting conditions and distinguishing between similar colours
 
-For the Canadian National WRO Future Engineers competition, the sensitivity of the camera to different lighting conditions made it difficult to have consistently running code that was unaffected by the environment and the direction the car was travelling. Improvements we considered were changing the camera settings, or attaching a lamp to the car so that we could ensure consistent lighting. However, a solution was instead found by processing the colours using a different system (detailed in the Software section).
+For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to have consistently running code that was unaffected by the environment and the direction the car was travelling. Improvements we considered were changing the camera settings or attaching a lamp to the car so that we could ensure consistent lighting. However, a solution was instead found by processing the colours using a different system (detailed in the Software section).
 
 ##### Improvements
 Although this system is sufficient for our needs, object detection can be further improved by using a camera with a higher-quality sensor such as the [Raspberry Pi HQ Camera M12](https://www.pishop.ca/product/raspberry-pi-hq-camera-m12/), which performs better in different lighting and can easily distinguish between colours. An improvement to the camera would help maintain consistency in the programs to an even higher degree.
+
+Another possible improvement is the implementation of a `Gyro Sensor`, which tracks the car's orientation. We attempted to use a [BerryIMU](https://ozzmaker.com/product/berryimu-accelerometer-gyroscope-magnetometer-barometricaltitude-sensor/) for this function but decided against using it due to the extra complexity it added and its inconsistent readings. By tracking the car's orientation and keeping it heading at the same angle, it is possible to make parking more consistent and allow the car to control more precisely allowing it to go faster for the open challenge. 
+
+An example of an alternative gyro sensor that may offer higher accuracy is the [BNO055 Absolute Orientation Sensor](https://www.pishop.ca/product/adafruit-9-dof-absolute-orientation-imu-fusion-breakout-bno055/)
 
 &nbsp;
 
