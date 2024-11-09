@@ -592,48 +592,52 @@ This causes the car to control slightly differently when the car is running cloc
    - Note that some rear portions of the car will need to the disassembled temporarily to access some screws
 
 3. Install the new parts
-   - The `Furitek Micro Komodo Brushless Motor` fits in the original compartment
+   DC Motor Installation:
+   - Install the `Aluminum DC Motor Mount`
+   - Install The `Furitek Micro Komodo Brushless Motor` onto the motor mount
    - The gear head may need to be replaced. Judge this based on how well it meshes with the drive system gears
-   - The `Hitec HS-5055MG Servo Motor` needs it's wings clipped before installing
-   - More space for the ESC and other wires can be created by removing the battery compartment. This will require some knife skills
+   Servo Motor Installation: 
+   - 3D-print our servo attachment, place it on the head of the servo motor, and secure it with a screw and nut. 
+   - The `Hitec HS-5055MG Servo Motor` also needs it's wings clipped before installing
 
-4. Wiring
+5. Wiring
    - Ensure everything is wired properly, according the the schematic above.
    - Here, you can also splice your switch into your battery wires
    - Although they haven't been installed yet, you can test the connection to the Raspberry Pi and the battery
+   - Although the Raspberry Pi and ESC both contain switches, we only use our self-added switch to turn on the whole system
+   - 3D print a `cable barrier` and attach it onto the chassis to prevent cables from interfering with steering
 
-5. 3D Printed Parts
-   - Print a base and a camera holder. Our designs can be found in this repository.
-   - Note that our base was designed to fit smoothly ontop of the chassis
-   - These new parts provide housing for the camera, Raspberry Pi, Raspberry Pi Fan, and battery.
+6. 3D Printed Parts
+   - Print a base and a camera mount. Our designs can be found in this repository.
+   - Note that our base was designed to fit smoothly on top of the chassis with the holes matching the 4 posts of the chassis
+   - The camera screws onto the camera mount at the top where 4 small holes are present
+   - The camera mount attaches by inserting it into the rectangular slots on the rear of the car base
+   - These new parts provide housing for the camera, Raspberry Pi, Raspberry Pi Fan, and battery
    - The Raspberry Pi HAT fits nicely on top of the Raspberry Pi, secured and connected through the GPI0 pins
 
-6. Wiring
-   - Double check your wiring
-
-7. Power on
-   - Switches can be found on the Raspberry PI and in your self-added switch
-   - For the purposes of this competition, we rely on our own switch to control the whole system
-
-8. Configuration
+9. Configuration
    - Download the [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
    - With the imager, prepare your MicroSD card and copy the [TurboPi OS](https://drive.google.com/file/d/1sBCMegKXQaT8nuhjBM0KjXP2YUlaAOju/view). Then, insert the card back into the Pi
    - Power on your Raspberry Pi, by default it is running in Access Point (AP) mode meaning you have to connect to a Wifi Access Point.
-      - Search for a Wifi connection with the format: HW-xxxxxx
-      - It will have a password of "hiwonder"
-   - Access your Raspberry Pi through [VNC Viewer](https://www.realvnc.com/en/connect/download/viewer/) by entering the IP address "192.168.149.1"
-   - VNC Viewer will ask for a username: "pi" and a password: "raspberry"
+      - Search for a Wifi connection with the format: `HW-xxxxxx`
+      - It will have a password of `"hiwonder"`
+   - Remotely access your Raspberry Pi through [VNC Viewer](https://www.realvnc.com/en/connect/download/viewer/) by entering the IP address `192.168.149.1`
+   - VNC Viewer will ask for a username + password
+      - Username: `"pi"`
+      - Password: `"raspberry"`
    - Now you can access your Raspberry Pi
+
+10. load source files
    - Go to the folder: /home/pi/TurboPi/HiwonderSDK and add the files found in `src`
-   - We use Thonny, a pre-installed compiler on the Raspberry Pi, as our code editor
    - For this competition, you also need to auto-run your program
    - Open the Pi terminal and run `sudo nano /etc/rc.local`
-   - Add the line `sudo bash -c 'sudo python3 /home/pi/<<directory>>/<<filename.py>>' &`, before the line `exit 0`
+   - Add the program `(ObstacleChallengeV2.py/OpenChallenge.py)` with `sudo bash -c 'sudo python3 /home/pi/<<directory>>/<<filename.py>>' &`, before the line `exit 0`
    - Save and reboot
-   - On start-up, the file placed in the RC.local file will run automatically
+   - On start-up, the file placed in the rc.local file will run automatically
      
 9. Congraulations! You've built our robot!
-    - You can try running the `src` files directly from the Pi terminal  using sudo python3 <<filename.py>> while in the right directory to run our program
+    - You can try running the `src` files directly from the Pi terminal using sudo python3 <<filename.py>> while in the right directory to run our program
+    - You can use `Thonny`, a pre-installed compiler on the Raspberry Pi, as a code editor for the programs
     - Any other information can be found on this repository
     - Thanks for reading!
 
