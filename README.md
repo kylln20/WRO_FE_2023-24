@@ -264,9 +264,7 @@ area = cv2.contourArea(cnt)
 
 The area is returned in an array with additional data as the x-coordinate, y-coordinate, and the contour object. 
 
-
-
-#### Improvements
+#### Possible Improvements
 
 This algorithm is not perfect and the contour will not be perfectly aligned with the shape of the pillar, but it is sufficient for our needs. The accuracy of the object detection algorithm could hypothetically be improved with the use of even more morphological operations performed over more iterations. 
 
@@ -496,7 +494,7 @@ After the initial three-point turn, if the car detects a large black area in fro
 
 If the car doesn't detect the wall in front and instead comes too close to a pillar, it means the car has already turned around, so we count an extra turn.
 
-### Backing Up ###
+### Backing Up <sub> (Obstacle Challenge) </sub>
 
 In certain cases where the car may not be able to pass a pillar without moving it, the car will move back. We determine when the car will move back by checking the area of the current selected pillar and its distance from its target x-coordinate
 
@@ -505,9 +503,7 @@ if pillar area > threshold and current x-coordinate is far from its target x-coo
     move back 
 ```
 
-### Possible Improvements <sub> (Open Challenge / Obstacle Challenge) </sub>
-
-#### Stuck Detection
+### Possible Improvement: Stuck Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
 In our testing, very rarely our car would get stuck on the wall and not be able to move. Although this happens such a small percentage of the time, having a method to counteract this would be good to have. 
 
@@ -573,11 +569,6 @@ thread1.start()
 
 #continue with obstacle challenge program
 ```
-
-#### ROI Adjustments
-One possible improvement that could be made is the placement of our regions of interest. Our regions of interest on the screen are placed perfectly symmetrically on both sides of the screen. This means we didn’t account for the fact that our camera is not perfectly aligned. 
-
-This causes the car to control slightly differently when the car is running clockwise or counter-clockwise. The car could be made a lot more consistent in the open challenge and obstacle challenge with better adjustment of our regions of interest tailored to the view of the camera. 
 
 &nbsp;
 
