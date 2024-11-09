@@ -250,7 +250,7 @@ In a separate function:
 def max_contour(contours, ROI):
 ```
 
-We then measure the area of the specific contour using the OpenCV library function contourArea().
+we measure the area of the specific contour using the OpenCV library function contourArea().
 
 ```py
 area = cv2.contourArea(cnt)
@@ -613,19 +613,23 @@ This causes the car to control slightly differently when the car is running cloc
 
 8. Configuration
    - Download the (Raspberry Pi Imager)[https://www.raspberrypi.com/software/]
-   - With the imager, prepare your MicroSD card and copy the TurboPi OS. Then, insert the card back into the Pi
-   - Find the IP address of your Pi. We use the (Advanced IP Scanner)[https://www.advanced-ip-scanner.com]
-   - Remotely configure your Pi from here. This step can be pretty complicated. We reccomend finding a tutorial
-
-   - We use Thonny, a pre-installed compiler on the Raspberry Pi
-  
-   - For the purposes of this competition, you also need to auto-run your program
-   - Open command prompt and run `sudo nano /etc/rc.local`
+   - With the imager, prepare your MicroSD card and copy the TurboPi OS given by the manufacturer of our Pi Hat. Then, insert the card back into the Pi
+   - Power on your Raspberry Pi, by default it is running in Access Point (AP) mode meaning you have to connect to a Wifi Access Point.
+      - Search for a Wifi connection with the format: HW-xxxxxx
+      - It will have a password of "hiwonder"
+   - Access your Raspberry Pi through (VNC Viewer)[https://www.realvnc.com/en/connect/download/viewer/] by entering the IP address "192.168.149.1"
+   - VNC Viewer will ask for a username: "pi" and a password: "raspberry"
+   - Now you can access your Raspberry Pi
+   - Go to the folder: /home/pi/TurboPi/HiwonderSDK and add the files found in `src`
+   - We use Thonny, a pre-installed compiler on the Raspberry Pi, as our code editor
+   - For this competition, you also need to auto-run your program
+   - Open the Pi terminal and run `sudo nano /etc/rc.local`
    - Add the line `sudo bash -c 'sudo python3 /home/pi/<<directory>>/<<filename.py>>' &`, before the line `exit 0`
    - Save and reboot
+   - On start-up, the file placed in the RC.local file will run automatically
      
 9. Congraulations! You've built our robot!
-    - You can try using our `src` files directly to run our program
+    - You can try running the `src` files directly from the Pi terminal  using sudo python3 <<filename.py>> while in the right directory to run our program
     - Any other information can be found on this repository
     - Thanks for reading!
 
