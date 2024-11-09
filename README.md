@@ -409,6 +409,8 @@ This approach makes the car turn earlier making the turns around pillars much mo
 ### Parking Lot Detection/Management <sub> (Obstacle Challenge) </sub>
 After three laps are completed, we set a timer of two seconds so we stop in the starting section, the car then moves to pass all pillars on the outside to make it easier for the car to park. 
 
+During parking, ROI5 is always shown to make sure turns are as sharp and quick as possible for an easier approach while parking. 
+
 The parking walls are found with magenta colour masks and by searching in two regions of interest that were used to detect walls, again with LAB thresholding. This starts after twelve turns. Any time after thirteen turns, parking mode will start after a magenta contour of the right size reaches a specific Y-coordinate in either of the regions of interest.
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/parkingdetection.png" height="300px">
