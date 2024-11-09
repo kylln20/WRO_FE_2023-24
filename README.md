@@ -612,12 +612,12 @@ This causes the car to control slightly differently when the car is running cloc
    - For the purposes of this competition, we rely on our own switch to control the whole system
 
 8. Configuration
-   - Download the (Raspberry Pi Imager)[https://www.raspberrypi.com/software/]
-   - With the imager, prepare your MicroSD card and copy the TurboPi OS given by the manufacturer of our Pi Hat. Then, insert the card back into the Pi
+   - Download the [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+   - With the imager, prepare your MicroSD card and copy the [TurboPi OS](https://drive.google.com/file/d/1sBCMegKXQaT8nuhjBM0KjXP2YUlaAOju/view). Then, insert the card back into the Pi
    - Power on your Raspberry Pi, by default it is running in Access Point (AP) mode meaning you have to connect to a Wifi Access Point.
       - Search for a Wifi connection with the format: HW-xxxxxx
       - It will have a password of "hiwonder"
-   - Access your Raspberry Pi through (VNC Viewer)[https://www.realvnc.com/en/connect/download/viewer/] by entering the IP address "192.168.149.1"
+   - Access your Raspberry Pi through [VNC Viewer](https://www.realvnc.com/en/connect/download/viewer/) by entering the IP address "192.168.149.1"
    - VNC Viewer will ask for a username: "pi" and a password: "raspberry"
    - Now you can access your Raspberry Pi
    - Go to the folder: /home/pi/TurboPi/HiwonderSDK and add the files found in `src`
