@@ -462,14 +462,13 @@ if orange line detected and turn direction == right or blue line detected and tu
 
 if num_pillars_g >= 2 or num_pillars_r >= 2 and pillarAtStart == not set:
     pillarAtStart = True
-
 ```
 
-If we know there was a pillar directly in front of the car in the starting section. We can assume that any pillar seen during the 8th turn is the last pillar of the second lap. 
+If there was no pillar directly in front of the car in the starting section, we can assume that any pillar seen during the 8th turn is the last pillar of the second lap. 
 
-If we know there was no pillar directly in front of the car. We know that if there is another pillar in the starting section it would be close to the edge as it's impossible to have a pillar in the middle. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
+If there was a pillar directly in front of the car, we know it could not be the last pillar of the second lap. If there was another pillar in the starting section, it would be considered the last pillar in the second lap. If this extra pillar is present, it would be close to the edge as it's impossible to have a pillar in the middle with two pillars. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
 
-If no pillar is detected during the 8th turn, we just use the last pillar we had detected to determine whether to do a three-point turn. 
+If no pillar is detected during the 8th turn, the last pillar detected is the last pillar of the second lap so we use it to determine whether to do a three-point turn. 
 
 ```py
 if turn is ended by seeing the wall: 
