@@ -190,15 +190,25 @@ The camera captures an image, which the program then converts from OpenCV’s de
 ```py
 img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 ```
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/base.PNG" height="300px">
 
 Then, we perform a Gaussian blur on the image using the OpenCV library `GaussianBlur()` function. This smooths any edges in the image and removes small noise, making the overall shape of the any obstacles easier to detect. 
 ```py
 img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
 ```
-<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Gaussian_Blur.PNG" height="300px">
+<img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/base.PNG" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Gaussian_Blur.PNG" height="300px">
 
-Then, `LAB thresholding` is applied, which changes the pixel data of the inputted image so that areas of interest are white, and everything else is black. This is done with the OpenCV library `inRange()` function, where we specify the input image and a colour mask (a range of LAB values).The colour mask[^3] allows us to account for how lighting causes colour variation for the target object. Additionally, the input image can be modified with array splicing so we only search in a specific region of interest. By only searching in the desired region of interest, we also reduce the amount of processing required for the car to produce a speed and angle value to send to the motors. This gives the robot the chance to analyse more images, which means more frequent decisions, which means obstacles can be avoided with more efficiently. This was an improvement made after nationals, and it led to the car avoiding obstacles better. 
+Then, `LAB thresholding` is applied, which changes the pixel data of the inputted image so that areas of interest are white, and everything else is black. This is done with the OpenCV library `inRange()` function, where we specify the input image and a colour mask (a range of LAB values).
+
+```py
+#LAB colour masks for all ranges, the first array represents the lower bound, and the second represents the higher bound
+rMagenta = [[0, 171, 106], [255, 195, 135]]
+rGreen = [[0, 45, 0], [255, 117, 153]]
+rBlue = [[54, 124, 25], [148, 164, 121]]
+rOrange = [[0, 163, 163], [255, 191, 204]]
+rBlack = [[0, 109, 113], [59, 137, 150]]
+```
+
+The colour mask[^3] allows us to account for how lighting causes colour variation for the target object. Additionally, the input image can be modified with array splicing so we only search in a specific region of interest. By only searching in the desired region of interest, we also reduce the amount of processing required for the car to produce a speed and angle value to send to the motors. This gives the robot the chance to analyse more images, which means more frequent decisions, which means obstacles can be avoided with more efficiently. This was an improvement made after nationals, and it led to the car avoiding obstacles better. 
 
 ```py
 img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
@@ -229,14 +239,26 @@ contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
     cv2.CHAIN_APPROX_SIMPLE)[-2]
 ```
 
+We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track. This processing is placed in a function which takes in the LAB image, LAB mask ranges, and the ROI in which contours should be detected. The function returns a list of contours from the thresholded mask: 
+
+```py
+def find_contours(img_lab, lab_range, ROI):
+```
+In a separate function: 
+
+```py
+def max_contour(contours, ROI):
+```
+
 We then measure the area of the specific contour using the OpenCV library function contourArea().
+
 ```py
 area = cv2.contourArea(cnt)
 ```
 
-We can predict which contour(s) is the target object by checking the largest area. 
+The area is returned in an array with additional data as the x-coordinate, y-coordinate, and the contour object. 
 
-We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track.
+
 
 #### Improvements
 
@@ -254,7 +276,7 @@ but the program slowed from 30 fps down to 8 fps. If one could find a way to opt
 
 ### Wall Detection/Management <sub> (Open Challenge / Obstacle Challenge) </sub>
 
-The wall contours are detected with the colour mask ([0, 0, 0] to [180, 255, 50]), and one region of interest for each wall. 
+The wall contours are detected with one region of interest for each wall. 
 
 The areas of each contour is added into their respective variable, leftArea for the area of the left wall, and rightArea for the area of the right wall. 
 
@@ -346,7 +368,7 @@ The car is automatically set to the maximum 50-degree turning angle to ensure it
 
 If it detects a signal pillar, the turn ends immediately, and the angle calculation is based on the signal pillar. Otherwise, like in the open challenge, the program will exit the turning mode when the difference between the two wall contours has decreased to a certain threshold, and the angle calculation will be based on the wall area difference.
 
-If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 6th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle in the same direction as the car's turning direction even if we still detect the pillar. 
+If a pillar is detected during a turn, we found the car may struggle in certain cases to successfully turn around the pillar when the angle of approach is very narrow. To counteract this, we added a 5th region of interest for detecting the wall in front to turn earlier. If a turn is ended by seeing a pillar, we check if this region of interest is filled and turn to the maximum angle in the same direction as the car's turning direction even if we still detect the pillar. 
 
 If the pillar's area becomes too large while turning, the car turns too early and is on course to hit. In this case, we straightened the car's turning angle until the area was lower than a certain threshold to avoid collision. 
 
@@ -388,6 +410,8 @@ The parking walls are found with magenta colour masks and by searching in three 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/parkingdetection.png" height="300px">
 
+After 3 laps are completed, we set a timer of 2 seconds so we stop in the starting section, the car then moves to pass all pillars on the outside to make it easier for the car to park. 
+
 Once the magenta parking lot has been found in the left or right region of interest, we delay using time.sleep() based on the detected area to ensure the car doesn't turn too early. 
 
 ```py
@@ -417,7 +441,7 @@ if area of wall in front > threshold:
     turn the wheels straight and stop the car
 ```
 
-The car stops once the area of the wall detected in the middle is large enough, using the same ROI that detects the orange/blue lines.
+The car stops once the area of the wall detected in the middle is large enough, using the same region of interest (ROI) that detects the orange/blue lines.
 
 &nbsp;
 
@@ -461,7 +485,7 @@ if turn is ended by seeing the pillar:
 
 This approach to determining the need to perform a three-point turn proved much more consistent than our last approach, which relied heavily on specific wall area and pillar area thresholds vulnerable to lighting and color. 
 
-Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected for 10 iterations of the main loop. The car will turn left until it detects the wall or parking lot in front. It will then back up while turning to the right for a certain period. Then the program will resume.
+Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected or the area of the wall in which the car is turning towards is large enough. The car will turn left until it detects the wall or parking lot in front using the same ROI used for detecting the coloured lines. It will then back up while turning to the right for a certain period. Then the program will resume.
 
 After the initial three-point turn, if the car detects a large black area in front again, the initial three-point turn isn't sharp enough, so another three-point turn is performed.
 
