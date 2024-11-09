@@ -40,7 +40,6 @@ Team Members
     *  `Power and Wiring`
     *  `Sensors`
   * `Schematic`
-    
 * ### Software
   * `Initialization and Connection Process`
   * `Object Management`
@@ -50,7 +49,10 @@ Team Members
     *  `Turning`
     *  `Parking Lot Detection/Management`
     *  `Three-Point Turn`
-    *  `Possible Improvements`
+    *  `Backing Up`
+    *  `Possible Improvement: Stuck Detection`
+* ### Assembly Instructions
+  
 &nbsp;
 
 ---
@@ -86,11 +88,6 @@ Team Members
 
 🚗 Mobility Management 🚗
 ---
-### Key Considerations
-- Servo motor for steering
-- DC motor for driving
-- Head-in parking
-- Compatibility with original chassis
 
 #### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
@@ -103,21 +100,6 @@ Although the chassis has many benefits, its design only allows a maximum turning
 This is a video example of a modification done to a similar chassis: 
 
 [K989 Modification](https://www.youtube.com/watch?v=JmsCxSgEJnU)
-
-#### Motors
-Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
-
-The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, it is still very powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
-
-The Motor is mounted on an aluminum motor mount for increased durability and passive cooling. 
-
-The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This esc provides a constant regulation that ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
-
-To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
-
-This servo motor has a torque of about 1.5kg/cm at 6V allowing it to quickly and precisely change the direction of our car. This precision is vital for our needs in the obstacle challenge and open challenge. 
-
-These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
 
 #### Overview of Design 
 
@@ -140,6 +122,21 @@ The design of the camera mount changed from our national competition with it bec
 It used to consist of 3 pieces, mounted to thin plastic posts on the chassis. 
 
 This redesign allowed for a much more sturdy camera mount ensuring the camera is stable during object detection. 
+
+#### Motors
+Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
+
+The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, it is still very powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
+
+The Motor is mounted on an aluminum motor mount for increased durability and passive cooling. 
+
+The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This esc provides a constant regulation that ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
+
+To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
+
+This servo motor has a torque of about 1.5kg/cm at 6V allowing it to quickly and precisely change the direction of our car. This precision is vital for our needs in the obstacle challenge and open challenge. 
+
+These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
 
 &nbsp;
 
