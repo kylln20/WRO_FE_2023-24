@@ -109,10 +109,13 @@ Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to
 
 The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, it is still very powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
 
-The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. A constant regulation ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
+The Motor is mounted on an aluminum motor mount for increased durability and passive cooling. 
+
+The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This esc provides a constant regulation that ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
 
 To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
 
+This servo motor has a torque of about 1.5kg/cm at 6V allowing it to quickly and precisely change the direction of our car. This precision is vital for our needs in the obstacle challenge and open challenge. 
 **add more detail about servo considerations** 
 
 These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
@@ -145,7 +148,7 @@ This redesign allowed for a much more sturdy camera mount ensuring the camera is
 ---
 
 #### Power and Wiring
-Our car gets power from a single `Gens Ace 1300mAh Battery` which powers the Raspberry Pi and ESC circuit. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
+Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. This powerful battery easily satisfies the power demands of the Raspberry Pi, motors, and sensors. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi, and still have a 7.4V output for the motors. 
 
 The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
