@@ -506,7 +506,7 @@ if pillar area > threshold and current x-coordinate is far from its target x-coo
 
 In our testing, very rarely our car would get stuck on the wall and not be able to move. Although this happens such a small percentage of the time, having a method to counteract this would be good to have. 
 
-One method we considered was to compare the changes in the camera images. We decided against its implementation due to the rarity of stalling and our time constraints. 
+One method we considered to check for when we were stuck was comparing the camera image changes and seeing if they were similar. We decided against its implementation due to the rarity of becoming stuck and our time constraints. 
 
 This could be implemented with two methods: 
 
