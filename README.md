@@ -90,19 +90,19 @@ Team Members
 🚗 Mobility Management 🚗
 ---
 
-#### Chassis
+### Chassis
 We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
 
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. This system offers benefits over a two-wheel drive system increasing the car's traction, stability, and acceleration due to the power distribution between four wheels instead of two. 
 
-##### Possible Chassis Improvement
+#### Possible Chassis Improvement
 Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that will enable a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that it is possible to modify the original chassis to have a much greater turning angle, but we decided against modifying it any further due to time constraints. 
 
 This is a video example of a modification done to a similar chassis: 
 
 [K989 Modification](https://www.youtube.com/watch?v=JmsCxSgEJnU)
 
-#### Design 
+### Design 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled3.jpg" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Labeled4.jpg" height="300px">
 
@@ -124,7 +124,7 @@ It used to consist of 3 pieces, mounted to thin plastic posts on the chassis.
 
 This redesign allowed for a much more sturdy camera mount ensuring the camera is stable during object detection. 
 
-#### Motors
+### Motors
 Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
 
 The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, it is still very powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
@@ -144,17 +144,17 @@ These components all replace the original parts that came with the chassis. They
 ⚡ Power and Sense Management ⚡
 ---
 
-#### Power and Wiring
+### Power and Wiring
 Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. This powerful battery easily satisfies the power demands of the Raspberry Pi, motors, and sensors. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi, and still have a 7.4V output for the motors. 
 
 The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
-##### Improvements
+#### Improvements
 Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimetres. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
-#### Sensors
+### Sensors
 
 For our sensors, we only use one camera to navigate both challenges, this helps to keep our power consumption as low as possible, keep our car and software design as simple as possible, and avoid more possible failure points. 
 
@@ -166,7 +166,7 @@ The camera uses a 5 MP OV5647 Sensor, which is adequate to detect basic colours 
 
 For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to have consistently running code that was unaffected by the environment and the direction the car was travelling. Improvements we considered were changing the camera settings or attaching a lamp to the car so that we could ensure consistent lighting. However, a solution was instead found by processing the colours using a different system (detailed in the Software section).
 
-##### Improvements
+#### Improvements
 Although this system is sufficient for our needs, object detection can be further improved by using a camera with a higher-quality sensor such as the [Raspberry Pi HQ Camera M12](https://www.pishop.ca/product/raspberry-pi-hq-camera-m12/), which performs better in different lighting and can easily distinguish between colours. An improvement to the camera would help maintain consistency in the programs to an even higher degree.
 
 Another possible improvement is the implementation of a `Gyro Sensor`, which tracks the car's orientation. We attempted to use a [BerryIMU](https://ozzmaker.com/product/berryimu-accelerometer-gyroscope-magnetometer-barometricaltitude-sensor/) for this function but decided against using it due to the extra complexity it added and its inconsistent readings. By tracking the car's orientation and keeping it heading at the same angle, it is possible to make parking more consistent and allow the car to control more precisely allowing it to go faster for the open challenge. 
