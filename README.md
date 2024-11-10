@@ -375,15 +375,15 @@ If a pillar is detected during a turn, we found the car may struggle in certain 
 If the pillar's area becomes too large while turning, the car turns too early and is on course to hit. In this case, we straightened the car's turning angle until the area was lower than a certain threshold to avoid collision. 
 
 ```py
-if ((ROI5 area > threshold and turnDir == left) or (ROI5 area > threshold and turnDir == right)):
+if ((ROI5_area > threshold and turnDir == left) or (ROI5_area > threshold and turnDir == right)):
 
-    if pillar area > threshold:
-        turn angle = straight
+    if pillar_area > threshold:
+        turn_angle = straight
     else: 
-        if turn direction == right:
-            turn angle = sharp right
+        if turnDir == right:
+            turn_angle = sharp_right
         else:
-            turn angle = sharp left
+            turn_angle = sharp_left
 ```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/ROI5.png" height="300px">
 
@@ -398,7 +398,7 @@ if (turnDir == right and orange_line_detected) or (turnDir == left and blue_line
 The region of interest is then hidden once the camera no longer detects the wall in front, a pillar in front, or there is a large enough difference in the wall areas. 
 
 ```py
-if ((pillar_area == 0 and front_area > threshold) or (difference in wall areas > threshold and front_area > threshold)) and not in_parking:
+if (pillar_area == 0 and ROI5_area > threshold) or (wall_area_difference > threshold and ROI5_area > threshold):
      hide ROI5
 ```
 
@@ -418,7 +418,7 @@ The parking walls are found with magenta colour masks and by searching in two re
 Once the magenta parking lot has been found in the left or right region of interest, we delay using time.sleep() based on the detected area to ensure the car doesn't turn too early. 
 
 ```py
-time.sleep((lot area) / (constant))
+time.sleep((lot_area) / (constant))
 ```
 
 After, the car turns to the direction in which the parking lot has been detected. If the program detects a magenta contour in the central region of interest, this indicates that the car is not centered between the wall. To avoid hitting the walls, the car backs up to allow more distance to adjust. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
