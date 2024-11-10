@@ -201,7 +201,7 @@ img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
 ```
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/base.PNG" height="300px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/Gaussian_Blur.PNG" height="300px">
 
-Then, `LAB thresholding` is applied, which changes the pixel data of the inputted image so that areas of interest are white, and everything else is black. This is done with the OpenCV library `inRange()` function, where we specify the input image and a colour mask (a range of LAB values).
+Then, `LAB thresholding` is applied, which checks if all pixels are within a certain LAB range. The resulting image has pixels within this range (areas of interest) as white, and everything else black. This is done with the OpenCV library `inRange()` function, where we specify the input image and a colour mask (range of LAB values).
 
 ```py
 #LAB colour masks for all ranges, the first array represents the lower bound, and the second represents the higher bound
