@@ -51,7 +51,7 @@ Team Members
     *  [Parking Lot Detection/Management](#parking-lot-detectionmanagement--obstacle-challenge-)
     *  [Three-Point Turn](#three-point-turn--obstacle-challenge-)
     *  [Backing Up](#backing-up--obstacle-challenge-)
-    *  [Possible Improvement: Stuck Detection](#possible-improvement-stuck-detection--open-challenge--obstacle-challenge-)
+    *  [Potential Improvement: Stuck Detection](#potential-improvement-stuck-detection--open-challenge--obstacle-challenge-)
 * **[Assembly Instructions](#-complete-assembly-instructions-)**
   
 &nbsp;
@@ -96,7 +96,7 @@ We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm i
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. This system offers benefits over a two-wheel drive system increasing the car's traction, stability, and acceleration due to the power distribution between four wheels instead of two. 
 
 #### Potential Chassis Improvement
-Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that will enable a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that it is possible to modify the original chassis to have a much greater turning angle, but we decided against modifying it any further due to time constraints. 
+Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis with a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that it is possible to modify the original chassis to have a much greater turning angle, but we decided against modifying it any further due to time constraints. 
 
 This is a video example of a modification done to a similar chassis: 
 
@@ -149,8 +149,8 @@ Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery w
 
 The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
-#### Improvements
-Our switch is large and along with the fact that the wires connecting to the switch are too long, it ends up extending the length of our car by a couple of centimetres. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
+#### Potential Circuitry Improvements
+Our switch is large and the wires connecting to it are too long. It extends the length of our car by a couple of centimetres, and its exposed nature is a structural weak point of the car. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
@@ -166,7 +166,7 @@ The camera uses a 5 MP OV5647 Sensor, which is adequate to detect basic colours 
 
 For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to consistently run code unaffected by the environment and direction. Improvements we considered were changing the camera settings or attaching a lamp to the car to ensure consistent lighting. However, a solution was found by processing the colours using a different system (detailed in the Software section).
 
-#### Improvements
+#### Potential Sensing Improvements
 Although this system is sufficient for our needs, object detection can be further improved by using a camera with a higher-quality sensor such as the [Raspberry Pi HQ Camera M12](https://www.pishop.ca/product/raspberry-pi-hq-camera-m12/), which performs better in different lighting and can easily distinguish between colours. An improvement to the camera would help maintain consistency in the programs to an even higher degree.
 
 Another possible improvement is the implementation of a `Gyro Sensor`, which tracks the car's orientation. We attempted to use a [BerryIMU](https://ozzmaker.com/product/berryimu-accelerometer-gyroscope-magnetometer-barometricaltitude-sensor/) for this function but decided against using it due to the extra complexity it added and its inconsistent readings. By tracking the car's orientation and keeping it heading at the same angle, it is possible to make parking more consistent and allow the car to control more precisely allowing it to go faster for the open challenge. 
@@ -262,7 +262,7 @@ area = cv2.contourArea(cnt)
 
 The area is returned in an array with additional data as the x-coordinate, y-coordinate, and the contour object. 
 
-#### Possible Improvements
+#### Potential Object Detection Improvements
 
 This algorithm is not perfect and the contour will not be perfectly aligned with the shape of the pillar, but it is sufficient for our needs. The accuracy of the object detection algorithm could hypothetically be improved with the use of even more morphological operations performed over more iterations. 
 
@@ -502,7 +502,7 @@ if pillar area > threshold and current x-coordinate is far from its target x-coo
     move back 
 ```
 
-### Possible Improvement: Stuck Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
+### Potential Improvement: Stuck Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
 In our testing, very rarely our car would get stuck on the wall and not be able to move. Although this happens such a small percentage of the time, having a method to counteract this would be good to have. 
 
