@@ -95,7 +95,7 @@ We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm i
 
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. This system offers benefits over a two-wheel drive system increasing the car's traction, stability, and acceleration due to the power distribution between four wheels instead of two. 
 
-#### Possible Chassis Improvement
+#### Potential Chassis Improvement
 Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis that will enable a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that it is possible to modify the original chassis to have a much greater turning angle, but we decided against modifying it any further due to time constraints. 
 
 This is a video example of a modification done to a similar chassis: 
@@ -131,13 +131,13 @@ The `Furitek Micro Komodo Brushless Motor` is also very small compared to other 
 
 The Motor is mounted on an aluminum motor mount for increased durability and passive cooling. 
 
-The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This esc provides a constant regulation that ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
+The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This ESC provides a constant regulation that ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
 
-To control steering, we use a `Hitec HS-5055MG Servo Motor`, which is a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power from the `Raspberry Pi Hardware Attached on Top (HAT)`. It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
+To control steering we use a `Hitec HS-5055MG Servo Motor`, a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power it from the `Raspberry Pi Hardware Attached on Top (HAT)`. The original 5-wire servo that came with the RC chassis had a weaker plastic gear and was non-programmable due to being connected to a customized circuit board. Due to both those flaws, we replaced the original servo. 
+
+It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
 
 This servo motor has a torque of about 1.5kg/cm at 6V allowing it to quickly and precisely change the direction of our car. This precision is vital for our needs in the obstacle challenge and open challenge. 
-
-These components all replace the original parts that came with the chassis. They fulfill the same tasks, are of much higher quality and are compatible with the software we use.
 
 &nbsp;
 
@@ -158,13 +158,13 @@ Our switch is large and along with the fact that the wires connecting to the swi
 
 For our sensors, we only use one camera to navigate both challenges. This was chosen over using LIDAR or adding ultrasonic sensors, as this helps to keep our power consumption as low as possible, keep our car and software design as simple as possible, and avoid more possible failure points. 
 
-We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the Raspberry Pi via a Camera Serial Interface (CSI) cable. We chose a CSI camera over a USB camera due to its low latency, high performance, low power consumption, and smaller size. The CSI camera has the drawback of not being plug-and-play, instead requiring a driver to be downloaded to use it, but the benefits outweighed the cost.  Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. The greater amount of information allows the program to more accurately plan the car's movements.
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the Raspberry Pi via a Camera Serial Interface (CSI) cable. We chose a CSI camera over a USB camera due to its low latency, high performance, low power consumption, and smaller size. Unlike a USB camera, the CSI camera has the drawback of not being hot-swappable, but overall, the benefits outweigh the cost.  The 'SainSmart Camera' also has a fish-eye lens which enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. The greater quantity of information allows the program to more accurately plan the car's movements.
 
 Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 
 The camera uses a 5 MP OV5647 Sensor, which is adequate to detect basic colours for our needs, but has its limitations in different lighting conditions and distinguishing between similar colours
 
-For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to have consistently running code that was unaffected by the environment and the direction the car was travelling. Improvements we considered were changing the camera settings or attaching a lamp to the car so that we could ensure consistent lighting. However, a solution was instead found by processing the colours using a different system (detailed in the Software section).
+For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to consistently run code unaffected by the environment and direction. Improvements we considered were changing the camera settings or attaching a lamp to the car to ensure consistent lighting. However, a solution was found by processing the colours using a different system (detailed in the Software section).
 
 #### Improvements
 Although this system is sufficient for our needs, object detection can be further improved by using a camera with a higher-quality sensor such as the [Raspberry Pi HQ Camera M12](https://www.pishop.ca/product/raspberry-pi-hq-camera-m12/), which performs better in different lighting and can easily distinguish between colours. An improvement to the camera would help maintain consistency in the programs to an even higher degree.
