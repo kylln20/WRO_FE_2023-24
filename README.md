@@ -156,9 +156,9 @@ Our switch is large and along with the fact that the wires connecting to the swi
 
 ### Sensors
 
-For our sensors, we only use one camera to navigate both challenges, this helps to keep our power consumption as low as possible, keep our car and software design as simple as possible, and avoid more possible failure points. 
+For our sensors, we only use one camera to navigate both challenges. This was chosen over using LIDAR or adding ultrasonic sensors, as this helps to keep our power consumption as low as possible, keep our car and software design as simple as possible, and avoid more possible failure points. 
 
-We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the Raspberry Pi via a Camera Serial Interface (CSI) cable. Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. Overall, the greater amount of information allows the program to more accurately plan the car's movements.
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the Raspberry Pi via a Camera Serial Interface (CSI) cable. We chose a CSI camera over a USB camera due to its low latency, high performance, low power consumption, and smaller size. The CSI camera has the drawback of not being plug-and-play, instead requiring a driver to be downloaded to use it, but the benefits outweighed the cost.  Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. The greater amount of information allows the program to more accurately plan the car's movements.
 
 Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 
