@@ -627,7 +627,7 @@ thread1.start()
    - Save and reboot
    - On start-up, the file placed in the rc.local file will run automatically
      
-9. **Congraulations! You've built our robot!**
+9. **Congratulations! You've built our robot!**
     - You can try running the `src` files directly from the Pi terminal using sudo python3 <<filename.py>> while in the right directory to run our program
     - You can use `Thonny`, a pre-installed compiler on the Raspberry Pi, as a code editor for the programs
     - Any other information can be found on this repository
