@@ -103,7 +103,7 @@ if __name__ == '__main__':
     
 # ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
     
-    time.sleep(3)
+    #time.sleep(3)
     
     #initialize camera
     picam2 = Picamera2()
@@ -266,16 +266,14 @@ if __name__ == '__main__':
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
         
-        time.sleep(3)
+        #time.sleep(3)
         
     LED1(0, 0, 0)
     
     #used to track time elapsed
     pTimer = time.time()
     
-    #write initial valuess
-    time.sleep(0.5)
-    multi_write([angle, 0.5, speed, 0.1, speed])
+    start = False
     
     #used to determine whether there is a pillar directly in front of the car
     startArea = 0
@@ -687,7 +685,7 @@ if __name__ == '__main__':
                 reverse = "turning"
             
             #if a pillar wasn't seen for the last 10 frames or car sees enough of the wall its turning towards, turn left until it sees the parking lot or wall in front
-            if (cPillar.area == 0 or (turnDir == "right" and rightArea > 1500) or (turnDir == "left" and leftArea > 1500)) and reverse != "turning":
+            if (cPillar.area == 0 or (turnDir == "right" and rightArea > 1500 and pillarAtStart) or (turnDir == "left" and leftArea > 1500 and pillarAtStart)) and reverse != "turning":
                 reverse = "turning"
                 
             if reverse == "turning":
@@ -705,7 +703,11 @@ if __name__ == '__main__':
                 reverse = "done"
                 
 # ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
-        
+        if not start: 
+            #write initial valuess
+            multi_write([1, speed, 0.5, angle])
+            start = True
+            
         if angle != prevAngle or rTurn or lTurn:
             
             #if area of wall is large enough and turning line is not detected end turn
