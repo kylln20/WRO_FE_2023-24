@@ -10,7 +10,7 @@ import threading
 import HiwonderSDK.Board as Board
 import time
 from functions import *
-from masks import rOrange, rBlack
+from masks import rOrange, rBlack, rBlue
     
 if __name__ == '__main__':
     
@@ -87,13 +87,14 @@ if __name__ == '__main__':
         #wait until button press
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
+        
         time.sleep(3)
         
     LED1(0, 0, 0)
     LED2(0, 0, 255)
     
-    #write intial values to car
-    multi_write([angle, 0.5, 1670, 0.1, speed])
+    start = False
+    turnDir = "none"
 
     #main loop
     while True:
@@ -110,18 +111,25 @@ if __name__ == '__main__':
         #blur image
         img_lab = cv2.GaussianBlur(img_lab, (7, 7), 0)
         
-        #find contours of walls and orange line
+        #find contours of walls and orange and blue lines
         cListLeft = find_contours(img_lab, rBlack, ROI1)
         cListRight = find_contours(img_lab, rBlack, ROI2)
         cListOrange = find_contours(img_lab, rOrange, ROI3)
+        cListBlue = find_contours(img_lab, rBlue, ROI3)
         
         #find areas of walls
         leftArea = max_contour(cListLeft, ROI1)[0]
         rightArea = max_contour(cListRight, ROI2)[0]
         
-        #indicate if orange line is detected
+        #indicate if orange line or blue line is detected and set turn direction accordingly
         if max_contour(cListOrange, ROI3)[0] > 100: 
             lDetected = True
+            if turnDir == "none":
+                turnDir = "right"
+        elif max_contour(cListBlue, ROI3)[0] > 100:
+            lDeteted = True
+            if turnDir == "none":
+                turnDir = "left"
         
         #draw contours
         cv2.drawContours(img[ROI3[1]:ROI3[3], ROI3[0]:ROI3[2]], cListOrange, -1, (0, 255, 0), 2)
@@ -144,6 +152,11 @@ if __name__ == '__main__':
 
             rTurn = True
             LED1(255, 0, 0)
+            
+        if not start:
+            #write intial values to car
+            multi_write([2, angle, 0.5, speed])
+            start = True
 
         #if angle is different from previous angle
         if angle != prevAngle:
@@ -194,10 +207,16 @@ if __name__ == '__main__':
         
         #stop car once car is straight and 12 turns have been performed
         if t == 12 and abs(angle - straightConst) <= 10:
-            sleep(1)
+            
+            #change delay based on turn direction
+            if turnDir == "left": 
+                sleep(1)
+            else:
+                sleep(1.5)
+                
             stop_car() 
             break
-        
+
         #debug mode
         if debug: 
             
