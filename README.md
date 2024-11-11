@@ -145,7 +145,7 @@ These components all replace the original parts that came with the chassis. They
 ---
 
 ### Power and Wiring
-Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. This powerful battery easily satisfies the power demands of the Raspberry Pi, motors, and sensors. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi, and still have a 7.4V output for the motors. 
+Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. This powerful battery easily satisfies the power demands of the Raspberry Pi, camera, 7.4V DC motor, and servo motor. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
 
 The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
@@ -158,7 +158,7 @@ Our switch is large and along with the fact that the wires connecting to the swi
 
 For our sensors, we only use one camera to navigate both challenges, this helps to keep our power consumption as low as possible, keep our car and software design as simple as possible, and avoid more possible failure points. 
 
-We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the HAT via a Camera Serial Interface (CSI) cable. Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. Overall, the greater amount of information allows the program to more accurately plan the car's movements.
+We use a `SainSmart Wide-Angle Camera`, which carries pixel data to the Raspberry Pi via a Camera Serial Interface (CSI) cable. Its fish-eye lens enables it to have a field of vision angle of 160 degrees, which allows us to detect more of the game field- whether that be the signal pillars, the coloured lines on the mat, or the walls- both at the front and to the sides of the car. Overall, the greater amount of information allows the program to more accurately plan the car's movements.
 
 Based on said pixel data, we can identify objects based on their size and colour. From such information, our program will calculate the desired speed and turning angle which it will send through the HAT to the DC and servo motors respectively with pulse-width modulation (PWM) signals. 
 
