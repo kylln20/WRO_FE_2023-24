@@ -135,9 +135,7 @@ The motor receives power and signal via PWM from the `Furitek Lizard Pro Electro
 
 To control steering we use a `Hitec HS-5055MG Servo Motor`, a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power it from the `Raspberry Pi Hardware Attached on Top (HAT)`. The original 5-wire servo that came with the RC chassis had a weaker plastic gear and was non-programmable due to being connected to a customized circuit board. Due to both those flaws, we replaced the original servo. 
 
-It is connected to the wheel axis with a 3D-printed adapter piece that is screwed onto the rotational part of the servo.
-
-This servo motor has a torque of about 1.5kg/cm at 6V allowing it to quickly and precisely change the direction of our car. This precision is vital for our needs in the obstacle challenge and open challenge. 
+The servo is connected to the front wheel axis with a 3D-printed adapter piece that is screwed onto the servo shaft. It has a torque of about 1.5kg/cm at 6V allowing it to quickly and precisely change the direction of our car. This precision is vital for our needs in the obstacle challenge and open challenge.
 
 &nbsp;
 
