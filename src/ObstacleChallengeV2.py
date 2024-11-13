@@ -66,14 +66,14 @@ def find_pillar(contours, target, p, colour):
                 LED2(255, 255, 0)
                 
                 #move back 
-                multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 1, speed])
+                multi_write([straightConst, 0.1, 1500, 0.1, reverseSpeed, 0.5, speed])
                 
                 if tempParking:
                     write(1650)
                 
                 #if car is supposed to stop increase the timer as we moved back
                 if s != 0:
-                    s += 2
+                    s += 1.5
                 
                 #in the case of the car turning for a three point turn and seeing a pillar first instead of the wall, complete it as we have already switched directions
                 if reverse == "turning" and turnDir == "right":
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     
 # ------------------------------------------------------------{ initialization of variables }-------------------------------------------------------------------------
     
-    #time.sleep(3)
+    time.sleep(3)
     
     #initialize camera
     picam2 = Picamera2()
@@ -154,9 +154,6 @@ if __name__ == '__main__':
     
     #determines the offset from the bottom of the ROI when the car should stop seeing a pillar
     endConst = 30
-    
-    #stores whether a pillar or no pillar was seen, True for if a pillar was seen, False for if no pillar was seen. Is used to ensure no small interuptions have effect
-    tList = []
     
     #regions of interest
     #ROI1: for finding left lane
@@ -266,7 +263,7 @@ if __name__ == '__main__':
         while GPIO.input(key2_pin) == GPIO.HIGH:
             pass
         
-        #time.sleep(3)
+        time.sleep(2)
         
     LED1(0, 0, 0)
     
@@ -411,6 +408,11 @@ if __name__ == '__main__':
             #update t2
             t2 = t
             
+            if t2 == 7:
+                if not pillarAtStart:
+                    #readjust region of interest so pillars are seen earlier
+                    ROI3[1] = 110
+            
             #show ROI5 to make sharper turns during the lap where parking is performed
             if tempParking:
                 ROI5 = [270, 120, 370, 140]
@@ -428,7 +430,7 @@ if __name__ == '__main__':
             #determine if there was a pillar directly in front by checking the biggest pillar's area and colour (target). 
             if t == 0 and pillarAtStart == -1:
                 print("start area:", startArea)
-                if (startArea > 3000 and startTarget == greenTarget) or (startArea > 2000 and startTarget == redTarget):
+                if (startArea > 2500 and startTarget == greenTarget) or (startArea > 1500 and startTarget == redTarget): #3000, 2000
                     pillarAtStart = True
                 else:
                     pillarAtStart = False
@@ -610,6 +612,8 @@ if __name__ == '__main__':
                     #check for three-point turn by checking the last pillar, turn direction, area, and whether there is a pillar at the start
                     if t == 8:
                         
+                        ROI3[1] = 120
+                        
                         if debug: print(f"pillar area: {cPillar.area}, wall areas: {leftArea} {rightArea}, targets: {lastTarget} {cPillar.target}")
                         
                         if pillarAtStart:
@@ -622,10 +626,14 @@ if __name__ == '__main__':
                         else:
                             if cPillar.target == redTarget and not pillarAtStart:
                                 reverse = True
+                                #extend ROI3 to make it easier to see pillars
+                                ROI3[1] = 110            
                                 
                 #set turns to false as the turn ended
                 lTurn = False
                 rTurn = False
+                
+                
             
             #calculate error based on the difference between the target x coordinate and the pillar's current x coordinate
             error = cPillar.target - cPillar.x
@@ -669,7 +677,7 @@ if __name__ == '__main__':
         #if parking lot is too large turn away from it to avoid collision
         if rPArea > 5000:
             angle = sharpLeft
-
+            
 # ------------------------------------------------------------{ three point turn logic }-------------------------------------------------------------------------
 
         if reverse != "done" and (reverse == True or reverse == "turning"):
@@ -680,19 +688,24 @@ if __name__ == '__main__':
             rTurn = False
             lTurn = False
             
-            #if green pillar is seen turn left
-            if cPillar.target == greenTarget:
-                reverse = "turning"
+            #if green pillar is seen turn left or no pillar is seen
+            if (cPillar.target == greenTarget and cPillar.area != 0) or cPillar.area == 0:
+                angle = sharpLeft
             
-            #if a pillar wasn't seen for the last 10 frames or car sees enough of the wall its turning towards, turn left until it sees the parking lot or wall in front
-            if (cPillar.area == 0 or (turnDir == "right" and rightArea > 1500 and pillarAtStart) or (turnDir == "left" and leftArea > 1500 and pillarAtStart)) and reverse != "turning":
+            #if car sees enough of the wall its turning towards, turn left until it sees the parking lot or wall in front
+            if ((turnDir == "right" and rightArea > 1500 and pillarAtStart) or (turnDir == "left" and leftArea > 1500 and pillarAtStart)) and reverse != "turning":
                 reverse = "turning"
                 
             if reverse == "turning":
-                angle = sharpLeft
+                #ensure that angle can change if too close to a pillar
+                if not (cPillar.target == redTarget and cPillar.area > 6000): 
+                    angle = sharpLeft
             
             #stop turning once right in front of wall or parking lot
             if areaFront > 2000 or areaFrontMagenta > 750:
+                
+                #reset ROI3
+                ROI3[1] = 120
                 
                 #perform three point turn maneuver
                 delay = 1.5 if areaFront > 2000 else 2
@@ -704,7 +717,7 @@ if __name__ == '__main__':
                 
 # ------------------------------------------------------------{ final processing before writing angle to servo motor }-------------------------------------------------------------------------
         if not start: 
-            #write initial valuess
+            #write initial values
             multi_write([1, speed, 0.5, angle])
             start = True
             
@@ -728,6 +741,7 @@ if __name__ == '__main__':
                       if lastTarget == redTarget:
                           multi_write([straightConst, 0.25])    
                           reverse = "turning"
+                      ROI3[1] = 120
                   
             # if a car is parking or performing a three-point turn
             if not parkingR and not parkingL:
