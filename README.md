@@ -148,7 +148,7 @@ Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery w
 The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
 #### Potential Circuitry Improvements
-Our switch is large and the wires connecting to it are too long. It extends the length of our car by a couple of centimetres, and its exposed nature is a structural weak point of the car. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
+Our switch is large and the wires connecting to it are too long. It extends the length of our car by a couple of centimeters, and its exposed nature is a structural weak point of the car. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/schemes/schematic.png" height="400px"> <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wiring2.jpg" height="400px"> 
 
@@ -188,12 +188,12 @@ Object Management
 
 ### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
-The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to `LAB (lightness, green-red, blue-yellow)`. We chose to use the LAB colour space due to it being better at accounting for different lighting environments. Previously, we used the data format of `HSV (hue, saturation, value)`. It was easier to select ranges for our colour masks than BGR or RGB. While LAB makes it less intuitive to find the colour ranges, the colour masks themselves are better for detecting the objects, as the two values concerning colour allow for better control than the H variable in HSV does. A significant improvement from the change is that the colour masks defined using LAB values have eliminated instances where the robot mistakens the magenta parking lot for being a red signal pillar.
+The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to `LAB (lightness, green-red, blue-yellow)`. We chose to use the LAB colour space due to it being better at accounting for different lighting environments. Previously, we used the data format of `HSV (hue, saturation, value)`. It was easier to select ranges for our colour masks than BGR or RGB. While LAB makes it less intuitive to find the colour ranges, the colour masks themselves are better for detecting the objects, as the two values concerning colour allow for better control than the H variable in HSV does. A significant improvement from the change is that the colour masks defined using LAB values have eliminated instances where the robot mistakes the magenta parking lot for being a red signal pillar.
 ```py
 img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 ```
 
-Then, we perform a Gaussian blur on the image using the OpenCV library `GaussianBlur()` function. This smooths any edges in the image and removes small noise, making the overall shape of the any obstacles easier to detect. 
+Then, we perform a Gaussian blur on the image using the OpenCV library `GaussianBlur()` function. This smooths any edges in the image and removes small noise, making the overall shape of any obstacles easier to detect. 
 ```py
 img_blur = cv2.GaussianBlur(img_lab, (7, 7), 0)
 ```
@@ -241,7 +241,7 @@ contours = cv2.findContours(mask, cv2.RETR_EXTERNAL,
     cv2.CHAIN_APPROX_SIMPLE)[-2]
 ```
 
-We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track. This processing is placed in a function which takes in the LAB image, LAB mask ranges, and the ROI in which contours should be detected. The function returns a list of contours from the thresholded mask: 
+We use this method of detection for all target objects including the signal pillars, the coloured lines on the game mat, the magenta parking lot, and the black walls around the track. This processing is placed in a function that takes in the LAB image, LAB mask ranges, and the ROI in which contours should be detected. The function returns a list of contours from the thresholded mask: 
 
 ```py
 def find_contours(img_lab, lab_range, ROI):
@@ -270,7 +270,7 @@ One approach we tried was to use a bilateral filtering algorithm to better retai
  cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
 ```
 
-but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance, or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
+but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
 
 [^3]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs, especially before switching to LAB. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTesterLAB.py code.
 
@@ -278,13 +278,13 @@ but the program slowed from 30 fps down to 8 fps. If one could find a way to opt
 
 The wall contours are detected with one region of interest for each wall. 
 
-The areas of each contour is added into their respective variable, leftArea for the area of the left wall, and rightArea for the area of the right wall. 
+The areas of each contour are added into their respective variable, leftArea for the area of the left wall, and rightArea for the area of the right wall. 
 
 In addition to the area of the black wall, we also add the areas of any magenta contour we see to help make sure we avoid collision with the parking lot. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wallcontour.png" height="300px">
 
-To stay centered when driving straight, we use a proportional derivitave (PD) algorithm, which involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
+To stay centered when driving straight, we use a proportional derivative (PD) algorithm, which involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
 
 * A difference in contour areas (error)
 * A straight constant (straightConst)- the number that would be sent for the car to go straight
@@ -352,12 +352,12 @@ elif rTurn:
     angle = max(min(angle, sharpRight), maxRight)
 ```
 
- The turning ends once the area of the side that was below the threshold regains enough area. Additionally, to count the number of corners the car has passed, the program counts the orange lines on the mat. The line is searched for using our object detection algorithm, with an orange colour mask on a centred region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
+ The turning ends once the area of the side that was below the threshold regains enough area. Additionally, to count the number of corners the car has passed, the program tracks whether the orange or blue lines on the mat have been detected. The line is searched for using our object detection algorithm, with an orange colour mask on a centered region of interest. Once the area of the line contour has passed a certain value, the program knows the car has passed a corner.
  
 ```py
 if (rightArea > exitThresh and rTurn) or (leftArea > exitThresh and lTurn): 
-    end turns
-    increase number of turns if orange line was detected
+    end turn
+    increase number of turns if orange or blue line was detected
 ```
 &nbsp;
 
@@ -419,7 +419,7 @@ Once the magenta parking lot has been found in the left or right region of inter
 time.sleep((lot_area) / (constant))
 ```
 
-After, the car turns to the direction in which the parking lot has been detected. If the program detects a magenta contour in the central region of interest, this indicates that the car is not centered between the wall. To avoid hitting the walls, the car backs up to allow more distance to adjust. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
+After, the car turns to the direction in which the parking lot has been detected. If the program detects a magenta contour in the central region of interest, the car is not centered between the parking walls. To avoid hitting the walls, the car backs up to allow more distance to adjust. Additionally, while parking into the lot on the left, if the right region of interest is found to have a large enough area in both magenta and black, the car is too far left, meaning we have to turn right.
 ```py
 
 if parking lot is on the right:
@@ -450,7 +450,7 @@ The car stops once the area of the wall detected in the middle is large enough, 
 
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done by checking whether there was a pillar directly in front of the car at the start of the program and the area of the pillar detected during the 8th turn. 
 
-We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we have detected before the first turn is larger than a certain threshold or if 2 pillars of a single color have been detected before the first turn. 
+We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we detected before the first turn is larger than a certain threshold or if two pillars of a single color were detected before the first turn. 
 
 ```py
 if orange line detected and turn direction == right or blue line detected and turn direction == left
@@ -466,21 +466,21 @@ if num_pillars_g >= 2 or num_pillars_r >= 2 and pillarAtStart == not set:
 
 If there was no pillar directly in front of the car in the starting section, we can assume that any pillar seen during the 8th turn is the last pillar of the second lap. 
 
-If there was a pillar directly in front of the car, we know it could not be the last pillar of the second lap. If there was another pillar in the starting section, it would be considered the last pillar in the second lap. If this extra pillar is present, it would be close to the edge as it's impossible to have a pillar in the middle with two pillars. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
+If a pillar was directly in front of the car (in the starting section), we know it could not be the last pillar of the second lap. If there was another pillar in the starting section, it would be considered the last pillar in the second lap. If this extra pillar is present, it would be close to the edge as it's impossible to have a pillar in the middle with two pillars. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
 
 If no pillar is detected during the 8th turn, the last pillar detected is the last pillar of the second lap so we use it to determine whether to do a three-point turn. 
 
 ```py
 if turn is ended by seeing the wall: 
      if last pillar seen is red: 
-          perform three point turn
+          perform three-point turn
           
 if turn is ended by seeing the pillar: 
      if there was a pillar directly in front: 
           if area of current pillar is larger than a threshold and is red: 
-                 perform turn
+                 perform three-point turn
      if there was no pillar directly in front and current pillar is red: 
-          perform turn
+          perform three-point turn
 ```
 
 This approach to determining the need to perform a three-point turn proved much more consistent than our last approach, which relied heavily on specific wall area and pillar area thresholds vulnerable to lighting and color. 
@@ -577,7 +577,7 @@ thread1.start()
    - The electrical components are housed within the center of the chassis. They can be accessed by unscrewing another plastic cover
      
 2. **Removing unnecessary parts**
-   - Take out the DC motor, servo motor, ESC and RC module. The first three will be replaced by better components.
+   - Take out the DC motor, servo motor, ESC, and RC module. The first three will be replaced by better components.
    - This will require unscrewing as well as ripping parts off of the adhesive
    - Note that some rear portions of the car will need to the disassembled temporarily to access some screws
 
@@ -588,10 +588,10 @@ thread1.start()
    - The gear head may need to be replaced. Judge this based on how well it meshes with the drive system gears
    Servo Motor Installation: 
    - 3D-print our servo attachment, place it on the head of the servo motor, and secure it with a screw and nut. 
-   - The `Hitec HS-5055MG Servo Motor` also needs it's wings clipped before installing
+   - The `Hitec HS-5055MG Servo Motor` also needs its wings clipped before installing
 
 5. **Wiring**
-   - Ensure everything is wired properly, according the the schematic above.
+   - Ensure everything is wired properly, according to the schematic above.
    - Here, you can also splice your switch into your battery wires
    - Although they haven't been installed yet, you can test the connection to the Raspberry Pi and the battery
    - Although the Raspberry Pi and ESC both contain switches, we only use our self-added switch to turn on the whole system
