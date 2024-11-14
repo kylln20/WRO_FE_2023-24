@@ -81,7 +81,7 @@ Team Members
 
 **Total Car Cost: $867 CAD**
 
-[^1]:This link is for the `Hiwonder TurboPi Car`, which uses the `HiWonder TurboPi HAT`. We contacted the manufacturer to purchase the HAT directly.
+[^1]: This link is for the `Hiwonder TurboPi Car`, which uses the `HiWonder TurboPi HAT`. We contacted the manufacturer to purchase the HAT directly.
 
 <sup>*3D printed parts were made with the [`BambuLab P1P`](https://ca.store.bambulab.com/products/p1p)</sup>
 
@@ -91,12 +91,12 @@ Team Members
 ---
 
 ### Chassis
-We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length)to accommodate the addition of the magenta parking lot in the obstacle challenge. It allows us to simply park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to parallel park, a car will usually need to reverse, requiring an additional rear-facing sensor of some kind. Such would unnecessarily complicate the system.
+We use the chassis of the `Carisma GT24`, a pre-built 1/24 scale RC car (15 cm in length) to accommodate the added challenge of the magenta parking lot in the obstacle challenge. It allows us to park head-on, as opposed to parallel parking. Head-in parking has fewer steps, reducing our obstacle challenge time. Also, while head-in parking, the car only needs to be aware of what is beside it and what is in front of it, which can be assessed with a single front-facing camera. Comparatively, to perform parallel parking, a car will usually need to reverse, requiring an additional rear-facing sensor. Such would unnecessarily complicate the system.
 
 The chassis also enables a four-wheel drive system, with pre-integrated gearboxes. This system offers benefits over a two-wheel drive system increasing the car's traction, stability, and acceleration due to the power distribution between four wheels instead of two. 
 
 #### Potential Chassis Improvement
-Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis with a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Switching the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that it is possible to modify the original chassis to have a much greater turning angle, but we decided against modifying it any further due to time constraints. 
+Although the chassis has many benefits, its design only allows a maximum turning angle of 50 degrees. Although sufficient for our task, a car with a chassis with a greater turning angle would more easily navigate the challenges and could be pushed to navigate at a higher speed. Swapping the chassis for one with a higher turning angle, whether store-bought or 3D-printed, would significantly improve the car's movement and obstacle avoidance. We have also seen that one can modify the original chassis to have a much greater turning angle, but we decided against it due to time constraints. 
 
 This is a video example of a modification done to a similar chassis: 
 
@@ -120,18 +120,18 @@ This is a video example of a modification done to a similar chassis:
 
 The design of the camera mount changed from our national competition with it becoming one singular piece mounted directly on the printed car base. 
 
-It used to consist of 3 pieces, mounted to thin plastic posts on the chassis. 
+It used to be three seperate pieces, mounted to thin plastic posts on the chassis. 
 
 This redesign allowed for a much more sturdy camera mount ensuring the camera is stable during object detection. 
 
 ### Motors
-Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is especially important during slow turns to avoid cogging.
+Our car uses a `Furitek Micro Komodo Brushless Motor`. Brushless motors refer to the lack of small "brushes" in the motor that a brushed motor would have. This design reduces motor friction, improving lifespan, torque, efficiency, and acceleration. Adequate torque is essential during slow turns to avoid cogging.
 
-The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, it is still very powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
+The `Furitek Micro Komodo Brushless Motor` is also very small compared to other RC car motors, making it fit well with our small chassis. It fits conveniently in the place of the original motor, with a metal gearhead that connects to the rest of the drive system. Despite its size, the motor is remarkably powerful. With a KV (RPM/Motor) of 3450, this motor allows us to reach high speeds without maxing out the motor. 
 
 The Motor is mounted on an aluminum motor mount for increased durability and passive cooling. 
 
-The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This ESC provides a constant regulation that ensures we can maintain a constant pace, along with smooth acceleration and deceleration.
+The motor receives power and signal via PWM from the `Furitek Lizard Pro Electronic Speed Controller (ESC)`. This ESC provides constant regulation that ensures we can maintain a constant pace, with smooth acceleration and deceleration.
 
 To control steering we use a `Hitec HS-5055MG Servo Motor`, a three-wire connection (signal, voltage, ground) metal gear servo motor. We control and power it from the `Raspberry Pi Hardware Attached on Top (HAT)`. The original 5-wire servo that came with the RC chassis had a weaker plastic gear and was non-programmable due to being connected to a customized circuit board. Due to both those flaws, we replaced the original servo. 
 
@@ -145,7 +145,7 @@ The servo is connected to the front wheel axis with a 3D-printed adapter piece t
 ### Power and Wiring
 Our car gets power from a single `Gens Ace 1300mAh 7.4V Battery`. This battery was chosen mainly due to its high 45 C rating allowing for a higher discharge of electricity while still being lightweight and compact. This powerful battery easily satisfies the power demands of the Raspberry Pi, camera, 7.4V DC motor, and servo motor. Although the `Raspberry Pi 4B` runs off 5V, our Pi HAT contains a voltage regulator allowing the 7.4V output of the battery to be limited to 5V to power the Raspberry Pi. 
 
-The wires of the battery are connected via soldering to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
+The wires of the battery are soldered to the circuits of the Raspberry Pi and ESC in parallel with a switch controlling the passage of electricity at the beginning of the circuit. This design eliminated the need for two separate batteries, saving space, simplifying our circuit, and reducing the car’s overall weight.
 
 #### Potential Circuitry Improvements
 Our switch is large and the wires connecting to it are too long. It extends the length of our car by a couple of centimeters, and its exposed nature is a structural weak point of the car. Our design could be improved by using a smaller switch with a shorter length of wire, making the car more compact. 
@@ -162,7 +162,7 @@ Based on said pixel data, we can identify objects based on their size and colour
 
 The camera uses a 5 MP OV5647 Sensor, which is adequate to detect basic colours for our needs, but has its limitations in different lighting conditions and distinguishing between similar colours
 
-For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to consistently run code unaffected by the environment and direction. Improvements we considered were changing the camera settings or attaching a lamp to the car to ensure consistent lighting. However, a solution was found by processing the colours using a different system (detailed in the Software section).
+For the Canadian National WRO Future Engineers competition, the camera's sensitivity to different lighting conditions made it difficult to consistently run code that is unaffected by the environment and direction. Improvements we considered were changing the camera settings or attaching a lamp to the car to ensure consistent lighting. However, a solution was found by processing the colours using a different system (detailed in the Software section).
 
 #### Potential Sensing Improvements
 Although this system is sufficient for our needs, object detection can be further improved by using a camera with a higher-quality sensor such as the [Raspberry Pi HQ Camera M12](https://www.pishop.ca/product/raspberry-pi-hq-camera-m12/), which performs better in different lighting and can easily distinguish between colours. An improvement to the camera would help maintain consistency in the programs to an even higher degree.
@@ -181,14 +181,14 @@ The program running on the Raspberry Pi is written in Python.
 
 🛜 Initialization and Connection Process 🛜
 ---
-We used the Raspberry Pi imager to write the Raspberry Pi operating system onto an SD card that allowed us to use our Pi HAT. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through a wifi connection. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
+We used the Raspberry Pi imager to write the Raspberry Pi operating system onto an SD card that allowed us to use our Pi HAT. Once the operating system is downloaded onto the SD card, when the Raspberry Pi is running AP (Access Point) mode, we can connect to the Raspberry Pi through wifi. Once we have selected the Access Point in the wifi tab, we use VNC Viewer to connect remotely to and interact with the Raspberry Pi using a set IP address. 
 
 Object Management
 ---
 
 ### Object Detection <sub> (Open Challenge / Obstacle Challenge) </sub>
 
-The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to `LAB (lightness, green-red, blue-yellow)`. We chose to use the LAB colour space due to it being better at accounting for different lighting environments. Previously, we used the data format of `HSV (hue, saturation, value)`. It was easier to select ranges for our colour masks than BGR or RGB. While LAB makes it less intuitive to find the colour ranges, the colour masks themselves are better for detecting the objects, as the two values concerning colour allow for better control than the H variable in HSV does. A significant improvement from the change is that the colour masks defined using LAB values have eliminated instances where the robot mistakes the magenta parking lot for being a red signal pillar.
+The camera captures an image, which the program then converts from OpenCV’s default pixel data format of BGR (blue, green, red) to `LAB (lightness, green-red, blue-yellow)`. We chose to use the LAB colour space because it performs better no matter the lighting environment. Previously, we used `HSV (hue, saturation, value)`. It was easier to select ranges for our colour masks than BGR or RGB. While LAB makes it less intuitive to find the colour ranges, the colour masks themselves are better for detecting the objects, as the two values concerning colour allow for better control than the H variable in HSV does. A significant improvement from the change is that the colour masks defined using LAB values have eliminated instances where the robot mistakes the magenta parking lot for being a red signal pillar.
 ```py
 img_lab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
 ```
@@ -210,7 +210,7 @@ rOrange = [[0, 163, 163], [255, 191, 204]]
 rBlack = [[0, 109, 113], [59, 137, 150]]
 ```
 
-The colour mask[^3] allows us to account for how lighting causes colour variation for the target object. Additionally, the input image can be modified with array splicing so we only search in a specific region of interest. By only searching in the desired region of interest, we also reduce the amount of processing required for the car to produce a speed and angle value to send to the motors. This gives the robot the chance to analyse more images, which means more frequent decisions, which means obstacles can be avoided with more efficiently. This was an improvement made after nationals, and it led to the car avoiding obstacles better. 
+The colour mask[^3] allows us to account for how lighting causes colour variation for the target object. Additionally, the input image can be modified with array splicing so we only search in a specific region of interest. By only searching in the region of interest, we also reduce the processing required for the car to produce a speed and angle value to send to the motors. This gives the robot time to analyze more images, which means more frequent decisions, and obstacles that can be avoided more efficiently. This improvement made after nationals and led to the car avoiding obstacles better. 
 
 ```py
 img_segmented = img_lab[ROI[1]:ROI[3], ROI[0]:ROI[2]]
@@ -270,7 +270,7 @@ One approach we tried was to use a bilateral filtering algorithm to better retai
  cv2.bilateralFilter(image, d=9, sigmaColor=75, sigmaSpace=75)
 ```
 
-but the program slowed from 30 fps down to 8 fps. If one could find a way to optimize the Raspberry Pi 4's performance or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
+but the program slowed from 30 fps down to 8 fps. If one could optimize the Raspberry Pi 4's performance or make our obstacle challenge code more efficient, these operations could be performed easily leading to more accurate object detection. 
 
 [^3]: The colour masks used for each object still depend on the environment the car is in. We had difficulties getting the program to perform well in a room with yellow-tinted lights instead of white LEDs, especially before switching to LAB. This required changing the colour masks when running the car in that environment. An existing code that was useful for finding/adjusting colour masks was from an [OpenCV tutorial](https://docs.opencv.org/3.4/da/d97/tutorial_threshold_inRange.html), which was modified to be the ColourTesterLAB.py code.
 
@@ -278,18 +278,18 @@ but the program slowed from 30 fps down to 8 fps. If one could find a way to opt
 
 The wall contours are detected with one region of interest for each wall. 
 
-The areas of each contour are added into their respective variable, leftArea for the area of the left wall, and rightArea for the area of the right wall. 
+The areas of each contour are added to their respective variable, leftArea for the area of the left wall and rightArea for the area of the right wall. 
 
-In addition to the area of the black wall, we also add the areas of any magenta contour we see to help make sure we avoid collision with the parking lot. 
+In addition to the area of the black wall, we also add the areas of any magenta contour we see to help avoid collision with the parking lot. 
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/wallcontour.png" height="300px">
 
 To stay centered when driving straight, we use a proportional derivative (PD) algorithm, which involves calculating the difference between the areas of the two contours and calculating a turning angle based on:
 
-* A difference in contour areas (error)
-* A straight constant (straightConst)- the number that would be sent for the car to go straight
-* A proportional constant (cKp) - the constant that gets multiplied by error 
-* A derivative constant (cKd) - the constant that gets multiplied by the difference in the error and the previous error (prevError)
+* A difference in contour areas (`error`)
+* A straight constant (`straightConst`)- the number that would be sent for the car to go straight
+* A proportional constant (`cKp`) - the constant that gets multiplied by `error` 
+* A derivative constant (`cKd`) - the constant that gets multiplied by the difference in the error and the previous error (`prevError`)
 
 The resulting calculation is:
 ```py
@@ -316,15 +316,15 @@ error = target x - current x
 #calculate new angle using PD steering
 angle = int(straightConst + error * cKp + (error - prevError) * cKd)
 
-#adjust the angle further based on cy value
+#adjust the angle further based on the y-coordinate (cy) value
 angle -= int(cy * y) if error <= 0 else -int(cy * y)
 ```
 
 <img src="https://github.com/kylln20/WRO_FE_2023-24/blob/main/other/extra%20images/pillarcoord.png" height="300px">
 
-In the event there are 2 or more pillars seen, we determine the one to focus on by calculating the distance between the bottom middle of the screen, to the bottom middle of the pillar. We use the closest pillar to calculate the servo angle. 
+In the event there are 2 or more pillars seen, we determine which one to focus on by calculating the distance between the bottom-middle of the screen to the bottom-middle of the pillar. We use the closest pillar to calculate the servo angle. 
 
-Additionally, we change the control variables to be weaker when 2 or more pillars of the same color are seen, so the car can successfully navigate tight corner cases. 
+Additionally, we change the control variables to be weaker when 2 or more pillars of the same colour are seen, so the car can successfully navigate tight corner cases. 
 
 While we detect a pillar, if the area of the left or right walls becomes too large, we deselect the current pillar so the wall areas determine the angle instead. This allows the car to turn towards the middle and avoid hitting the wall
 
@@ -438,7 +438,7 @@ if parking lot is on the right:
      else:
          turn left
 
-if area of wall in front > threshold:
+if the area of the wall in front > threshold:
     turn the wheels straight and stop the car
 ```
 
@@ -450,7 +450,7 @@ The car stops once the area of the wall detected in the middle is large enough, 
 
 After the eighth turn has been counted by seeing a wall or a pillar, we check whether a three-point turn is required. This is done by checking whether there was a pillar directly in front of the car at the start of the program and the area of the pillar detected during the 8th turn. 
 
-We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we detected before the first turn is larger than a certain threshold or if two pillars of a single color were detected before the first turn. 
+We determine if there was a pillar in front of the car in the starting section by seeing if the maximum pillar area we detected before the first turn is larger than a certain threshold or if two pillars of a single colour were detected before the first turn. 
 
 ```py
 if orange line detected and turn direction == right or blue line detected and turn direction == left
@@ -466,7 +466,7 @@ if num_pillars_g >= 2 or num_pillars_r >= 2 and pillarAtStart == not set:
 
 If there was no pillar directly in front of the car in the starting section, we can assume that any pillar seen during the 8th turn is the last pillar of the second lap. 
 
-If a pillar was directly in front of the car (in the starting section), we know it could not be the last pillar of the second lap. If there was another pillar in the starting section, it would be considered the last pillar in the second lap. If this extra pillar is present, it would be close to the edge as it's impossible to have a pillar in the middle with two pillars. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
+If a pillar was directly in front of the car (in the starting section), we know it could not be the last pillar of the second lap. If there is another pillar in the starting section, it would be considered the last pillar in the second lap. If this extra pillar is present, it would be close to the edge as it's impossible to have a pillar in the middle with two pillars. This means that the area of the pillar that is seen during the turn must be large. Therefore, we check if the area of the pillar is above a threshold. 
 
 If no pillar is detected during the 8th turn, the last pillar detected is the last pillar of the second lap so we use it to determine whether to do a three-point turn. 
 
@@ -483,7 +483,7 @@ if turn is ended by seeing the pillar:
           perform three-point turn
 ```
 
-This approach to determining the need to perform a three-point turn proved much more consistent than our last approach, which relied heavily on specific wall area and pillar area thresholds vulnerable to lighting and color. 
+This approach to determining the need to perform a three-point turn proved much more consistent than our last approach, which relied heavily on specific wall area and pillar area thresholds vulnerable to lighting and colour. 
 
 Once we know a three-point turn must be performed, the car will immediately turn to the left unless it detects a red pillar, in which case it will turn after passing the red pillar by waiting until no pillar is detected or the area of the wall in which the car is turning towards is large enough. The car will turn left until it detects the wall or parking lot in front using the same ROI used for detecting the coloured lines. It will then back up while turning to the right for a certain period. Then the program will resume.
 
@@ -573,11 +573,11 @@ thread1.start()
 ===
 
 1. **Strip the `Carisma GT24` chassis.**
-   - The car itself comes with a realistic car cover. This is purely cosmetic, and can be removed, as well as the mounts supporting it.
+   - The car itself comes with a realistic car cover. This is purely cosmetic and can be removed, along with the mounts supporting it.
    - The electrical components are housed within the center of the chassis. They can be accessed by unscrewing another plastic cover
      
 2. **Removing unnecessary parts**
-   - Take out the DC motor, servo motor, ESC, and RC module. The first three will be replaced by better components.
+   - Take out the DC motor, servo motor, ESC, and RC module. The first three parts listed will be replaced by higher quality components.
    - This will require unscrewing as well as ripping parts off of the adhesive
    - Note that some rear portions of the car will need to the disassembled temporarily to access some screws
 
@@ -585,7 +585,7 @@ thread1.start()
    DC Motor Installation:
    - Install the `Aluminum DC Motor Mount`
    - Install The `Furitek Micro Komodo Brushless Motor` onto the motor mount
-   - The gear head may need to be replaced. Judge this based on how well it meshes with the drive system gears
+   - The motor gear may need to be replaced. Judge this based on how well it meshes with the drive system gears
    Servo Motor Installation: 
    - 3D-print our servo attachment, place it on the head of the servo motor, and secure it with a screw and nut. 
    - The `Hitec HS-5055MG Servo Motor` also needs its wings clipped before installing
@@ -608,7 +608,7 @@ thread1.start()
 9. **Configuration**
    - Download the [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
    - With the imager, prepare your MicroSD card and copy the [TurboPi OS](https://drive.google.com/file/d/1sBCMegKXQaT8nuhjBM0KjXP2YUlaAOju/view). Then, insert the card back into the Pi
-   - Power on your Raspberry Pi, by default it is running in Access Point (AP) mode meaning you have to connect to a Wifi Access Point.
+   - Power on your Raspberry Pi. By default it is running in Access Point (AP) mode meaning you have to connect via a Wifi Access Point.
       - Search for a Wifi connection with the format: `HW-xxxxxx`
       - It will have a password of `"hiwonder"`
    - Remotely access your Raspberry Pi through [VNC Viewer](https://www.realvnc.com/en/connect/download/viewer/) by entering the IP address `192.168.149.1`
